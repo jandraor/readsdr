@@ -1,0 +1,167 @@
+{UTF-8}
+Completing Latent Period=
+	Exposed/Mean Latent Period in Weeks
+	~	
+	~		|
+
+Infective= INTEG (
+	Completing Latent Period-Recovery,
+		0)
+	~	
+	~		|
+
+Recovery=
+	Infective/Mean Time to Recovery in Weeks
+	~	
+	~		|
+
+Mean Latent Period in Weeks=
+	0.42857
+	~	
+	~	Approximately three days -- woudl give formula, except that variable must \
+		be constant to be overridden
+	|
+
+Recovered= INTEG (
+	Recovery,
+		0)
+	~	
+	~		|
+
+Total Population Size=
+	Susceptible+Exposed+Infective+Recovered
+	~	
+	~		|
+
+Contacts per Week c=
+	350
+	~	
+	~	50 contacts per day * 7 days per week
+	|
+
+Force of Infection=
+	Contacts per Week c*Prevalence of Infection*Likelihood of Infection Transmission Given Exposure Beta
+	~	
+	~		|
+
+Exposed= INTEG (
+	New Infections-Completing Latent Period,
+		1)
+	~	
+	~		|
+
+Likelihood of Infection Transmission Given Exposure Beta=
+	0.005
+	~	
+	~		|
+
+Mean Time to Recovery in Weeks=
+	1
+	~	
+	~		|
+
+New Infections=
+	Force of Infection*Susceptible
+	~	
+	~		|
+
+Prevalence of Infection=
+	Infective/Total Population Size
+	~	
+	~		|
+
+Susceptible= INTEG (
+	-New Infections,
+		999)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 31
+	~	Week
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Week
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Week [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0078125
+	~	Week [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Susceptible,161,242,30,15,3,3,0,0,0,0,0,0
+10,2,Exposed,332,240,30,15,3,3,0,0,0,0,0,0
+10,3,Infective,487,239,30,15,3,3,0,0,0,0,0,0
+1,4,6,2,4,0,0,22,0,0,0,-1--1--1,,1|(279,240)|
+1,5,6,1,100,0,0,22,0,0,0,-1--1--1,,1|(219,240)|
+11,6,252,252,240,5,6,34,3,0,0,1,0,0,0
+10,7,New Infections,252,254,36,8,40,3,0,0,-1,0,0,0
+1,8,10,3,4,0,0,22,0,0,0,-1--1--1,,1|(439,241)|
+1,9,10,2,100,0,0,22,0,0,0,-1--1--1,,1|(386,241)|
+11,10,412,416,241,5,6,34,3,0,0,1,0,0,0
+10,11,Completing Latent Period,416,261,44,14,40,3,0,0,-1,0,0,0
+10,12,Contacts per Week c,107,141,32,14,8,3,0,0,0,0,0,0
+10,13,Likelihood of Infection Transmission Given Exposure Beta,170,103,54,21,8,3,0,0,0,0,0,0
+10,14,Total Population Size,399,167,40,14,8,3,0,0,0,0,0,0
+1,15,1,14,1,0,0,0,0,64,0,-1--1--1,,1|(281,210)|
+1,16,2,14,1,0,0,0,0,64,0,-1--1--1,,1|(394,220)|
+1,17,3,14,1,0,0,0,0,64,0,-1--1--1,,1|(470,212)|
+10,18,Prevalence of Infection,260,132,33,14,8,3,0,0,0,0,0,0
+1,19,14,18,0,0,0,0,0,64,0,-1--1--1,,1|(332,150)|
+10,20,Mean Time to Recovery in Weeks,568,308,47,14,8,131,0,0,0,0,0,0
+10,21,Force of Infection,212,191,42,8,8,3,0,0,0,0,0,0
+1,22,12,21,1,0,0,0,0,64,0,-1--1--1,,1|(152,176)|
+1,23,13,21,1,0,0,0,0,64,0,-1--1--1,,1|(175,155)|
+1,24,18,21,1,0,0,0,0,64,0,-1--1--1,,1|(242,170)|
+1,25,1,7,1,0,0,0,0,64,0,-1--1--1,,1|(200,253)|
+1,26,21,7,1,0,0,0,0,64,0,-1--1--1,,1|(230,211)|
+1,27,2,11,1,0,0,0,0,64,0,-1--1--1,,1|(365,261)|
+10,28,Recovered,637,241,30,15,3,3,0,0,0,0,0,0
+1,29,31,28,4,0,0,22,0,0,0,-1--1--1,,1|(587,242)|
+1,30,31,3,100,0,0,22,0,0,0,-1--1--1,,1|(537,242)|
+11,31,300,562,242,5,6,34,3,0,0,1,0,0,0
+10,32,Recovery,562,256,23,8,40,3,0,0,-1,0,0,0
+1,33,20,32,1,0,0,0,0,64,0,-1--1--1,,1|(575,272)|
+1,34,3,32,1,0,0,0,0,64,0,-1--1--1,,1|(548,272)|
+10,35,Mean Latent Period in Weeks,356,311,48,14,8,3,0,0,0,0,0,0
+1,36,35,11,1,0,0,0,0,64,0,-1--1--1,,1|(399,282)|
+1,37,28,14,1,0,0,0,0,64,0,-1--1--1,,1|(545,184)|
+1,38,3,18,1,0,0,0,0,64,0,-1--1--1,,1|(361,199)|
+///---\\\
+:L<%^E!@
+9:Baseline in Weeks
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+23:0
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Recovered
+24:0
+25:31
+26:31
