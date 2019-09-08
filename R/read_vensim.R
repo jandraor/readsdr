@@ -114,19 +114,26 @@ construct_nf_text <- function(stocks) {
   nf_text <- paste(equations, collapse = "\n")
 }
 
-construct_return_statement <- function(stocks) {
+construct_return_statement <- function(stocks, variables) {
   formattedStocks <- sapply(stocks, function(stock){
     paste0('d_', stock$name, '_dt')
   })
+
   stocks_text <- paste(formattedStocks, collapse = ", ")
-  paste0('return (list(c(', stocks_text, ')))')
+
+  var_names <- sapply(variables, function(var) {
+    paste0(var$name, ' = ', var$name)
+  })
+
+  var_text  <- paste(var_names, collapse = ",\n")
+  paste0('return (list(c(', stocks_text, '),', var_text, '))')
 }
 
 generate_model_func <- function (variables, stocks) {
   var_equations    <- construct_vars_text(variables)
   var_equations    <- arrange_in_comp_order(var_equations, variables)
   net_flows        <- construct_nf_text(stocks)
-  return_statement <- construct_return_statement(stocks)
+  return_statement <- construct_return_statement(stocks, variables)
 
   func_body <- paste(
     'with(as.list(c(stocks, auxs)), {',

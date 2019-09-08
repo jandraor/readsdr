@@ -56,7 +56,7 @@ test_that("it returns the correct number of constants", {
   }
 })
 
-test_that("it returns a runnable model", {
+test_that("read_vensim() returns a runnable model", {
 
   for(file in files) {
     mdl       <- read_vensim(file)
@@ -74,6 +74,29 @@ test_that("it returns a runnable model", {
                         method = "euler"))
 
     expect_is(o, 'data.frame')
+  }
+})
+
+test_that("read_vensim() produces a model function that returns all levels & variables", {
+  expected_cols <- c(9, 11)
+
+  for(file in files) {
+    index     <- which(file == files)
+    mdl       <- read_vensim(file)
+    START     <- as.numeric(mdl$description$parameters[[2]]$value)
+    FINISH    <- as.numeric(mdl$description$parameters[[1]]$value)
+    STEP      <- as.numeric(mdl$description$parameters[[4]]$value)
+
+    # Create time vector
+    simtime <- seq(START, FINISH, by = STEP)
+
+    o <- data.frame(ode(y = mdl$deSolve_components$stocks,
+                        times = simtime,
+                        func = mdl$deSolve_components$func,
+                        parms = mdl$deSolve_components$consts,
+                        method = "euler"))
+    n_of_cols <- ncol(o)
+    expect_equal(n_of_cols, expected_cols[index])
   }
 })
 
