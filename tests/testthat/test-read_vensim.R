@@ -100,6 +100,17 @@ test_that("read_vensim() produces a model function that returns all levels & var
   }
 })
 
+test_that("read_vensim() returns a nodes dataframe with the correct columns", {
+  for(file in files) {
+    mdl   <- read_vensim(file)
+    nodes_df <- mdl$graph_dfs$nodes
+    col_names <- colnames(nodes_df)
+    expect_equal("name" %in% col_names, TRUE)
+    expect_equal("type" %in% col_names, TRUE)
+    expect_equal("equation" %in% col_names, TRUE)
+  }
+})
+
 test_that("it returns the correct inputs for constructing a graph", {
 
   for(file in files) {
@@ -111,6 +122,7 @@ test_that("it returns the correct inputs for constructing a graph", {
   }
 
 })
+
 
 test_that("read_vensim() returns the correct number of edges", {
   expected_edges <- c(10, 17)

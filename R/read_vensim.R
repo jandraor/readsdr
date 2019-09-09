@@ -28,11 +28,18 @@ generate_edges_df <- function(stocks, variables, constants) {
 
 generate_nodes_df <- function(stocks, variables) {
   stocks_df <- purrr::map_df(stocks, function(stock) {
-    data.frame(name = stock$name, type = "stock", stringsAsFactors = F)
+
+    data.frame(name = stock$name,
+               type = "stock",
+               equation = stock$equation,
+               stringsAsFactors = F)
   })
 
   variables_df <- purrr::map_df(variables, function(variable) {
-    data.frame(name = variable$name, type = "variable", stringsAsFactors = F)
+    data.frame(name = variable$name,
+               type = "variable",
+               equation = variable$equation,
+               stringsAsFactors = F)
   })
 
   dplyr::bind_rows(stocks_df, variables_df)
