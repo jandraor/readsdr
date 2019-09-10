@@ -153,6 +153,23 @@ test_that("read_vensim() returns the correct number of nodes", {
   }
 })
 
+test_that("read_vensim() returns the correct number of flows", {
+  expected_flows <- c(4, 6)
+
+  for(file in files) {
+    index     <- which(file == files)
+    mdl       <- read_vensim(file)
+
+    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+                                vertices = mdl$graph_dfs$nodes)
+
+    n_flows <- length(E(gr)[[type == "flow"]])
+
+    expect_equal(n_flows, expected_flows[index])
+  }
+})
+
+
 test_that("read_vensim() returns the correct structure for identifying strong components", {
   expected_sc <- c(2, 1)
 

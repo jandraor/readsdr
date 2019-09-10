@@ -4,6 +4,7 @@ generate_edges_df <- function(stocks, variables, constants) {
     rhs <- rhs[rhs != ""]
     data.frame(from = rhs,
                to = rep(stock$name, length(rhs)),
+               type = "flow",
                stringsAsFactors = F)
   })
 
@@ -19,6 +20,7 @@ generate_edges_df <- function(stocks, variables, constants) {
 
                               data.frame(from = rhs,
                                          to = rep(variable$name, length(rhs)),
+                                         type = "vars_link",
                                          stringsAsFactors = F)
                             })
 
