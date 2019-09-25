@@ -77,8 +77,8 @@ test_that("read_vensim() returns a runnable model", {
   }
 })
 
-test_that("read_vensim() produces a model function that returns all levels & variables", {
-  expected_cols <- c(9, 11)
+test_that("read_vensim() produces a model function that returns all levels, variables & constants", {
+  expected_cols <- c(13, 15) # +1, Time is expected
 
   for(file in files) {
     index     <- which(file == files)

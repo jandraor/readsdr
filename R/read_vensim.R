@@ -20,7 +20,7 @@ generate_edges_df <- function(stocks, variables, constants) {
 
                               data.frame(from = rhs,
                                          to = rep(variable$name, length(rhs)),
-                                         type = "vars_link",
+                                         type = "info_link",
                                          stringsAsFactors = F)
                             })
 
@@ -123,26 +123,33 @@ construct_nf_text <- function(stocks) {
   nf_text <- paste(equations, collapse = "\n")
 }
 
-construct_return_statement <- function(stocks, variables) {
+construct_return_statement <- function(stocks, variables, constants) {
   formattedStocks <- sapply(stocks, function(stock){
     paste0('d_', stock$name, '_dt')
   })
 
-  stocks_text <- paste(formattedStocks, collapse = ", ")
+  stock_text <- paste(formattedStocks, collapse = ", ")
 
   var_names <- sapply(variables, function(var) {
     paste0(var$name, ' = ', var$name)
   })
 
   var_text  <- paste(var_names, collapse = ",\n")
-  paste0('return (list(c(', stocks_text, '),', var_text, '))')
+
+  const_names <- sapply(constants, function(const) {
+    paste0(const$name, ' = ', const$name)
+  })
+
+  const_text  <- paste(const_names, collapse = ",\n")
+
+  paste0('return (list(c(', stock_text, '),', var_text, ",\n", const_text, '))')
 }
 
-generate_model_func <- function (variables, stocks) {
+generate_model_func <- function (variables, stocks, constants) {
   var_equations    <- construct_vars_text(variables)
   var_equations    <- arrange_in_comp_order(var_equations, variables)
   net_flows        <- construct_nf_text(stocks)
-  return_statement <- construct_return_statement(stocks, variables)
+  return_statement <- construct_return_statement(stocks, variables, constants)
 
   func_body <- paste(
     'with(as.list(c(stocks, auxs)), {',
@@ -251,7 +258,7 @@ read_vensim <- function(file) {
   variables <- vars_and_consts[!are_they_consts] %>%
     lapply(create_var_obj)
 
-  ds_model_func <- generate_model_func(variables, levels)
+  ds_model_func <- generate_model_func(variables, levels, constants)
   ds_stocks     <- generate_stocks_vector(levels)
   ds_consts     <- generate_constants_vector(constants)
 
