@@ -1,7 +1,7 @@
 context("Read xmile file")
 
 #SIR.xmile is a xmile file generated from Vensim
-files <- c("SIR.xmile")
+files <- c("SIR.xmile", "SIR.stmx")
 
 test_that("the output from read_xmile() is a list", {
   for(file in files) {
@@ -20,8 +20,16 @@ test_that("the output from read_xmile() produces the required elements", {
   }
 })
 
+test_that("read_xmile() returns the correct DT", {
+  for(file in files) {
+    mdl       <- read_xmile(file)
+    actual_dt <- mdl$description$parameters$dt
+    expect_equal(actual_dt, 0.125)
+  }
+})
+
 test_that("read_xmile() returns the correct number of levels", {
-  expected_levels <- c(3)
+  expected_levels <- c(3, 3)
 
   for(file in files) {
     index     <- which(file == files)
@@ -32,7 +40,7 @@ test_that("read_xmile() returns the correct number of levels", {
 })
 
 test_that("read_xmile() returns the correct number of variables", {
-  expected_variables <- c(5)
+  expected_variables <- c(5, 5)
 
   for(file in files) {
     index     <- which(file == files)
@@ -43,7 +51,7 @@ test_that("read_xmile() returns the correct number of variables", {
 })
 
 test_that("read_xmile() returns the correct number of constants", {
-  expected_constants <- c(4)
+  expected_constants <- c(4, 4)
 
   for(file in files) {
     index     <- which(file == files)
@@ -75,7 +83,7 @@ test_that("read_xmile() returns a runnable model", {
 })
 
 test_that("read_xmile() produces a model function that returns all levels, variables & constants", {
-  expected_cols <- c(13) # +1, Time is expected
+  expected_cols <- c(13, 13) # +1, Time is expected
 
   for(file in files) {
     index     <- which(file == files)
@@ -122,7 +130,7 @@ test_that("read_xmile() returns the correct inputs for constructing a graph", {
 
 
 test_that("read_xmile() returns the correct number of edges", {
-  expected_edges <- c(10)
+  expected_edges <- c(10, 10)
 
   for(file in files) {
     index     <- which(file == files)
@@ -136,7 +144,7 @@ test_that("read_xmile() returns the correct number of edges", {
 })
 
 test_that("read_xmile() returns the correct number of nodes", {
-  expected_nodes <- c(8)
+  expected_nodes <- c(8, 8)
 
   for(file in files) {
     index     <- which(file == files)
@@ -151,7 +159,7 @@ test_that("read_xmile() returns the correct number of nodes", {
 })
 
 test_that("read_xmile() returns the correct number of flows", {
-  expected_flows <- c(4)
+  expected_flows <- c(4, 4)
 
   for(file in files) {
     index     <- which(file == files)
@@ -168,7 +176,7 @@ test_that("read_xmile() returns the correct number of flows", {
 
 
 test_that("read_xmile() returns the correct structure for identifying strong components", {
-  expected_sc <- c(2)
+  expected_sc <- c(2, 2)
 
   for(file in files) {
     index     <- which(file == files)
@@ -184,7 +192,7 @@ test_that("read_xmile() returns the correct structure for identifying strong com
 })
 
 test_that("read_xmile() returns the correct structure for identifying nodes in strong components", {
-  expected_nodes_sc <- c(9)
+  expected_nodes_sc <- c(9, 9)
 
   for(file in files) {
     index     <- which(file == files)

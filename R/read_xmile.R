@@ -3,8 +3,14 @@ create_param_obj_xmile <- function(sim_specs) {
     xml2::xml_double()
   stop       <- sim_specs %>% xml_find_first("//d1:stop") %>%
     xml2::xml_double()
-  dt         <- sim_specs %>% xml_find_first("//d1:dt") %>%
-    xml2::xml_double()
+  dt_html    <- sim_specs %>% xml_find_first("//d1:dt")
+  dt         <- xml2::xml_double(dt_html)
+
+  if(xml2::xml_has_attr(dt_html ,"reciprocal")) {
+    if(xml2::xml_attr(dt_html ,"reciprocal") == "true"){
+      dt <- 1 / dt
+    }
+  }
 
   list(start = start,
        stop = stop,
@@ -88,10 +94,12 @@ read_xmile <- function(filepath) {
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
 
-  stocks_xml <- raw_xml %>% xml2::xml_find_all(".//d1:stock")
-  levels     <- create_level_obj_xmile(stocks_xml)
+  variables_xml  <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
+  stocks_xml     <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
+  levels         <- create_level_obj_xmile(stocks_xml)
 
-  auxs_xml        <- raw_xml %>% xml2::xml_find_all(".//d1:aux")
+  auxs_xml        <- variables_xml %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
   vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml)
   variables       <- vars_and_consts$variables
   constants       <- vars_and_consts$constants
