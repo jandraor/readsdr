@@ -45,8 +45,10 @@ create_level_obj_xmile <- function(stocks_xml) {
       netflow <- paste0("-", outflow)
     }
 
+    stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
+      stringr::str_replace(" ", "_")
 
-    list(name = stock_xml %>% xml2::xml_attr("name"),
+    list(name = stock_name,
          equation = netflow,
          initValue = as.numeric(initValue))
   })
@@ -66,16 +68,19 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
 
     # if the aux is a variable
+    var_name <- aux_xml %>% xml2::xml_attr("name") %>%
+      stringr::str_replace(" ", "_")
+
     if(!is_const) {
-      variable          <- list(name = aux_xml %>% xml2::xml_attr("name"),
+      variable          <- list(name = var_name,
                                 equation = equation)
       vars[[counter_v]] <- variable
       counter_v         <- counter_v + 1
     }
 
-    # if the aux is a constants
+    # if the aux is a constant
     if(is_const) {
-      const               <- list(name = aux_xml %>% xml2::xml_attr("name"),
+      const               <- list(name = var_name,
                                   value = as.numeric(equation))
       consts[[counter_c]] <- const
       counter_c           <- counter_c + 1

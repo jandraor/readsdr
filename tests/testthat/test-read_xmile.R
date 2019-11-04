@@ -215,3 +215,12 @@ test_that("read_xmile() returns the correct structure for identifying nodes in s
   }
 })
 
+test_that("read_xmile() reads variables with compound names separated by blanks", {
+  file           <- "one_stock_one_inflow.stmx"
+  mdl            <- read_xmile(file)
+  actual_names   <- c(mdl$description$levels[[1]]$name,
+                      mdl$description$constants[[1]]$name)
+  expected_names <- c("main_stock", "growth_rate")
+  expect_equal(actual_names, expected_names)
+})
+
