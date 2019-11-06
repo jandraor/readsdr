@@ -1,9 +1,9 @@
 create_param_obj_xmile <- function(sim_specs) {
-  start      <- sim_specs %>% xml_find_first("//d1:start") %>%
+  start      <- sim_specs %>% xml2::xml_find_first("//d1:start") %>%
     xml2::xml_double()
-  stop       <- sim_specs %>% xml_find_first("//d1:stop") %>%
+  stop       <- sim_specs %>% xml2::xml_find_first("//d1:stop") %>%
     xml2::xml_double()
-  dt_html    <- sim_specs %>% xml_find_first("//d1:dt")
+  dt_html    <- sim_specs %>% xml2::xml_find_first("//d1:dt")
   dt         <- xml2::xml_double(dt_html)
 
   if(xml2::xml_has_attr(dt_html ,"reciprocal")) {

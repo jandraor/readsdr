@@ -97,5 +97,17 @@ test_that("create_stan_function() generates the expected differential equations"
 })
 
 
+test_that("create_stan_function() parameterise the function", {
+  file <- "./lotka_volterra.stmx"
+  stan_function <- create_stan_function(file, "lotka_volterra",
+                                        pars = c("d", "a"))
+  actual_12th_line   <- strsplit(stan_function, "\n")[[1]][[12]]
+  actual_15th_line   <- strsplit(stan_function, "\n")[[1]][[15]]
+  expected_12th_line  <-   "  Bx = params[2]*y[1];"
+  expected_15th_line  <-   "  Dy = params[1]*y[2];"
+  expect_equal(actual_12th_line, expected_12th_line)
+  expect_equal(actual_15th_line, expected_15th_line)
+})
+
 
 

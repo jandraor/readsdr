@@ -1,5 +1,5 @@
 
-create_stan_function <- function (filepath, func_name) {
+create_stan_function <- function (filepath, func_name, pars = NULL) {
   raw_xml       <- xml2::read_xml(filepath)
   variables_xml <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
   stocks_xml    <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
@@ -16,6 +16,13 @@ create_stan_function <- function (filepath, func_name) {
   variables        <- vars_and_consts$variables
   constants        <- vars_and_consts$constants
   const_names      <- sapply(constants, function(constant) constant$name)
+
+  for(param in pars) {
+    pos_param                     <- which(pars == param)
+    replacement                   <- paste0("params[", pos_param,"]")
+    pos_const                     <- which(param == const_names)
+    constants[[pos_const]]$value  <- replacement
+  }
 
   vars_declaration <- sapply(variables, function(variable) {
     paste0("  real ", variable$name,";")
@@ -47,7 +54,12 @@ create_stan_function <- function (filepath, func_name) {
 
     for(cf in consts_found) {
       const_pos     <- which(const_names == cf)
-      const_value   <- as.character(round(constants[[const_pos]]$value, 10))
+      const_value   <- constants[[const_pos]]$value
+
+      const_value   <- ifelse(is.numeric(const_value),
+                              as.character(round(const_value, 10)),
+                              const_value)
+
       regex_pattern <- stringr::regex(paste0("\\b", cf,"\\b"))
       equation      <- stringr::str_replace_all(
         equation, regex_pattern, const_value)
