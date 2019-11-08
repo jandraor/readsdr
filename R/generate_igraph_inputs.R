@@ -18,6 +18,7 @@ generate_nodes_df <- function(stocks, variables) {
 }
 
 generate_edges_df <- function(stocks, variables, constants) {
+
   stocks_edges <- purrr::map_df(stocks, function(stock) {
     rhs <- stringr::str_split(stock$equation, pattern = "\\+|-|\\*|/")[[1]]
     rhs <- rhs[rhs != ""]
@@ -29,19 +30,20 @@ generate_edges_df <- function(stocks, variables, constants) {
 
   const_names <- sapply(constants, function(constant) constant$name)
 
-  variables_edges <- purrr::map_df(variables,
-                                   const_names = const_names,
-                                   function(variable, const_names) {
-                                     rhs <- stringr::str_split(variable$equation,
-                                                               pattern = "\\+|-|\\*|/")[[1]]
-                                     rhs <- rhs[rhs != ""]
-                                     rhs <- rhs[!rhs %in% const_names ]
+  variables_edges <- purrr::map_df(
+    variables, const_names = const_names,
+    function(variable, const_names) {
+      raw_elements   <- stringr::str_split(variable$equation, "\\b")[[1]] %>%
+        stringi::stri_remove_empty()
 
-                                     data.frame(from = rhs,
-                                                to = rep(variable$name, length(rhs)),
-                                                type = "info_link",
-                                                stringsAsFactors = F)
-                                   })
+      boolean_filter <- stringr::str_detect(raw_elements, "/|\\*|\\+|-|\\(|\\)")
+      rhs            <- raw_elements[!boolean_filter]
+      rhs            <- rhs[!rhs %in% const_names ]
+
+      if(length(rhs) == 0L) return(NULL)
+
+      data.frame(from = rhs, to = rep(variable$name, length(rhs)),
+                 type = "info_link", stringsAsFactors = F)})
 
   dplyr::bind_rows(stocks_edges, variables_edges)
 }
