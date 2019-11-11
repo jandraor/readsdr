@@ -13,7 +13,7 @@ create_stan_function <- function (filepath, func_name, pars = NULL) {
   auxs_xml         <- variables_xml %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
   vars_and_consts  <- create_vars_consts_obj_xmile(auxs_xml)
-  variables        <- vars_and_consts$variables
+  variables        <- vars_and_consts$variables %>% arrange_variables()
   constants        <- vars_and_consts$constants
   const_names      <- sapply(constants, function(constant) constant$name)
 

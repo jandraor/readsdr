@@ -109,5 +109,28 @@ test_that("create_stan_function() parameterise the function", {
   expect_equal(actual_15th_line, expected_15th_line)
 })
 
+test_that("create_stan_function() returns equations in computational  order", {
+  file           <- "./pop_extended_consts.stmx"
+  stan_function <- create_stan_function(file, "test_model")
+
+  expected_function <- paste(
+    "functions {",
+    "  real[] test_model(real t,",
+    "              real[] y,",
+    "              real[] params,",
+    "              real[] x_r,",
+    "              int[] x_i) {",
+    "  real dydt[1];",
+    "  real birthRate;",
+    "  real births;",
+    "  birthRate = 0.1;",
+    "  births = y[1]*birthRate;",
+    "  dydt[1] = births;",
+    "  return dydt;",
+    "  }",
+    "}", sep = "\n")
+
+    expect_equal(stan_function, expected_function)
+})
 
 

@@ -21,51 +21,6 @@ construct_vars_text <- function(variables) {
   vars_text <- paste(equations, collapse = "\n")
 }
 
-arrange_in_comp_order <- function(vars_equations, var_list) {
-
-  var_names <- sapply(var_list, function(varElem) {
-    varElem$name
-  })
-
-  n_equations <- length(var_names)
-  states <- rep(0, n_equations)
-  names(states) <- var_names
-  equations <- strsplit(vars_equations, "\n")[[1]] %>%
-    stringr::str_replace_all(" ","")
-
-  aux_equations    <- equations
-  sorted_equations <- vector(mode = "character", length = n_equations)
-  current_pos      <- 1
-
-  while (length(aux_equations) > 0) {
-    equation <- aux_equations[1]
-    other_equations <- aux_equations[-1]
-    param_components <- stringr::str_match(equation, "(.+)<-(.+)")
-    lhs <- param_components[, 2]
-    rhs <- param_components[, 3]
-    rh_vars <- stringr::str_split(rhs,
-                                  pattern = "\\+|-|\\*|/")[[1]]
-
-    undefined_vars <- sapply(rh_vars, function(var){
-      ifelse(var %in% var_names && states[var] == 0, TRUE, FALSE)
-    })
-
-    n_und_var <- sum(undefined_vars)
-
-    if(n_und_var == 0) {
-      sorted_equations[current_pos] <- equation
-      states[lhs] <- 1
-      aux_equations <- aux_equations[-1]
-      current_pos <- current_pos + 1
-    }
-
-    if(n_und_var > 0){
-      aux_equations <- c(other_equations, equation)
-    }
-  }
-
-  sorted_equations <- paste(sorted_equations, collapse = "\n")
-}
 #netflows
 construct_nf_text <- function(stocks) {
   equations <- sapply(stocks, function(stock) {
@@ -97,8 +52,8 @@ construct_return_statement <- function(stocks, variables, constants) {
 }
 
 generate_model_func <- function (variables, stocks, constants) {
+  variables        <- arrange_variables(variables)
   var_equations    <- construct_vars_text(variables)
-  var_equations    <- arrange_in_comp_order(var_equations, variables)
   net_flows        <- construct_nf_text(stocks)
   return_statement <- construct_return_statement(stocks, variables, constants)
 
