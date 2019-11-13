@@ -1,5 +1,9 @@
-
-create_stan_function <- function (filepath, func_name, pars = NULL) {
+#' @param filepath A string with the filepath to the xmile file
+#' @param func_name A string with the name of the STAN ODE function
+#' @param pars A character vector that indicates the constants that will be considered as parameters in the STAN ODE function
+#' @param override.consts A list of lists. Second-level lists include constants' name & value to replace.
+#' @return a string with the transformation of the file \code{filepath} into a STAN ODE function
+create_stan_function <- function (filepath, func_name, pars = NULL, override.consts = NULL) {
   raw_xml       <- xml2::read_xml(filepath)
   variables_xml <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
   stocks_xml    <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
@@ -16,6 +20,11 @@ create_stan_function <- function (filepath, func_name, pars = NULL) {
   variables        <- vars_and_consts$variables %>% arrange_variables()
   constants        <- vars_and_consts$constants
   const_names      <- sapply(constants, function(constant) constant$name)
+
+  purrr::walk(override.consts, function(const_list) {
+    pos <- which(const_list$name == const_names)
+    constants[[pos]]$value <<- const_list$value
+  })
 
   for(param in pars) {
     pos_param                     <- which(pars == param)

@@ -133,4 +133,35 @@ test_that("create_stan_function() returns equations in computational  order", {
     expect_equal(stan_function, expected_function)
 })
 
+test_that("create_stan_function() allows user to override constant values", {
+  file <- "./lotka_volterra.stmx"
+  consts <- list(list(name = "a", value = 0.5), list(name = "c", value = 0.3))
+  stan_function <- create_stan_function(
+    filepath = file, func_name = "lotka_volterra", override.consts = consts)
+
+  expected_stan_function <- paste(
+    "functions {",
+    "  real[] lotka_volterra(real t,",
+    "              real[] y,",
+    "              real[] params,",
+    "              real[] x_r,",
+    "              int[] x_i) {",
+    "  real dydt[2];",
+    "  real Bx;",
+    "  real Dx;",
+    "  real By;",
+    "  real Dy;",
+    "  Bx = 0.5*y[1];",
+    "  Dx = 0.2*y[1]*y[2];",
+    "  By = 0.3*y[1]*y[2];",
+    "  Dy = 0.5*y[2];",
+    "  dydt[1] = Bx-Dx;",
+    "  dydt[2] = By-Dy;",
+    "  return dydt;",
+    "  }",
+    "}",
+    sep = "\n")
+  expect_equal(stan_function, expected_stan_function)
+})
+
 
