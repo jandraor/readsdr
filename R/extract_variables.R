@@ -4,4 +4,5 @@ extract_variables <- function(rhs) {
 
   boolean_filter <- stringr::str_detect(raw_elements, "/|\\*|\\+|-|\\(|\\)")
   detected_vars  <- raw_elements[!boolean_filter]
+  detected_vars[stringr::str_detect(detected_vars, "[:alpha:]+")]
 }
