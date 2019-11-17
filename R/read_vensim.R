@@ -96,7 +96,7 @@ read_vensim <- function(file) {
   ds_stocks     <- generate_stocks_vector(levels)
   ds_consts     <- generate_constants_vector(constants)
 
-  nodes_df <- generate_nodes_df(levels, variables)
+  nodes_df <- generate_nodes_df(levels, variables, constants)
   edges_df <- generate_edges_df(levels, variables, constants)
 
   list(

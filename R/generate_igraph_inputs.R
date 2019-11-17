@@ -1,4 +1,6 @@
-generate_nodes_df <- function(stocks, variables) {
+generate_nodes_df <- function(stocks, variables, constants) {
+  const_names <- sapply(constants, function(const) const$name)
+
   stocks_df <- purrr::map_df(stocks, function(stock) {
 
     data.frame(name = stock$name,
@@ -8,9 +10,31 @@ generate_nodes_df <- function(stocks, variables) {
   })
 
   variables_df <- purrr::map_df(variables, function(variable) {
+    equation <- variable$equation
+    extracted_vars  <- extract_variables(equation)
+    detected_consts <- extracted_vars[extracted_vars %in% const_names]
+    n_det_consts    <- length(detected_consts)
+
+    if(n_det_consts > 0) {
+
+      for(det_const in detected_consts){
+
+        regex_pattern <- stringr::regex(paste0("\\b", det_const,"\\b"))
+        pos_const     <- which(det_const == const_names)
+        const_value   <- constants[[pos_const]]$value
+
+        const_value   <- ifelse(is.numeric(const_value),
+                                as.character(round(const_value, 10)),
+                                const_value)
+
+        equation      <- stringr::str_replace_all(
+          equation, regex_pattern, const_value)
+      }
+    }
+
     data.frame(name = variable$name,
                type = "variable",
-               equation = variable$equation,
+               equation = equation,
                stringsAsFactors = F)
   })
 
