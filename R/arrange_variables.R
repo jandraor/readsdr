@@ -7,14 +7,22 @@ arrange_variables <- function(var_list) {
   names(states) <- var_names
   equations <- sapply(var_list, function(var_obj) var_obj$equation)
 
-  aux_equations    <- equations
+  equations_df <- data.frame(stringsAsFactors = FALSE, equation = equations) %>%
+    dplyr::group_by(equation) %>%
+    dplyr::mutate(ocurrence = dplyr::row_number()) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(id = paste(equation, ocurrence, sep = "_")) %>%
+    dplyr::select(-ocurrence)
+
+  aux_ids   <- equations_df$id
   sorted_variables <- vector(mode = "list", length = n_equations)
   current_pos      <- 1
 
-  while (length(aux_equations) > 0) {
-    equation <- aux_equations[1]
-    pos_equation <- which(equation == equations)
-    other_equations <- aux_equations[-1]
+  while (length(aux_ids) > 0) {
+    id <- aux_ids[1]
+    pos_equation <- which(id == equations_df$id)
+    equation <- var_list[[pos_equation]]$equation
+    other_ids <- aux_ids[-1]
     lhs     <- var_list[[pos_equation]]$name
     rh_vars <- extract_variables(equation)
 
@@ -27,13 +35,11 @@ arrange_variables <- function(var_list) {
     if(n_und_var == 0) {
       sorted_variables[current_pos] <- var_list[pos_equation]
       states[lhs] <- 1
-      aux_equations <- aux_equations[-1]
+      aux_ids <- aux_ids[-1]
       current_pos <- current_pos + 1
     }
 
-    if(n_und_var > 0){
-      aux_equations <- c(other_equations, equation)
-    }
+    if(n_und_var > 0) aux_ids <- c(other_ids, id)
   }
 
   sorted_variables
