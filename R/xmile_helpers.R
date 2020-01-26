@@ -17,7 +17,15 @@ create_param_obj_xmile <- function(sim_specs) {
        dt = dt)
 }
 
-create_level_obj_xmile <- function(stocks_xml) {
+create_level_obj_xmile <- function(stocks_xml, variables, constants) {
+
+  # This makes consts & auxs have the same properties
+  constants <- lapply(constants, function(const) {
+    list(name = const$name, equation = const$value)
+  })
+
+  auxs      <- c(variables, constants)
+
 
   lapply(stocks_xml, function(stock_xml) {
 
@@ -48,9 +56,28 @@ create_level_obj_xmile <- function(stocks_xml) {
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
       stringr::str_replace(" ", "_")
 
+    is_numeric <- !is.na(as.numeric(initValue))
+
+    if(is_numeric) {
+      initValue <- as.numeric(initValue)
+    }
+
+    if(!is_numeric) {
+      initValue <- compute_init_value(initValue)
+
+
+
+
+
+
+
+      initValue <- as.numeric(newInitValue)
+
+    }
+
     list(name = stock_name,
          equation = netflow,
-         initValue = as.numeric(initValue))
+         initValue = initValue)
   })
 }
 
@@ -90,3 +117,54 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
   list(variables = vars,
        constants = consts)
 }
+
+extract_structure_from_XMILE <- function(filepath) {
+  raw_xml    <- xml2::read_xml(filepath)
+
+  sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
+  parameters <- create_param_obj_xmile(sim_specs)
+
+  variables_xml  <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
+
+  auxs_xml        <- variables_xml %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml)
+  variables       <- vars_and_consts$variables %>% arrange_variables()
+  constants       <- vars_and_consts$constants
+
+  stocks_xml     <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
+  levels         <- create_level_obj_xmile(stocks_xml, variables, constants)
+
+  list(parameters = parameters,
+       levels = levels,
+       variables = variables,
+       constants = constants)
+}
+
+compute_init_value <- function(equation, auxs) {
+  vars_in_equation <- extract_variables(equation)
+  newEquation        <- equation
+
+  for(var_in_equation in vars_in_equation) {
+    auxs_names  <- sapply(auxs, function(aux) aux$name)
+    pos_aux     <- which(auxs_names == var_in_equation)
+    replacement <- paste0("(", auxs[[pos_aux]]$equation, ")")
+    newEquation <- gsub(var_in_equation, replacement, newEquation)
+  }
+
+  #!!! UNEQUAL CONDITION
+  contains_characters <- stringr::str_detect(newEquation, "[A-Za-z]")
+
+  if(contains_characters) {
+    initValue <- compute_init_value(newEquation, auxs)
+    return(initValue)
+  }
+
+  if(!contains_characters) {
+    newEquation <- parse(text = newEquation)
+    initValue   <- eval(newEquation)
+  }
+
+  initValue
+}
+

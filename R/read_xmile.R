@@ -1,19 +1,10 @@
 read_xmile <- function(filepath) {
 
-  raw_xml    <- xml2::read_xml(filepath)
-
-  sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
-  parameters <- create_param_obj_xmile(sim_specs)
-
-  variables_xml  <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
-  stocks_xml     <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
-  levels         <- create_level_obj_xmile(stocks_xml)
-
-  auxs_xml        <- variables_xml %>%
-    xml2::xml_find_all(".//d1:flow|.//d1:aux")
-  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml)
-  variables       <- vars_and_consts$variables
-  constants       <- vars_and_consts$constants
+  XMILE_structure  <- extract_structure_from_XMILE(filepath)
+  parameters       <- XMILE_structure$parameters
+  levels           <- XMILE_structure$levels
+  variables        <- XMILE_structure$variables
+  constants        <- XMILE_structure$constants
 
   ds_model_func <- generate_model_func(variables, levels, constants)
   ds_stocks     <- generate_stocks_vector(levels)

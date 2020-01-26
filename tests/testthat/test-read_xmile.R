@@ -224,3 +224,11 @@ test_that("read_xmile() reads variables with compound names separated by blanks"
   expect_equal(actual_names, expected_names)
 })
 
+test_that("read_xmile() returns the expected stock's initial value", {
+  file         <- "initByEquation_simplest.stmx"
+  mdl          <- read_xmile(file)
+  actual_val   <- mdl$description$levels[[1]]$initValue
+  expected_val <- 100
+  expect_equal(actual_val, expected_val)
+})
+

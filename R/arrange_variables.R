@@ -1,3 +1,9 @@
+
+#' Arrange variables
+#'
+#' Sorts variables in computational order
+#' @param var_list
+#'
 arrange_variables <- function(var_list) {
 
   var_names <- sapply(var_list, function(varElem) varElem$name)

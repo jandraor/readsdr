@@ -4,11 +4,17 @@
 #' @param override.consts A list of lists. Second-level lists include constants' name & value to replace.
 #' @return a string with the transformation of the file \code{filepath} into a STAN ODE function
 create_stan_function <- function (filepath, func_name, pars = NULL, override.consts = NULL) {
+
+  XMILE_structure  <- extract_structure_from_XMILE(filepath)
+
+  levels           <- XMILE_structure$levels
+  variables        <- XMILE_structure$variables
+  constants        <- XMILE_structure$constants
+
   raw_xml       <- xml2::read_xml(filepath)
   variables_xml <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
   stocks_xml    <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
-  n_stocks      <- length(stocks_xml)
-  levels        <- create_level_obj_xmile(stocks_xml)
+  n_stocks      <- length(levels)
   level_names   <- sapply(levels, function(level) level$name)
 
   function_name_line       <- paste0("  real[] ", func_name, "(real t,")
