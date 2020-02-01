@@ -31,15 +31,15 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
 
     initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
       xml2::xml_text() %>%
-      stringr::str_replace_all("\n|\t|~| ","")
+      sanitise_elem_name()
 
     inflow  <- stock_xml %>% xml2::xml_find_first(".//d1:inflow") %>%
       xml2::xml_text() %>%
-      stringr::str_replace_all("\n|\t|~| ","")
+      sanitise_elem_name()
 
     outflow <- stock_xml %>% xml2::xml_find_first(".//d1:outflow") %>%
-      xml2::xml_text() %>%
-      stringr::str_replace_all("\n|\t|~| ","")
+      xml2::xml_text()  %>%
+      sanitise_elem_name()
 
     if(!is.na(inflow) && !is.na(outflow)) {
       netflow <- paste(inflow, outflow, sep = "-")
@@ -54,7 +54,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
     }
 
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
-      stringr::str_replace(" ", "_")
+      sanitise_elem_name()
 
     is_numeric <- !is.na(as.numeric(initValue))
 
@@ -96,7 +96,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
 
     # if the aux is a variable
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%
-      stringr::str_replace(" ", "_")
+      sanitise_elem_name()
 
     if(!is_const) {
       variable          <- list(name = var_name,
@@ -152,7 +152,6 @@ compute_init_value <- function(equation, auxs) {
     newEquation <- gsub(var_in_equation, replacement, newEquation)
   }
 
-  #!!! UNEQUAL CONDITION
   contains_characters <- stringr::str_detect(newEquation, "[A-Za-z]")
 
   if(contains_characters) {
@@ -166,5 +165,10 @@ compute_init_value <- function(equation, auxs) {
   }
 
   initValue
+}
+
+sanitise_elem_name <- function(elem_name) {
+  elem_name %>% stringr::str_replace_all("\n|\t|~","") %>%
+  stringr::str_replace_all(" |\\\\n", "_")
 }
 

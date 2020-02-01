@@ -52,3 +52,9 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
+
+test_that("sanitise_elem_name() returns the sanitised name when it has a breakline in between", {
+  actual_val <- sanitise_elem_name("flow\\ntest")
+  expected_val <- "flow_test"
+  expect_equal(actual_val, expected_val)
+})
