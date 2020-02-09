@@ -63,16 +63,8 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
     }
 
     if(!is_numeric) {
-      initValue <- compute_init_value(initValue)
-
-
-
-
-
-
-
-      initValue <- as.numeric(newInitValue)
-
+      newInitValue <- compute_init_value(initValue, auxs)
+      initValue    <- as.numeric(newInitValue)
     }
 
     list(name = stock_name,
@@ -91,7 +83,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
   for(i in 1:n_vars_consts){
     aux_xml  <- auxs_xml[[i]]
     equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
-      xml2::xml_text() %>% stringr::str_replace_all("\n|\t|~| ","")
+      xml2::xml_text() %>% sanitise_aux_equation()
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
 
     # if the aux is a variable
@@ -149,7 +141,8 @@ compute_init_value <- function(equation, auxs) {
     auxs_names  <- sapply(auxs, function(aux) aux$name)
     pos_aux     <- which(auxs_names == var_in_equation)
     replacement <- paste0("(", auxs[[pos_aux]]$equation, ")")
-    newEquation <- gsub(var_in_equation, replacement, newEquation)
+    pattern     <- paste0("\\b", var_in_equation, "\\b")
+    newEquation <- gsub(pattern, replacement, newEquation)
   }
 
   contains_characters <- stringr::str_detect(newEquation, "[A-Za-z]")
@@ -168,7 +161,14 @@ compute_init_value <- function(equation, auxs) {
 }
 
 sanitise_elem_name <- function(elem_name) {
-  elem_name %>% stringr::str_replace_all("\n|\t|~","") %>%
+  elem_name %>%
+    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
+    stringr::str_replace_all("\n|\t|~","") %>%
   stringr::str_replace_all(" |\\\\n", "_")
+}
+
+sanitise_aux_equation <- function(equation) {
+  equation %>% stringr::str_replace_all("\n|\t|~| ","") %>%
+    stringr::str_replace_all("\\{.*?\\}", "") # removes commentaries
 }
 
