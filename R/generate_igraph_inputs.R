@@ -54,20 +54,18 @@ generate_edges_df <- function(stocks, variables, constants) {
 
   const_names <- sapply(constants, function(constant) constant$name)
 
-  variables_edges <- purrr::map_df(
-    variables, const_names = const_names,
-    function(variable, const_names) {
-      raw_elements   <- stringr::str_split(variable$equation, "\\b")[[1]] %>%
-        stringi::stri_remove_empty()
-
-      boolean_filter <- stringr::str_detect(raw_elements, "/|\\*|\\+|-|\\(|\\)")
-      rhs            <- raw_elements[!boolean_filter]
-      rhs            <- rhs[!rhs %in% const_names ]
-
-      if(length(rhs) == 0L) return(NULL)
-
-      data.frame(from = rhs, to = rep(variable$name, length(rhs)),
-                 type = "info_link", stringsAsFactors = F)})
+  variables_edges <- purrr::map_df(variables, const_names = const_names,
+                                   construct_var_edge)
 
   dplyr::bind_rows(stocks_edges, variables_edges)
+}
+
+construct_var_edge <- function(variable, const_names) {
+  rhs            <- extract_variables(variable$equation)
+  rhs            <- rhs[!rhs %in% const_names ] %>% unique()
+
+  if(length(rhs) == 0L) return(NULL)
+
+  data.frame(from = rhs, to = rep(variable$name, length(rhs)),
+             type = "info_link", stringsAsFactors = F)
 }
