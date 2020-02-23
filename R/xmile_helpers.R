@@ -169,6 +169,8 @@ sanitise_elem_name <- function(elem_name) {
 
 sanitise_aux_equation <- function(equation) {
   equation %>% stringr::str_replace_all("\n|\t|~| ","") %>%
-    stringr::str_replace_all("\\{.*?\\}", "") # removes commentaries
+    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
+    stringr::str_replace_all("\\bMIN\\b", "min") %>%
+    stringr::str_replace_all("\\bMAX\\b", "max")
 }
 

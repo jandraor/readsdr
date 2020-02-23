@@ -83,7 +83,7 @@ test_that("sanitise_aux_equation() removes comentaries at the beginning", {
 })
 
 test_that("sanitise_aux_equation() removes comentaries at the end", {
-  actual_val <- sanitise_aux_equation("{}1")
+  actual_val <- sanitise_aux_equation("1{}")
   expected_val <- "1"
   expect_equal(actual_val, expected_val)
 })
@@ -94,6 +94,17 @@ test_that("sanitise_aux_equation() removes comentaries at the beginning and at t
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_aux_equation() set min function in lower case", {
+  actual_val <- sanitise_aux_equation("MIN(a,b)")
+  expected_val <- "min(a,b)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("sanitise_aux_equation() set maxfunction in lower case", {
+  actual_val <- sanitise_aux_equation("MAX(a,b)")
+  expected_val <- "max(a,b)"
+  expect_equal(actual_val, expected_val)
+})
 
 
 test_that("create_level_obj_xmile() returns the expected object", {
