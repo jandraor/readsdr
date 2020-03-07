@@ -53,6 +53,10 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
       netflow <- paste0("-", outflow)
     }
 
+    if(is.na(inflow) && is.na(outflow)) {
+      netflow <- 0
+    }
+
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
       sanitise_elem_name()
 
@@ -85,14 +89,14 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
     equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
       xml2::xml_text() %>% sanitise_aux_equation()
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
-    
+
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%
       sanitise_elem_name()
-    
+
     # if the aux is a variable
     if(!is_const) {
       there_is_graph_fun <- FALSE
-      
+
       if(stringr::str_detect(equation, "WITHLOOKUP")) {
         there_is_graph_fun <- TRUE
         translation        <- translate_Vensim_graph_func(equation)
@@ -101,17 +105,17 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
         graph_fun          <- list(name = fun_name,
                                    fun = translation$graph_fun)
       }
-      
+
       if(1 == 0) {
         there_is_graph_fun <- TRUE
         fun_style   <- "Stella"
         equation    <- paste0("f_(", equation, ")")
         graph_fun   <- "graph_fun"
       }
-      
+
       variable          <- list(name = var_name,
                                 equation = equation)
-      
+
       if(there_is_graph_fun) {
         variable$graph_fun <- graph_fun
       }

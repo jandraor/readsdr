@@ -107,7 +107,7 @@ test_that("sanitise_aux_equation() set maxfunction in lower case", {
   expect_equal(actual_val, expected_val)
 })
 
-
+#===============================================================================
 test_that("create_level_obj_xmile() returns the expected object", {
   test_stocks_xml <- xml2::read_xml('
   <root>
@@ -140,11 +140,38 @@ test_that("create_level_obj_xmile() returns the expected object", {
                        initValue = 100)
   expect_equal(actual_val, expected_val)
 })
+
+test_that("create_level_obj_xmile() deals with levels with no flows", {
+  test_stocks_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+        <stock name="Population">
+          <eqn>100</eqn>
+        </stock>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:stock")
+
+  test_vars   <- list()
+  test_consts <- list()
+
+  level_obj    <- create_level_obj_xmile(test_stocks_xml,
+                                         test_vars, test_consts)
+  actual_obj   <- level_obj[[1]]
+
+  expected_obj <- list(name = "Population",
+                       equation = 0,
+                       initValue = 100)
+
+  expect_equal(actual_obj, expected_obj)
+})
 #===============================================================================
 
 test_that("create_vars_consts_obj_xmile() creates the var object for a variable
           with a graphical function, and the XMILE was producted by VENSIM", {
-            
+
   test_var_xml <- xml2::read_xml('
   <root>
     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -161,9 +188,9 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
     </doc1>
   </root>') %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
-  
+
   actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
-  
+
   expected_obj <- list(
     variables = list(
       list(name = "demand_price_schedule",
@@ -178,7 +205,7 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
                yright = 10)))
     ),
     constants = list())
-  
+
   expect_equal(actual_obj, expected_obj)
 })
 
