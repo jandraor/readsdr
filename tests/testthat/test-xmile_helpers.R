@@ -76,6 +76,7 @@ test_that("sanitise_elem_name() removes commentaries", {
   expect_equal(actual_val, expected_val)
 })
 
+#===============================================================================
 test_that("sanitise_aux_equation() removes comentaries at the beginning", {
   actual_val <- sanitise_aux_equation("{0}1")
   expected_val <- "1"
@@ -138,6 +139,47 @@ test_that("create_level_obj_xmile() returns the expected object", {
                        equation = "netGrowth",
                        initValue = 100)
   expect_equal(actual_val, expected_val)
+})
+#===============================================================================
+
+test_that("create_vars_consts_obj_xmile() creates the var object for a variable
+          with a graphical function, and the XMILE was producted by VENSIM", {
+            
+  test_var_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+        <stock name="Price">
+          <eqn>15</eqn>
+        </stock>
+        <aux name="demand_price_schedule">
+          <eqn>WITH LOOKUP (Price, ([(0,10)-(50,100)],(5,100),(10,73),(15,57),(20,45),
+            (25,35),(30,28),(35,22),(40,18),(45,14),(50,10) ))
+          </eqn>
+        </aux>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+  
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
+  
+  expected_obj <- list(
+    variables = list(
+      list(name = "demand_price_schedule",
+           equation = "f_demand_price_schedule(Price)",
+           graph_fun = list(
+             name = "f_demand_price_schedule",
+             fun  = approxfun(
+               x = seq(5, 50, 5),
+               y = c(100, 73, 57, 45, 35, 28, 22, 18, 14, 10),
+               method = "linear",
+               yleft  = 100,
+               yright = 10)))
+    ),
+    constants = list())
+  
+  expect_equal(actual_obj, expected_obj)
 })
 
 

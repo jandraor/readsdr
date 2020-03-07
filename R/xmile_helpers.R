@@ -85,14 +85,37 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
     equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
       xml2::xml_text() %>% sanitise_aux_equation()
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
-
-    # if the aux is a variable
+    
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%
       sanitise_elem_name()
-
+    
+    # if the aux is a variable
     if(!is_const) {
+      there_is_graph_fun <- FALSE
+      
+      if(stringr::str_detect(equation, "WITHLOOKUP")) {
+        there_is_graph_fun <- TRUE
+        translation        <- translate_Vensim_graph_func(equation)
+        fun_name           <- paste0("f_", var_name)
+        equation           <- paste0(fun_name, "(", translation$input, ")")
+        graph_fun          <- list(name = fun_name,
+                                   fun = translation$graph_fun)
+      }
+      
+      if(1 == 0) {
+        there_is_graph_fun <- TRUE
+        fun_style   <- "Stella"
+        equation    <- paste0("f_(", equation, ")")
+        graph_fun   <- "graph_fun"
+      }
+      
       variable          <- list(name = var_name,
                                 equation = equation)
+      
+      if(there_is_graph_fun) {
+        variable$graph_fun <- graph_fun
+      }
+
       vars[[counter_v]] <- variable
       counter_v         <- counter_v + 1
     }
