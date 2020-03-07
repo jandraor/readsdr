@@ -34,21 +34,31 @@ construct_return_statement <- function(stocks, variables, constants) {
     paste0('d_', stock$name, '_dt')
   })
 
-  stock_text <- paste(formattedStocks, collapse = ", ")
+  stock_text   <- paste(formattedStocks, collapse = ", ")
+  stocks_in_rs <- paste0("c(", stock_text, ")" ) # stocks in return statement
 
   var_names <- sapply(variables, function(var) {
     paste0(var$name, ' = ', var$name)
   })
 
-  var_text  <- paste(var_names, collapse = ",\n")
+  vars_in_rs  <- paste(var_names, collapse = ",\n")
 
   const_names <- sapply(constants, function(const) {
     paste0(const$name, ' = ', const$name)
   })
 
-  const_text  <- paste(const_names, collapse = ",\n")
+  if(length(const_names) > 0) {
+    consts_in_rs  <- paste(const_names, collapse = ",\n")
+  } else {
+    consts_in_rs <- NULL
+  }
 
-  paste0('return (list(c(', stock_text, '),', var_text, ",\n", const_text, '))')
+  body_elems <- c(stocks_in_rs,  vars_in_rs, consts_in_rs)
+  body_elems <- body_elems[!is.null(body_elems)]
+
+  body_return <- paste(body_elems, collapse = ",\n")
+
+  paste0('return (list(', body_return,'))')
 }
 
 generate_model_func <- function (variables, stocks, constants) {

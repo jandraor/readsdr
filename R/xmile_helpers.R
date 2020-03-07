@@ -54,7 +54,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
     }
 
     if(is.na(inflow) && is.na(outflow)) {
-      netflow <- 0
+      netflow <- "0"
     }
 
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
@@ -78,9 +78,25 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
 }
 
 create_vars_consts_obj_xmile <- function(auxs_xml) {
+
+  #-----------------------------------------------------------------------------
+  # Exception for Vensim PRO that adds the variable 'Time'
+  all_names <- sapply(auxs_xml, function(node){
+    xml2::xml_attr(node, "name")
+  })
+
+  pos_Time <- which(all_names == "Time")
+
+  if(length(pos_Time) == 1) auxs_xml <- auxs_xml[-pos_Time]
+  #-----------------------------------------------------------------------------
   n_vars_consts <- length(auxs_xml)
   vars          <- list()
   consts        <- list()
+
+  if(n_vars_consts == 0L) {
+    return(list(variables = vars, constants = consts))
+  }
+
   counter_v     <- 1
   counter_c     <- 1
 

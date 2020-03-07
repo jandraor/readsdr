@@ -162,12 +162,60 @@ test_that("create_level_obj_xmile() deals with levels with no flows", {
   actual_obj   <- level_obj[[1]]
 
   expected_obj <- list(name = "Population",
-                       equation = 0,
+                       equation = "0",
                        initValue = 100)
 
   expect_equal(actual_obj, expected_obj)
 })
 #===============================================================================
+
+test_that("create_vars_consts_obj_xmile() returns an empty list there are no
+  vars and consts", {
+
+  auxs_xml <- xml2::read_xml('
+    <root>
+      <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+        <variables>
+          <stock name="Population">
+            <eqn>100</eqn>
+          </stock>
+        </variables>
+      </doc1>
+    </root>') %>%
+      xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml)
+  expected_obj <- list(variables = list(), constants = list())
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_vars_consts_obj_xmile() ignores aux Time", {
+
+    auxs_xml <- xml2::read_xml('
+    <root>
+      <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+        <variables>
+			    <stock name="Population">
+				    <eqn>100</eqn>
+			    </stock>
+			    <aux name="effect">
+				    <eqn>Population</eqn>
+			    </aux>
+			    <aux name="Time">
+				    <eqn>INTEG(1, INITIAL_TIME )</eqn>
+			   </aux>
+		    </variables>
+      </doc1>
+    </root>') %>%
+      xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
+    actual_obj   <- create_vars_consts_obj_xmile(auxs_xml)
+    expected_obj <- list(variables = list(
+      list(name = "effect", equation = "Population")
+    ), constants = list())
+    expect_equal(actual_obj, expected_obj)
+  })
+
 
 test_that("create_vars_consts_obj_xmile() creates the var object for a variable
           with a graphical function, and the XMILE was producted by VENSIM", {
@@ -208,5 +256,6 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
 
   expect_equal(actual_obj, expected_obj)
 })
+
 
 
