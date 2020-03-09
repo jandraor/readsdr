@@ -257,5 +257,49 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
   expect_equal(actual_obj, expected_obj)
 })
 
+test_that("create_vars_consts_obj_xmile() creates the var object for a variable
+with a graphical function, and the XMILE was producted by STELLA", {
+
+  test_var_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+			  <stock name="Price">
+				  <eqn>15</eqn>
+				</stock>
+			  <aux name="demand price schedule">
+				  <eqn>Price</eqn>
+				  <gf>
+					  <xscale min="5" max="50"/>
+					  <yscale min="0" max="2"/>
+					  <ypts>100,73,57,45,35,28,22,18,14,10</ypts>
+				  </gf>
+			  </aux>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
+
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
+
+  expected_obj <- list(
+    variables = list(
+      list(name = "demand_price_schedule",
+           equation = "f_demand_price_schedule(Price)",
+           graph_fun = list(
+             name = "f_demand_price_schedule",
+             fun  = approxfun(
+               x = seq(5, 50, 5),
+               y = c(100, 73, 57, 45, 35, 28, 22, 18, 14, 10),
+               method = "linear",
+               yleft  = 100,
+               yright = 10)))
+    ),
+    constants = list())
+
+  expect_equal(actual_obj, expected_obj)
+})
+
 
 

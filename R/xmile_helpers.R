@@ -113,6 +113,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
     if(!is_const) {
       there_is_graph_fun <- FALSE
 
+      # Vensim
       if(stringr::str_detect(equation, "WITHLOOKUP")) {
         there_is_graph_fun <- TRUE
         translation        <- translate_Vensim_graph_func(equation)
@@ -122,11 +123,17 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
                                    fun = translation$graph_fun)
       }
 
-      if(1 == 0) {
+      # Stella
+      graph_fun_xml <- aux_xml %>% xml2::xml_find_first(".//d1:gf")
+
+      # Added the second as precaution
+      if(length(graph_fun_xml) > 0 & there_is_graph_fun == FALSE) {
         there_is_graph_fun <- TRUE
-        fun_style   <- "Stella"
-        equation    <- paste0("f_(", equation, ")")
-        graph_fun   <- "graph_fun"
+        func               <- translate_graph_func(graph_fun_xml)
+        fun_name           <- paste0("f_", var_name)
+        equation           <- paste0("f_", var_name, "(", equation, ")")
+        graph_fun          <- list(name = fun_name,
+                                   fun = func)
       }
 
       variable          <- list(name = var_name,
