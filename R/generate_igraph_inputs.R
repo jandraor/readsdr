@@ -10,8 +10,8 @@ generate_nodes_df <- function(stocks, variables, constants) {
   })
 
   variables_df <- purrr::map_df(variables, function(variable) {
-    equation <- variable$equation
-    extracted_vars  <- extract_variables(equation)
+    equation        <- variable$equation
+    extracted_vars  <- extract_variables(variable$name, equation)
     detected_consts <- extracted_vars[extracted_vars %in% const_names]
     n_det_consts    <- length(detected_consts)
 
@@ -61,7 +61,7 @@ generate_edges_df <- function(stocks, variables, constants) {
 }
 
 construct_var_edge <- function(variable, const_names) {
-  rhs            <- extract_variables(variable$equation)
+  rhs            <- extract_variables(variable$name, variable$equation)
   rhs            <- rhs[!rhs %in% const_names ] %>% unique()
 
   if(length(rhs) == 0L) return(NULL)

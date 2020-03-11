@@ -21,9 +21,9 @@ extract_structure_from_XMILE <- function(filepath) {
        constants = constants)
 }
 
-compute_init_value <- function(equation, auxs) {
-  vars_in_equation <- extract_variables(equation)
-  newEquation        <- equation
+compute_init_value <- function(var_name, equation, auxs) {
+  vars_in_equation <- extract_variables(var_name, equation)
+  newEquation      <- equation
 
   for(var_in_equation in vars_in_equation) {
     auxs_names  <- sapply(auxs, function(aux) aux$name)
@@ -36,7 +36,7 @@ compute_init_value <- function(equation, auxs) {
   contains_characters <- stringr::str_detect(newEquation, "[A-Za-z]")
 
   if(contains_characters) {
-    initValue <- compute_init_value(newEquation, auxs)
+    initValue <- compute_init_value(var_name, newEquation, auxs)
     return(initValue)
   }
 

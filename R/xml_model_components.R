@@ -67,7 +67,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
     }
 
     if(!is_numeric) {
-      newInitValue <- compute_init_value(initValue, auxs)
+      newInitValue <- compute_init_value(stock_name, initValue, auxs)
       initValue    <- as.numeric(newInitValue)
     }
 

@@ -1,4 +1,4 @@
-extract_variables <- function(rhs) {
+extract_variables <- function(lhs, rhs) {
   raw_elements <- stringr::str_split(rhs, "\\b")[[1]] %>%
     stringi::stri_remove_empty()
 
@@ -8,4 +8,8 @@ extract_variables <- function(rhs) {
   # Filtering out functions min & max
   detected_vars <- stringr::str_remove_all(elems_alpha, "\\bmin\\b|\\bmax\\b")
   detected_vars <- detected_vars[detected_vars != ""]
+
+  # Filtering out graph functions
+  potential_gf  <- paste0("f_", lhs)
+  detected_vars <- detected_vars[detected_vars != potential_gf]
 }

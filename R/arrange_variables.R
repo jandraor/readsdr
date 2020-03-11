@@ -30,7 +30,7 @@ arrange_variables <- function(var_list) {
     equation <- var_list[[pos_equation]]$equation
     other_ids <- aux_ids[-1]
     lhs     <- var_list[[pos_equation]]$name
-    rh_vars <- extract_variables(equation)
+    rh_vars <- extract_variables(lhs, equation)
 
     undefined_vars <- sapply(rh_vars, function(var){
       ifelse(var %in% var_names && states[var] == 0, TRUE, FALSE)

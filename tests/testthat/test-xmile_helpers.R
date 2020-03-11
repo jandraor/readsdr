@@ -1,24 +1,27 @@
 
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant", {
+  stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(list(name = "c", equation = "100"))
-  actual_val    <- compute_init_value(equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
 
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a one-level nested equation", {
+  stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(
     list(name = "c", equation = "c1 + c2"),
     list(name = "c1", equation = "80"),
     list(name = "c2", equation = "20"))
-  actual_val    <- compute_init_value(equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
 
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a two-level nested equation", {
+  stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(
     list(name = "c", equation = "c1 + c2"),
@@ -28,38 +31,41 @@ test_that("compute_init_value() extracts the expected initial value when it is t
     list(name = "c4", equation = "4"),
     list(name = "c5", equation = "40"),
     list(name = "c6", equation = "2"))
-  actual_val    <- compute_init_value(equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
 
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant and variable", {
+  stock_name    <- "test_stock"
   equation      <- "3 + c"
   auxs          <- list(
     list(name = "c", equation = "97"))
-  actual_val    <- compute_init_value(equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
 
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant and a one-level nested variable", {
+  stock_name    <- "test_stock"
   equation      <- "5 * c"
   auxs          <- list(
     list(name = "c", equation = "c1 - c2"),
     list(name = "c1", equation = "27"),
     list(name = "c2", equation = "7"))
-  actual_val    <- compute_init_value(equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
 
 test_that("compute_init_value() calculates the initial value in an equation when all variables are defined by constants", {
+  stock_name         <- "test_stock"
   test_equation      <- "ey*ep/eyvm"
   test_auxs          <- list(
     list(name = "ey", equation = "20000"),
     list(name = "ep", equation = "1"),
     list(name = "eyvm", equation = "5"))
-  actual_val    <- compute_init_value(test_equation, test_auxs)
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
   expected_val  <- 4000
   expect_equal(actual_val, expected_val)
 })
