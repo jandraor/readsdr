@@ -70,6 +70,31 @@ test_that("compute_init_value() calculates the initial value in an equation when
   expect_equal(actual_val, expected_val)
 })
 
+test_that("compute_init_value() calculates the initial value when there are graph function along the process", {
+  stock_name         <- "Population"
+  test_equation      <- "desired_init"
+  test_auxs          <- list(
+    list(name = "desired_init", equation = "value_scaled_down * scale_up"),
+    list(name = "scale_up", equation = "2"),
+    list(name      = "value_scaled_down",
+         equation  = "f_value_scaled_down(init_value)",
+         graph_fun = list(
+           name = "f_value_scaled_down",
+           fun  = approxfun(
+             x = seq(0, 200, 50),
+             y = seq(0, 200, 50) / 2,
+             method = "linear",
+             yleft  = 0,
+             yright = 100)
+         )),
+    list(name = "init_value", equation = "100"))
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
+  expected_val  <- 100
+  expect_equal(actual_val, expected_val)
+})
+
+#===============================================================================
+
 test_that("sanitise_elem_name() returns the sanitised name when it has a breakline in between", {
   actual_val <- sanitise_elem_name("flow\\ntest")
   expected_val <- "flow_test"

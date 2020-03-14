@@ -24,11 +24,22 @@ extract_structure_from_XMILE <- function(filepath) {
 compute_init_value <- function(var_name, equation, auxs) {
   vars_in_equation <- extract_variables(var_name, equation)
   newEquation      <- equation
+  auxs_names       <- sapply(auxs, function(aux) aux$name)
 
   for(var_in_equation in vars_in_equation) {
-    auxs_names  <- sapply(auxs, function(aux) aux$name)
     pos_aux     <- which(auxs_names == var_in_equation)
-    replacement <- paste0("(", auxs[[pos_aux]]$equation, ")")
+    aux_obj     <- auxs[[pos_aux]]
+    rpl_val     <- aux_obj$equation # replacement value
+
+
+    if(!is.null(aux_obj$graph)){
+      input_equation <- stringr::str_match(rpl_val, "f.+\\((.+)\\)")[[2]]
+      input          <- compute_init_value("", input_equation, auxs)
+      assign(aux_obj$graph_fun$name, aux_obj$graph_fun$fun)
+      rpl_val        <- do.call(aux_obj$graph_fun$name, list(input))
+    }
+
+    replacement <- paste0("(", rpl_val, ")")
     pattern     <- paste0("\\b", var_in_equation, "\\b")
     newEquation <- gsub(pattern, replacement, newEquation)
   }
