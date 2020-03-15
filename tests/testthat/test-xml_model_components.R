@@ -192,38 +192,48 @@ test_that("create_level_obj_xmile() deals with levels with no flows", {
   expect_equal(actual_obj, expected_obj)
 })
 
-# test_that("create_level_obj_xmile() estimates the initial value for stock which
-# depends on a graphical function", {
-#
-#   test_stocks_xml <- xml2::read_xml('
-#   <root>
-#     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
-#       <variables>
-#         <stock name="Price">
-# 				  <eqn>20</eqn>
-# 				  <inflow>Change_in_price</inflow>
-# 				</stock>
-#         <stock name="Inventory">
-#           <eqn>Desired_Inventory</eqn>
-#           <inflow>Supply</inflow>
-#           <outflow>Shipments</outflow>
-#         </stock>
-#       </variables>
-#     </doc1>
-#   </root>') %>%
-#     xml2::xml_find_all(".//d1:stock")
-#
-#   test_vars   <- list()
-#   test_consts <- list()
-#
-#   level_obj    <- create_level_obj_xmile(test_stocks_xml,
-#                                          test_vars, test_consts)
-#   actual_val   <- level_obj[[2]]
-#   expected_val <- list(name = "Inventory",
-#                        equation = "Supply - Shipments",
-#                        initValue = 150)
-#   expect_equal(actual_val, expected_val)
-# })
+test_that("create_level_obj_xmile() works should levels depend on other levels in init values", {
+  test_stocks_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+        <stock name="pop1">
+          <eqn>pop3*0.5</eqn>
+          <inflow>net_change_1</inflow>
+        </stock>
+        <stock name="pop2">
+          <eqn>100</eqn>
+          <inflow>net_change_2</inflow>
+       </stock>
+       <stock name="pop3">
+         <eqn>pop2*0.5</eqn>
+         <inflow>net_change_3</inflow>
+         </stock>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:stock")
+
+  test_vars   <- list()
+  test_consts <- list()
+
+  actual_obj    <- create_level_obj_xmile(test_stocks_xml,
+                                         test_vars, test_consts)
+  expected_obj <- list(
+    list(name      = "pop1",
+         equation  = "net_change_1",
+         initValue = 25),
+    list(name      = "pop2",
+         equation  = "net_change_2",
+         initValue = 100),
+    list(name      = "pop3",
+         equation  = "net_change_3",
+         initValue = 50))
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+
 
 
 

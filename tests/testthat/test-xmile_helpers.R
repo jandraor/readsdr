@@ -92,7 +92,6 @@ test_that("compute_init_value() calculates the initial value when there are grap
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
-
 #===============================================================================
 
 test_that("sanitise_elem_name() returns the sanitised name when it has a breakline in between", {

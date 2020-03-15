@@ -26,12 +26,12 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
 
   auxs      <- c(variables, constants)
 
+  stock_mould <- list(name = "", equation = "", initValue = NA)
+  n_stocks    <- length(stocks_xml)
+  stocks_list <- rep(list(stock_mould), n_stocks)
 
-  lapply(stocks_xml, function(stock_xml) {
-
-    initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
-      xml2::xml_text() %>%
-      sanitise_elem_name()
+  for(i in seq_len(n_stocks)){
+    stock_xml <- stocks_xml[[i]]
 
     inflow  <- stock_xml %>% xml2::xml_find_first(".//d1:inflow") %>%
       xml2::xml_text() %>%
@@ -57,24 +57,39 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
       netflow <- "0"
     }
 
+    stocks_list[[i]]$equation <- netflow
+
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
       sanitise_elem_name()
 
-    is_numeric <- !is.na(as.numeric(initValue))
+    stocks_list[[i]]$name <- stock_name
+
+    initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
+      xml2::xml_text() %>%
+      sanitise_elem_name()
+
+    auxs <- c(auxs, list(list(name = stock_name, equation = initValue)))
+
+    stocks_list[[i]]$initValue <- initValue
+  }
+
+  for(i in seq_len(n_stocks)){
+    initValue <- stocks_list[[i]]$initValue
+
+    is_numeric <- suppressWarnings(!is.na(as.numeric(initValue)))
 
     if(is_numeric) {
-      initValue <- as.numeric(initValue)
+      stocks_list[[i]]$initValue <- as.numeric(initValue)
     }
 
     if(!is_numeric) {
-      newInitValue <- compute_init_value(stock_name, initValue, auxs)
-      initValue    <- as.numeric(newInitValue)
+      newInitValue               <- compute_init_value(stock_name, initValue,
+                                                       auxs)
+      stocks_list[[i]]$initValue <- as.numeric(newInitValue)
     }
+  }
 
-    list(name = stock_name,
-         equation = netflow,
-         initValue = initValue)
-  })
+  stocks_list
 }
 
 create_vars_consts_obj_xmile <- function(auxs_xml) {
