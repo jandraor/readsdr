@@ -1,9 +1,28 @@
-#' @param filepath A string with the filepath to the xmile file
-#' @param func_name A string with the name of the STAN ODE function
-#' @param pars A character vector that indicates the constants that will be considered as parameters in the STAN ODE function
-#' @param override.consts A list of lists. Second-level lists include constants' name & value to replace.
-#' @return a string with the transformation of the file \code{filepath} into a STAN ODE function
-create_stan_function <- function (filepath, func_name, pars = NULL, override.consts = NULL) {
+#' Create a Stan's ODE function from an XMILE file
+#'
+#' \code{create_stan_function} returns a string with the code for a Stan's ODE function
+#'
+#' This function extracts the xml from the file specified via \code{filepath} to
+#' generate the code for an equivalent model in Stan.
+#'
+#' @param func_name A string for naming the ODE function
+#' @param pars A character vector that indicates which constants will be
+#'   considered as parameters in the ODE function.
+#' @param override.consts A list in which each element is a name-value pair that
+#' replaces values of constants.
+#' @inheritParams read_xmile
+#'
+#' @return A string with the code containing the model's equations in the
+#'  format required by Stan.
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' create_stan_function("mdl.xmile", "my_model")
+#' }
+
+create_stan_function <- function (filepath, func_name, pars = NULL,
+                                  override.consts = NULL) {
 
   XMILE_structure  <- extract_structure_from_XMILE(filepath)
 
