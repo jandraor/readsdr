@@ -1,9 +1,24 @@
-
 #' Arrange variables
 #'
-#' Sorts variables in computational order
-#' @param var_list
+#' \code{arrange_variables} returns a list of auxiliary variables sorted in
+#'    computational order
 #'
+#' This function iterates over each element until the variables are ordered in
+#' computational order.
+#'
+#' @param var_list A list of lists. Each second-level list corresponds to a
+#' variable in the model and must be a name-equation pair. Given that variables
+#' depend on other elements in the model, equations cannot consist of a single
+#' scalar.
+#'
+#' @return A list consisting of the elements in \code{var_list} but arranged in
+#' computational order.
+#'
+#' @examples
+#' unordered_vars <- list(list(name = "b", equation = "a + 1"),
+#'                        list(name = "a", equation = "alpha"))
+#' ordered_vars   <- arrange_variables(unordered_vars)
+#' print(ordered_vars)
 arrange_variables <- function(var_list) {
 
   var_names <- sapply(var_list, function(varElem) varElem$name)
