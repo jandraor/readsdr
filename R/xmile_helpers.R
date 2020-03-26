@@ -87,6 +87,7 @@ translate_ifelse <- function(equation) {
     if_false     <- string_match[[4]]
     body_ifelse  <- paste(condition, if_true, if_false, sep = ", ")
     equation     <- paste0("ifelse(", body_ifelse, ")")
+    return(equation)
   }
 
   ifelse_Vensim <- stringr::str_detect(equation, "IF_THEN_ELSE")
