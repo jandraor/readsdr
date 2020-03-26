@@ -67,9 +67,34 @@ sanitise_elem_name <- function(elem_name) {
 }
 
 sanitise_aux_equation <- function(equation) {
-  equation %>% stringr::str_replace_all("\n|\t|~| ","") %>%
+  equation %>% translate_ifelse() %>%
+    stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
     stringr::str_replace_all("\\bMAX\\b", "max")
+}
+
+translate_ifelse <- function(equation) {
+
+  ifelse_Stella <- stringr::str_detect(equation, "\\bIF\\b")
+
+  if(ifelse_Stella) {
+    pattern      <- stringr::regex("IF\\((.+)\\).*THEN(.*)ELSE(.*)",
+                                   dotall = TRUE)
+    string_match <- stringr::str_match(equation, pattern)
+    condition    <- string_match[[2]]
+    if_true      <- string_match[[3]]
+    if_false     <- string_match[[4]]
+    body_ifelse  <- paste(condition, if_true, if_false, sep = ", ")
+    equation     <- paste0("ifelse(", body_ifelse, ")")
+  }
+
+  ifelse_Vensim <- stringr::str_detect(equation, "IF_THEN_ELSE")
+
+  if(ifelse_Vensim) {
+    equation <- stringr::str_replace(equation, "IF_THEN_ELSE", "ifelse")
+  }
+
+  equation
 }
 

@@ -137,3 +137,24 @@ test_that("sanitise_aux_equation() set maxfunction in lower case", {
   expect_equal(actual_val, expected_val)
 })
 
+#===============================================================================
+test_that("translate_ifelse() returns an R-equivalent equation for Stella's XMILE", {
+  test_equation <- "IF(Backlog > supply_capacity)\nTHEN supply_capacity\nELSE Backlog"
+  actual_val    <- translate_ifelse(test_equation)
+  expected_val  <- "ifelse(Backlog > supply_capacity,  supply_capacity\n,  Backlog)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_ifelse() does not alter equations when there are no ifelse statements", {
+  test_equation <- "a + b"
+  actual_val    <- translate_ifelse(test_equation)
+  expected_val  <- "a + b"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_ifelse() returns an R-equivalent equation for Vensim's XMILE", {
+  test_equation <- "IF_THEN_ELSE(Backlog > Supply_capacity, Supply_capacity, Backlog)"
+  actual_val    <- translate_ifelse(test_equation)
+  expected_val  <- "ifelse(Backlog > Supply_capacity, Supply_capacity, Backlog)"
+  expect_equal(actual_val, expected_val)
+})
