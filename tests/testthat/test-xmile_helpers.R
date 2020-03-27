@@ -158,3 +158,26 @@ test_that("translate_ifelse() returns an R-equivalent equation for Vensim's XMIL
   expected_val  <- "ifelse(Backlog > Supply_capacity, Supply_capacity, Backlog)"
   expect_equal(actual_val, expected_val)
 })
+
+#===============================================================================
+test_that("eval_constant_expr() returns the value of a constant expression", {
+  test_equation <- "2 + 2"
+  actual_val    <- eval_constant_expr(test_equation)
+  expected_val  <- "4"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("eval_constant_expr() returns an equation if there is no constant expression", {
+  test_equation <- "a + b"
+  actual_val    <- eval_constant_expr(test_equation)
+  expected_val  <- "a + b"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("eval_constant_expr() is not affected by elements in the global environment", {
+  test_equation <- "a + 3"
+  a <- 0
+  actual_val    <- eval_constant_expr(test_equation)
+  expected_val  <- "a + 3"
+  expect_equal(actual_val, expected_val)
+})

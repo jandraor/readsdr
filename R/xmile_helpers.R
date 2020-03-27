@@ -71,7 +71,8 @@ sanitise_aux_equation <- function(equation) {
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
-    stringr::str_replace_all("\\bMAX\\b", "max")
+    stringr::str_replace_all("\\bMAX\\b", "max") %>%
+    eval_constant_expr()
 }
 
 translate_ifelse <- function(equation) {
@@ -97,5 +98,15 @@ translate_ifelse <- function(equation) {
   }
 
   equation
+}
+
+eval_constant_expr <- function(equation) {
+  tryCatch(
+    error = function(cnd) equation,
+    {
+      evaluated_expr <- eval(parse(text = equation), envir = baseenv())
+      as.character(evaluated_expr)
+    }
+  )
 }
 
