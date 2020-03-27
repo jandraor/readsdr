@@ -18,7 +18,7 @@
 #' unordered_vars <- list(list(name = "b", equation = "a + 1"),
 #'                        list(name = "a", equation = "alpha"))
 #' ordered_vars   <- arrange_variables(unordered_vars)
-#' print(ordered_vars)
+
 arrange_variables <- function(var_list) {
 
   var_names <- sapply(var_list, function(varElem) varElem$name)

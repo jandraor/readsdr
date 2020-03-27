@@ -33,3 +33,21 @@ test_that("extract_variables() ignores graph functions", {
   expected_vars <- c("a", "b")
   expect_equal(actual_vars, expected_vars)
 })
+
+test_that("extract_variables() returns unique elements", {
+  test_lhs      <- "test_var"
+  equation      <- "a^2 + 2*a*b + b^2"
+  actual_vars   <- extract_variables(test_lhs, equation)
+  actual_vars   <- sort(actual_vars)
+  expected_vars <- c("a", "b")
+  expect_equal(actual_vars, expected_vars)
+})
+
+test_that("extract_variables() ignores ifelse functions", {
+  test_lhs      <- "test_var"
+  equation      <- "ifelse(a + b, a, b)"
+  actual_vars   <- extract_variables(test_lhs, equation)
+  actual_vars   <- sort(actual_vars)
+  expected_vars <- c("a", "b")
+  expect_equal(actual_vars, expected_vars)
+})
