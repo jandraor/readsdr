@@ -1,5 +1,15 @@
 extract_structure_from_XMILE <- function(filepath) {
-  raw_xml    <- xml2::read_xml(filepath)
+
+  file_extension <- stringr::str_match(filepath, "^.+\\.(.+)$")[[2]]
+
+  if(file_extension == "stmx") {
+    raw_xml    <- xml2::read_xml(filepath)
+  }
+
+  if(file_extension == "xmile") {
+    raw_xml    <- readChar(filepath, file.info(filepath)$size) %>%
+      sanitise_xml() %>% xml2::read_xml()
+  }
 
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
