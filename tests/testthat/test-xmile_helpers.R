@@ -149,6 +149,24 @@ test_that("sanitise_aux_equation() translates OR operator", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_aux_equation() translates = operator", {
+  actual_val <- sanitise_aux_equation('a = b')
+  expected_val <- 'a==b'
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("sanitise_aux_equation() does not misinterpret greater or equal to", {
+  actual_val <- sanitise_aux_equation('a >= b')
+  expected_val <- 'a>=b'
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("sanitise_aux_equation() translates time variable", {
+  actual_val <- sanitise_aux_equation('Time + startTime')
+  expected_val <- 'time+startTime'
+  expect_equal(actual_val, expected_val)
+})
+
 #===============================================================================
 test_that("translate_ifelse() returns an R-equivalent equation for Stella's XMILE", {
   test_equation <- "IF(Backlog > supply_capacity)\nTHEN supply_capacity\nELSE Backlog"

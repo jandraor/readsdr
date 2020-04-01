@@ -84,6 +84,8 @@ sanitise_aux_equation <- function(equation) {
     stringr::str_replace_all("\\bMAX\\b", "max") %>%
     stringr::str_replace_all(":AND:", "&") %>%
     stringr::str_replace_all(":OR:", "|") %>%
+    stringr::str_replace_all("(?<!<|>)=", "==") %>%
+    stringr::str_replace_all("\\bTime\\b", "time") %>%
     eval_constant_expr() # Must go at the end
 }
 
