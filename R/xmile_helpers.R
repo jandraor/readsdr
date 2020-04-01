@@ -82,7 +82,9 @@ sanitise_aux_equation <- function(equation) {
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
     stringr::str_replace_all("\\bMAX\\b", "max") %>%
-    eval_constant_expr()
+    stringr::str_replace_all(":AND:", "&") %>%
+    stringr::str_replace_all(":OR:", "|") %>%
+    eval_constant_expr() # Must go at the end
 }
 
 translate_ifelse <- function(equation) {
