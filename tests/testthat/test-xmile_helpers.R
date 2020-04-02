@@ -211,3 +211,16 @@ test_that("eval_constant_expr() is not affected by elements in the global enviro
   expected_val  <- "a + 3"
   expect_equal(actual_val, expected_val)
 })
+
+#===============================================================================
+test_that("check_elem_name() throws an error in the presence of invalid names", {
+  test_name <- "a+"
+  expect_error(check_elem_name(test_name))
+})
+
+test_that("check_elem_name() returns the input if there is no error", {
+  test_name    <- "a"
+  actual_val   <- check_elem_name(test_name)
+  expected_val <- "a"
+  expect_equal(actual_val, expected_val)
+})

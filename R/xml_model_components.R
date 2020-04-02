@@ -60,7 +60,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
     stocks_list[[i]]$equation <- netflow
 
     stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
-      sanitise_elem_name()
+        sanitise_elem_name() %>% check_elem_name()
 
     stocks_list[[i]]$name <- stock_name
 
@@ -122,7 +122,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
 
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%
-      sanitise_elem_name()
+      sanitise_elem_name() %>% check_elem_name()
 
     # if the aux is a variable
     if(!is_const) {

@@ -124,3 +124,14 @@ eval_constant_expr <- function(equation) {
   )
 }
 
+check_elem_name <- function(elem_name) {
+  is_valid <- make.names(elem_name) == elem_name
+
+  if(!is_valid) {
+    error_message <- paste0(elem_name , " is not a valid name for a variable")
+    stop(error_message, call. = FALSE)
+  }
+
+  elem_name
+}
+
