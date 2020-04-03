@@ -224,3 +224,26 @@ test_that("check_elem_name() returns the input if there is no error", {
   expected_val <- "a"
   expect_equal(actual_val, expected_val)
 })
+
+# Translate STEP functions======================================================
+
+test_that("translate_step() returns the correct translation for a simple STEP", {
+  test_equation <- "STEP(10, 5)"
+  actual_val    <- translate_step(test_equation)
+  expected_val  <- "ifelse(time >= 5, 10, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_step() returns the correct translation for a sum with STEP", {
+  test_equation <- "10 + STEP(10, 5)"
+  actual_val    <- translate_step(test_equation)
+  expected_val  <- "10 + ifelse(time >= 5, 10, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_step() returns the correct translation for multiple STEP", {
+  test_equation <- "STEP(10, 5) + STEP(10, 10) + STEP(10, 20)"
+  actual_val    <- translate_step(test_equation)
+  expected_val  <- "ifelse(time >= 5, 10, 0) + ifelse(time >= 10, 10, 0) + ifelse(time >= 20, 10, 0)"
+  expect_equal(actual_val, expected_val)
+})

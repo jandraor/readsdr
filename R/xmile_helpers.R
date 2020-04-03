@@ -78,6 +78,7 @@ sanitise_elem_name <- function(elem_name) {
 
 sanitise_aux_equation <- function(equation) {
   equation %>% translate_ifelse() %>%
+    translate_step() %>%
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
@@ -133,5 +134,20 @@ check_elem_name <- function(elem_name) {
   }
 
   elem_name
+}
+
+translate_step <- function(equation) {
+  pattern_step  <- stringr::regex("STEP\\((.+?),(.+?)\\)")
+  there_is_step <- stringr::str_detect(equation, pattern_step)
+
+  if(there_is_step) {
+    new_equation <- stringr::str_replace(equation, pattern_step,
+                                     "ifelse(time >=\\2, \\1, 0)")
+
+    new_equation <- translate_step(new_equation)
+    equation <- new_equation
+  }
+
+  equation
 }
 
