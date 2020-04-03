@@ -339,3 +339,35 @@ test_that("create_level_obj_xmile() returns the expected object in the presence 
                        initValue = 100)
   expect_equal(actual_val, expected_val)
 })
+
+test_that("create_level_obj_xmile() throws an error when there are no stocks", {
+  test_stocks_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+		  <variables>
+		    <aux name="var1">
+				  <eqn>20</eqn>
+			  </aux>
+			  <aux name="var2">
+				  <eqn>30</eqn>
+			  </aux>
+			  <aux name="var3">
+				  <eqn>var1 + var2</eqn>
+			  </aux>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:stock")
+
+  test_vars <- list(
+    list(name = "var3",
+         equation = "var1+var2"))
+
+  test_consts <- list(
+    list(name = "var1",
+         value = "20"),
+    list(name = "var2",
+         value = "30"))
+
+  expect_error(create_level_obj_xmile(test_stocks_xml, test_vars, test_consts))
+})

@@ -19,6 +19,9 @@ create_param_obj_xmile <- function(sim_specs) {
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants) {
 
+  if(length(stocks_xml) == 0L) stop("A model must contain stocks",
+                                    call. = FALSE)
+
   # This makes consts & auxs have the same properties
   constants <- lapply(constants, function(const) {
     list(name = const$name, equation = const$value)
