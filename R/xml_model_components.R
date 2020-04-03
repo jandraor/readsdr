@@ -33,27 +33,36 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
   for(i in seq_len(n_stocks)){
     stock_xml <- stocks_xml[[i]]
 
-    inflow  <- stock_xml %>% xml2::xml_find_first(".//d1:inflow") %>%
-      xml2::xml_text() %>%
-      sanitise_elem_name()
+    inflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
+      xml2::xml_text() %>% sanitise_elem_name()
+    n_inflow    <- length(inflow_list)
 
-    outflow <- stock_xml %>% xml2::xml_find_first(".//d1:outflow") %>%
-      xml2::xml_text()  %>%
-      sanitise_elem_name()
-
-    if(!is.na(inflow) && !is.na(outflow)) {
-      netflow <- paste(inflow, outflow, sep = "-")
+    if(n_inflow > 0L) {
+      text_inflow  <- paste(inflow_list, collapse = "+")
     }
 
-    if(!is.na(inflow) && is.na(outflow)) {
-      netflow <- inflow
+    outflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
+      xml2::xml_text() %>% sanitise_elem_name()
+
+    n_outflow    <- length(outflow_list)
+
+    if(n_outflow > 0L) {
+      text_outflow  <- paste0("-", outflow_list) %>% paste(collapse = "")
     }
 
-    if(is.na(inflow) && !is.na(outflow)) {
-      netflow <- paste0("-", outflow)
+    if(n_inflow > 0L && n_outflow > 0L) {
+      netflow <- paste0(text_inflow, text_outflow)
     }
 
-    if(is.na(inflow) && is.na(outflow)) {
+    if(n_inflow > 0L && n_outflow == 0L) {
+      netflow <- text_inflow
+    }
+
+    if(n_inflow == 0L && n_outflow > 0L) {
+      netflow <- text_outflow
+    }
+
+    if(n_inflow == 0L && n_outflow == 0L) {
       netflow <- "0"
     }
 

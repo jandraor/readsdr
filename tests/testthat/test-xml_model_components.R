@@ -165,7 +165,8 @@ test_that("create_vars_consts_obj_xmile() sanitises constant expressions", {
   expect_equal(actual_obj, expected_obj)
 })
 
-#===============================================================================
+# create_level_obj_xmile()======================================================
+
 test_that("create_level_obj_xmile() returns the expected object", {
   test_stocks_xml <- xml2::read_xml('
   <root>
@@ -265,4 +266,76 @@ test_that("create_level_obj_xmile() works should levels depend on other levels i
          initValue = 50))
 
   expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_level_obj_xmile() returns the expected object in the presence of multiple outflows", {
+  test_stocks_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+        <stock name="Population">
+				  <eqn>100</eqn>
+				  <inflow>births</inflow>
+				  <outflow>emigration</outflow>
+				  <outflow>deaths</outflow>
+			  </stock>
+			</variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:stock")
+
+  test_vars <- list(
+    list(name = "births",
+         equation = "Population*0.02"),
+    list(name = "deaths",
+         equation = "Population*0.01"),
+    list(name = "emigration",
+         equation = "Population*0.01")
+    )
+
+  test_consts <- list()
+
+  level_obj    <- create_level_obj_xmile(test_stocks_xml,
+                                         test_vars, test_consts)
+  actual_val   <- level_obj[[1]]
+  expected_val <- list(name = "Population",
+                       equation = "births-emigration-deaths",
+                       initValue = 100)
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("create_level_obj_xmile() returns the expected object in the presence of multiple inflows", {
+  test_stocks_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+        <stock name="Population">
+				  <eqn>100</eqn>
+				  <inflow>births</inflow>
+				  <inflow>immigration</inflow>
+				  <outflow>deaths</outflow>
+			  </stock>
+      </variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:stock")
+
+  test_vars <- list(
+    list(name = "births",
+         equation = "Population*0.01"),
+    list(name = "deaths",
+         equation = "Population*0.02"),
+    list(name = "immigration",
+         equation = "Population*0.01")
+  )
+
+  test_consts <- list()
+
+  level_obj    <- create_level_obj_xmile(test_stocks_xml,
+                                         test_vars, test_consts)
+  actual_val   <- level_obj[[1]]
+  expected_val <- list(name = "Population",
+                       equation = "births+immigration-deaths",
+                       initValue = 100)
+  expect_equal(actual_val, expected_val)
 })
