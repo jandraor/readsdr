@@ -21,6 +21,8 @@
 
 arrange_variables <- function(var_list) {
 
+  if (length(var_list) == 0L) return (var_list)
+
   var_names <- sapply(var_list, function(varElem) varElem$name)
 
   n_equations <- length(var_names)

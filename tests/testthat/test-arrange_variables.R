@@ -26,3 +26,10 @@ test_that("arrange_variables() works when there are duplicated equations", {
   ordered_vars <- arrange_variables(variables)
   expect_equal(ordered_vars, expected_list)
 })
+
+test_that("arrange_variables() returns an empty list if the input is an empty list", {
+  variables    <- list()
+  actual_val   <- arrange_variables(list())
+  expected_val <- list()
+  expect_equal(actual_val, expected_val)
+})
