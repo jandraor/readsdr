@@ -79,6 +79,7 @@ sanitise_elem_name <- function(elem_name) {
 sanitise_aux_equation <- function(equation) {
   equation %>% translate_ifelse() %>%
     translate_step() %>%
+    translate_pulse_train() %>%
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
@@ -149,5 +150,47 @@ translate_step <- function(equation) {
   }
 
   equation
+}
+
+translate_pulse_train <- function(equation) {
+  # pattern pulse train
+  pattern_pt  <- stringr::regex("PULSE_TRAIN\\((.+?),(.+?),(.+?),(.+?)\\)")
+  # is there a pulse train?
+  there_is_pt <- stringr::str_detect(equation, pattern_pt)
+
+  if(there_is_pt) {
+    pt_condition <- create_pt_condition(equation, pattern_pt)
+    translation  <- stringr::str_glue("ifelse({pt_condition}, 1, 0)")
+    new_equation <- stringr::str_replace(equation, pattern_pt, translation)
+
+    equation     <- new_equation
+  }
+
+  equation
+}
+
+# Create condition for pulse train
+create_pt_condition <- function(equation, pattern_pt) {
+  match_result <- stringr::str_match(equation, pattern_pt)
+  start_pt     <- as.numeric(match_result[[2]])
+  duration_pt  <- as.numeric(match_result[[3]])
+  repeat_pt    <- as.numeric(match_result[[4]])
+  end_pt       <- as.numeric(match_result[[5]])
+
+  intervals_start      <- seq(from = start_pt, to = end_pt, by = repeat_pt)
+  intervals_should_end <- intervals_start + duration_pt
+  intervals_actual_end <- ifelse(intervals_should_end > end_pt, end_pt,
+                                 intervals_should_end)
+
+  comparison_end_intv  <- mapply(c, intervals_should_end, intervals_actual_end,
+                                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
+
+  conditions <- purrr::map2_chr(intervals_start, comparison_end_intv, ~ {
+    operator     <- ifelse(.y[[1]] == .y[[2]], "<", "<=")
+
+    stringr::str_glue("(time >= {.x} & time {operator} {.y[[2]]})")
+  })
+
+  paste(conditions, collapse = " | ")
 }
 
