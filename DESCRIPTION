@@ -17,7 +17,9 @@ RoxygenNote: 6.1.1
 Suggests: 
     testthat (>= 2.1.0),
     igraph,
-    deSolve
+    deSolve,
+    knitr,
+    rmarkdown
 Imports: 
     stringr,
     xml2,
@@ -26,3 +28,4 @@ Imports:
     rlang,
     stringi
 BugReports: https://github.com/jandraor/readsdr/issues
+VignetteBuilder: knitr

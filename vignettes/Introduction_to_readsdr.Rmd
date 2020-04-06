@@ -1,0 +1,187 @@
+---
+title: "Introduction to readsdr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction_to_readsdr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Model: SIR
+----------
+
+The SIR model is an epidemiological model, due to [Kermack and McKendrick](https://royalsocietypublishing.org/doi/pdf/10.1098/rspa.1927.0118), 
+that computes the theoretical number of people infected with a contagious 
+illness in a closed population over time. The SIR models the flows of people 
+between three states:
+
+Susceptible (S) 
+  : number of individuals who are not infected but could become infected.
+  
+Infected (I) 
+  : number of individuals who have the disease and can transmit it to the 
+  susceptibles. 
+
+Recovered (R) 
+  : number of individuals who have recovered from the disease and are immune 
+  from getting it again.
+  
+
+The model assumes a time scale short enough that births and deaths can be 
+neglected.
+
+The SIR model is used where individuals infect each other directly. Contact 
+between people is also modeled to be random.
+
+The rate that people become infected is proportional to the number of people who
+are infected, and the number of people who are susceptible. If there are lots of
+people infected, the chances of a susceptible coming into contact with someone 
+who is infected is high. Likewise, if there are very few people who are 
+susceptible, the chances of a susceptible coming into contact with an infected 
+is lower (since most of the contact would be between either infected or 
+recovered). In mathematical notation, the model is described by the following
+equations:
+
+\begin{equation}
+  \frac{dS}{dt} = -\beta SI
+\end{equation}
+
+\begin{equation}
+  \frac{dI}{dt} = \beta SI - \frac{I}{rd}
+\end{equation}
+
+\begin{equation}
+  \frac{dR}{dt} = \frac{I}{rd}
+\end{equation}
+
+\begin{equation}
+  \beta = \frac{e}{n}
+\end{equation}
+
+\begin{equation}
+  e = c \times i
+\end{equation}
+
+$n$ denotes the population size; $\beta$ the per capita rate at which two 
+specific individuals come into effective contact per unit time; $e$ the 
+effective contacts per infected individual; $c$ the contacts per person per 
+unit time; and $i$ the infectivity. 
+
+There exists several ways to implement this model. On one side of the spectrum,
+we find specialised software such as [Vensim](http://vensim.com/) and 
+[Stella](https://www.iseesystems.com/store/products/stella-architect.aspx) that 
+offer friendly graphical user interfaces to seamlessly design complex models, 
+emphasising on a systems perspective. _Figure 1_ presents the implementation of
+the SIR model in Stella.
+
+
+```{r, echo=FALSE, fig.cap="Figure 1. SIR", out.width = '80%'}
+filepath <- system.file("models/", "SIR_diagram.png", package = "readsdr")
+knitr::include_graphics(filepath)
+```
+
+
+
+On the other side, we can implement the model in flexible and powerful 
+statistical environments such as R that offer innumerable tools for numerical 
+analysis and data visualisation. Specifically, models can be implemented with 
+the [deSolve](https://www.jstatsoft.org/article/view/v033i09) library (see 
+[Duggan](https://www.springer.com/gp/book/9783319340418) for more details).
+This alternative requires the user to type all model equations in computational
+order. For large models, this task can be cumbersome and may lead to incorrect
+implementations.
+
+In order to bridge these two approaches, the package **readsdr** fills the gap
+by automating the translation from Vensim and Stella models to R. Such a process
+is achieved by the function **read_xmile**.
+
+
+```{r}
+library(readsdr)
+
+filepath <- system.file("models/", "SIR.stmx", package = "readsdr")
+mdl      <- read_xmile(filepath) 
+```
+
+_read_xmile_ returns a list of three elements. The element _description_ 
+contains the simulation parameters and the model variables as lists. From this
+element, we can replicate the simulation period specified originally in 
+Stella.
+
+```{r}
+# Create the start time, finish time, and time step
+START  <- mdl$description$parameters$start
+FINISH <- mdl$description$parameters$stop
+STEP   <- mdl$description$parameters$dt
+
+# Create time vector
+simtime <- seq(START, FINISH, by = STEP)
+```
+
+To simulate a model with deSolve, we use the function _ode_. This routine
+takes as arguments, a vector with the model's stocks, the simulation time,
+the equations wrapped in a function, the model's constants and the integration
+method. Indeed, the second element from _read_xmile_ is a list with all these
+inputs but the integration method. deSolve returns a matrix which then is 
+converted to a dataframe for convenience.
+
+
+```{r}
+library(deSolve)
+
+output_deSolve <- ode(y      = mdl$deSolve_components$stocks,
+                      times  = simtime,
+                      func   = mdl$deSolve_components$func,
+                      parms  = mdl$deSolve_components$consts, 
+                      method = "euler")
+
+result_df <- data.frame(output_deSolve)
+
+head(result_df)
+```
+
+With the results in a data frame, we can manipulate the data structure for 
+further analysis and data visualisation. In this case, we simply produce a plot
+with the behaviour over time using ggplot2, a library part of the [tidyverse](www.tidyverse.org).
+See [Duggan (2018)](https://onlinelibrary.wiley.com/doi/abs/10.1002/sdr.1600) for
+more details.
+
+```{r, message = FALSE, warning = FALSE, fig.align='center', fig.width = 6}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+tidy_result_df <- result_df %>% 
+  select(time, Susceptible, Infected, Recovered) %>%
+  pivot_longer(-time, names_to = "Variable") 
+
+ggplot(tidy_result_df, aes(x = time, y = value)) +
+  geom_line(aes(group = Variable, colour = Variable)) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+```
+
+Finally, the third element from read_xmile is a list of two data frames. 
+These structures describe the model as a graph in terms of vertices and edges,
+and serve as input to the functions in [igraph](igraph.org), a library 
+collection for creating and manipulating graphs and analyzing networks.
+
+```{r, fig.align='center', fig.height=7, fig.width=7, message=FALSE, warning=FALSE}
+library(igraph)
+
+gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = TRUE, 
+                               vertices = mdl$graph_dfs$nodes)
+
+V(gr)$shape <- ifelse(V(gr)$type == "stock", "rectangle", "circle")
+
+plot.igraph(gr, edge.arrow.size = 0.25,
+            vertex.label.cex = 1, layout = layout.lgl(gr))
+```
+
