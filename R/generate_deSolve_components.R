@@ -41,7 +41,12 @@ construct_return_statement <- function(stocks, variables, constants) {
     paste0(var$name, ' = ', var$name)
   })
 
-  vars_in_rs  <- paste(var_names, collapse = ",\n")
+
+  if(length(var_names) > 0) {
+    vars_in_rs  <- paste(var_names, collapse = ",\n")
+  } else {
+    vars_in_rs  <- NULL
+  }
 
   const_names <- sapply(constants, function(const) {
     paste0(const$name, ' = ', const$name)
