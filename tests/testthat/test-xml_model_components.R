@@ -1,4 +1,4 @@
-
+# create_vars_consts_obj_xmile() ===============================================
 test_that("create_vars_consts_obj_xmile() returns an empty list there are no
   vars and consts", {
 
@@ -161,6 +161,30 @@ test_that("create_vars_consts_obj_xmile() sanitises constant expressions", {
       list(name  = "growth_rate",
            value = 0.1)
     )
+  )
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_vars_consts_obj_xmile() works with PULSE from Vensim", {
+  test_var_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+    <variables>
+      <aux name="growth_rate">
+				<eqn>0.01 * PULSE(1, 0)					</eqn>
+			</aux>
+		</variables>
+    </doc1>
+  </root>') %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "Vensim")
+
+  expected_obj <- list(
+    variables = list(
+      list(name     = "growth_rate",
+           equation = "0.01*ifelse(time==1,1,0)")),
+    constants = list()
   )
   expect_equal(actual_obj, expected_obj)
 })

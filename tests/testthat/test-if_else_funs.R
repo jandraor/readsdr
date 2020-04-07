@@ -56,6 +56,7 @@ test_that("translate_step() returns the correct translation for multiple STEP", 
 
 # Translate PULSE_TRAIN function================================================
 context("Translate PULSE TRAIN")
+
 test_that("translate_pulse_train() returns the correct translation for a simple PULSE_TRAIN", {
   test_equation <- "PULSE_TRAIN(5, 3, 10, 20)"
   actual_val    <- translate_pulse_train(test_equation)
@@ -78,3 +79,29 @@ test_that("create_pt_condition() returns the correct condition when the end of i
   expected_val  <- "(time >= 5 & time < 8) | (time >= 15 & time <= 17)"
   expect_equal(actual_val, expected_val)
 })
+
+# Translate PULSE function======================================================
+context("Translate PULSE")
+
+test_that("translate_pulse() returns the correct translation for a PULSE from Vensim with width equal to 0", {
+  test_equation <- "PULSE(1, 0)"
+  actual_val    <- translate_pulse(test_equation, "Vensim")
+  expected_val  <- "ifelse(time == 1, 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_pulse() returns the correct translation for a PULSE from Vensim with width greater than 0", {
+  test_equation <- "PULSE(1, 1)"
+  actual_val    <- translate_pulse(test_equation, "Vensim")
+  expected_val  <- "ifelse(time >= 1 & time < 2, 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_pulse() returns the correct translation for a compounded expression that includes a PULSE from Vensim", {
+  test_equation <- "0.1 * PULSE(1, 0)"
+  actual_val    <- translate_pulse(test_equation, "Vensim")
+  expected_val  <- "0.1 * ifelse(time == 1, 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+

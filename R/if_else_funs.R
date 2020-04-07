@@ -1,14 +1,17 @@
 
 translate_if_else_functions <- function(equation, vendor) {
-  equation %>%
-    translate_ifelse(vendor) %>%
+  translated_equation <- translate_ifelse(equation, vendor) %>%
     translate_step() %>%
-    translate_pulse_train()
+    translate_pulse(vendor)
+
+  if(vendor == "Vensim") {
+    translated_equation <- translate_pulse_train(translated_equation)
+  }
+
+  translated_equation
 }
 
 translate_ifelse <- function(equation, vendor) {
-
-  # ifelse_Stella <- stringr::str_detect(equation, "\\bIF\\b")
 
   if(vendor == "isee") {
     there_is_if_statement <- stringr::str_detect(equation, "\\bIF\\b")
@@ -89,4 +92,29 @@ create_pt_condition <- function(equation, pattern_pt) {
   })
 
   paste(conditions, collapse = " | ")
+}
+
+# Translate Pulse
+
+translate_pulse <- function(equation, vendor) {
+
+  if(vendor == "Vensim") {
+    pattern_pulse  <- stringr::regex("(.*?)PULSE\\((.+?),(.+?)\\)(.*?)",
+                                     dotall = TRUE)
+    there_is_pulse <- stringr::str_detect(equation, pattern_pulse)
+
+    if(there_is_pulse) {
+      string_match <- stringr::str_match(equation, pattern_pulse)
+      text_before  <- string_match[[2]]
+      text_after   <- string_match[[5]]
+      start_pulse  <- as.numeric(string_match[[3]])
+      width_pulse  <- as.numeric(string_match[[4]])
+      end_pulse    <- start_pulse + width_pulse
+      if_true      <- paste0('== ', start_pulse)
+      if_false     <- stringr::str_glue(">= {start_pulse} & time < {end_pulse}")
+      condition    <- ifelse(width_pulse == 0L, if_true, if_false)
+      return(stringr::str_glue("{text_before}ifelse(time {condition}, 1, 0){text_after}"))
+    }
+  }
+  equation
 }

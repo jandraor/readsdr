@@ -173,6 +173,12 @@ test_that("sanitise_aux_equation() translates time variable from Stella", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_aux_equation() ignores the correct equal operator", {
+  actual_val <- sanitise_aux_equation('a == b', "Vensim")
+  expected_val <- 'a==b'
+  expect_equal(actual_val, expected_val)
+})
+
 #===============================================================================
 test_that("eval_constant_expr() returns the value of a constant expression", {
   test_equation <- "2 + 2"
