@@ -1,28 +1,37 @@
 # Translate IF ELSE statements==================================================
-context("translate IF ELSE")
+context("Translate IF ELSE")
 
 test_that("translate_ifelse() returns an R-equivalent equation for Stella's XMILE", {
   test_equation <- "IF(Backlog > supply_capacity)\nTHEN supply_capacity\nELSE Backlog"
-  actual_val    <- translate_ifelse(test_equation)
+  actual_val    <- translate_ifelse(test_equation, "isee")
   expected_val  <- "ifelse(Backlog > supply_capacity,  supply_capacity\n,  Backlog)"
   expect_equal(actual_val, expected_val)
 })
 
-test_that("translate_ifelse() does not alter equations when there are no ifelse statements", {
+test_that("translate_ifelse() does not alter equations when there are no ifelse statements from Vensim XMILE", {
   test_equation <- "a + b"
-  actual_val    <- translate_ifelse(test_equation)
+  actual_val    <- translate_ifelse(test_equation, "Vensim")
+  expected_val  <- "a + b"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_ifelse() does not alter equations when there are no ifelse statements from Stella XMILE", {
+  test_equation <- "a + b"
+  actual_val    <- translate_ifelse(test_equation, "isee")
   expected_val  <- "a + b"
   expect_equal(actual_val, expected_val)
 })
 
 test_that("translate_ifelse() returns an R-equivalent equation for Vensim's XMILE", {
   test_equation <- "IF_THEN_ELSE(Backlog > Supply_capacity, Supply_capacity, Backlog)"
-  actual_val    <- translate_ifelse(test_equation)
+  actual_val    <- translate_ifelse(test_equation, "Vensim")
   expected_val  <- "ifelse(Backlog > Supply_capacity, Supply_capacity, Backlog)"
   expect_equal(actual_val, expected_val)
 })
 
 # Translate STEP function=======================================================
+
+context("Translate STEP")
 
 test_that("translate_step() returns the correct translation for a simple STEP", {
   test_equation <- "STEP(10, 5)"
@@ -46,7 +55,7 @@ test_that("translate_step() returns the correct translation for multiple STEP", 
 })
 
 # Translate PULSE_TRAIN function================================================
-context("translate PULSE TRAIN")
+context("Translate PULSE TRAIN")
 test_that("translate_pulse_train() returns the correct translation for a simple PULSE_TRAIN", {
   test_equation <- "PULSE_TRAIN(5, 3, 10, 20)"
   actual_val    <- translate_pulse_train(test_equation)

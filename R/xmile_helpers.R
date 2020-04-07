@@ -75,13 +75,12 @@ sanitise_elem_name <- function(elem_name) {
   elem_name %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\n|\t|~","") %>%
-  stringr::str_replace_all(" |\\\\n", "_")
+    stringr::str_replace_all(" |\\\\n", "_")
 }
 
 sanitise_aux_equation <- function(equation, vendor) {
-  equation %>% translate_ifelse() %>%
-    translate_step() %>%
-    translate_pulse_train() %>%
+  equation %>%
+    translate_if_else_functions(vendor) %>%
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\\bMIN\\b", "min") %>%
