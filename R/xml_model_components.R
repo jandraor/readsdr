@@ -104,7 +104,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
   stocks_list
 }
 
-create_vars_consts_obj_xmile <- function(auxs_xml) {
+create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
 
   #-----------------------------------------------------------------------------
   # Exception for Vensim PRO that adds the variable 'Time'
@@ -130,7 +130,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml) {
   for(i in 1:n_vars_consts){
     aux_xml  <- auxs_xml[[i]]
     equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
-      xml2::xml_text() %>% sanitise_aux_equation()
+      xml2::xml_text() %>% sanitise_aux_equation(vendor)
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
 
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%

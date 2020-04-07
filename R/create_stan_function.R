@@ -30,21 +30,13 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
   variables        <- XMILE_structure$variables
   constants        <- XMILE_structure$constants
 
-  raw_xml       <- xml2::read_xml(filepath)
-  variables_xml <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
-  stocks_xml    <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
   n_stocks      <- length(levels)
   level_names   <- sapply(levels, function(level) level$name)
 
   function_name_line       <- paste0("  real[] ", func_name, "(real t,")
   diff_eq_declaration_line <- paste0("  real dydt[", n_stocks, "];")
 
-  auxs_xml         <- variables_xml %>%
-    xml2::xml_find_all(".//d1:flow|.//d1:aux")
-  vars_and_consts  <- create_vars_consts_obj_xmile(auxs_xml)
-  variables        <- vars_and_consts$variables %>% arrange_variables()
-  constants        <- vars_and_consts$constants
-  const_names      <- sapply(constants, function(constant) constant$name)
+  const_names   <- sapply(constants, function(constant) constant$name)
 
   purrr::walk(override.consts, function(const_list) {
     pos <- which(const_list$name == const_names)

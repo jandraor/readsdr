@@ -14,12 +14,12 @@ test_that("create_vars_consts_obj_xmile() returns an empty list there are no
     </root>') %>%
       xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-    actual_obj   <- create_vars_consts_obj_xmile(auxs_xml)
+    actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee")
     expected_obj <- list(variables = list(), constants = list())
     expect_equal(actual_obj, expected_obj)
   })
 
-test_that("create_vars_consts_obj_xmile() ignores aux Time", {
+test_that("create_vars_consts_obj_xmile() ignores aux Time from Vensim", {
 
   auxs_xml <- xml2::read_xml('
     <root>
@@ -39,7 +39,7 @@ test_that("create_vars_consts_obj_xmile() ignores aux Time", {
     </root>') %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml)
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "Vensim")
   expected_obj <- list(variables = list(
     list(name = "effect", equation = "Population")
   ), constants = list())
@@ -67,7 +67,7 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
   </root>') %>%
               xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-            actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
+            actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "Vensim")
 
             expected_obj <- list(
               variables = list(
@@ -111,7 +111,7 @@ with a graphical function, and the XMILE was producted by STELLA", {
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
 
-  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "isee")
 
   expected_obj <- list(
     variables = list(
@@ -151,7 +151,7 @@ test_that("create_vars_consts_obj_xmile() sanitises constant expressions", {
   </root>') %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml)
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "Vensim")
 
   expected_obj <- list(
     variables = list(

@@ -1,15 +1,29 @@
 
-translate_logical_operators <- function(equation) {
-  equation %>% translate_AND() %>%
-    translate_OR()
+translate_logical_operators <- function(equation, vendor) {
+  equation %>% translate_AND(vendor) %>%
+    translate_OR(vendor)
 }
 
-translate_AND <- function(equation) {
-  equation %>% stringr::str_replace_all(":AND:", "&") %>%
-    stringr::str_replace_all("AND(?=\\(.+\\))", "&")
+translate_AND <- function(equation, vendor) {
+  if(vendor == "Vensim") {
+    equation <- equation %>% stringr::str_replace_all(":AND:", "&")
+  }
+
+  if(vendor == "isee") {
+    equation <- equation %>% stringr::str_replace_all("AND(?=\\(.+\\))", "&")
+  }
+
+  equation
 }
 
-translate_OR <- function(equation) {
-  equation %>% stringr::str_replace_all(":OR:", "|")%>%
-    stringr::str_replace_all("OR(?=\\(.+\\))", "|")
+translate_OR <- function(equation, vendor) {
+  if(vendor == "Vensim") {
+    equation <- stringr::str_replace_all(equation, ":OR:", "|")
+  }
+
+  if(vendor == "isee") {
+    equation <- stringr::str_replace_all(equation , "OR(?=\\(.+\\))", "|")
+  }
+
+  equation
 }
