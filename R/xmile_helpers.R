@@ -11,6 +11,8 @@ extract_structure_from_XMILE <- function(filepath) {
       sanitise_xml() %>% xml2::read_xml()
   }
 
+  vendor <- which_vendor(raw_xml)
+
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
 
@@ -191,5 +193,18 @@ create_pt_condition <- function(equation, pattern_pt) {
   })
 
   paste(conditions, collapse = " | ")
+}
+
+which_vendor <- function(raw_xml) {
+  vendor_raw <- xml2::xml_find_first(raw_xml, ".//d1:vendor") %>%
+    xml2::xml_text()
+
+  is_Vensim <- stringr::str_detect(vendor_raw, "Ventana")
+  is_isee   <- stringr::str_detect(vendor_raw, "isee")
+
+  if(is_Vensim) vendor <- "Vensim"
+  if(is_isee)   vendor <- "isee"
+
+  vendor
 }
 

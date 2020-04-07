@@ -279,4 +279,37 @@ test_that("create_pt_condition() returns the correct condition when the end of i
   expect_equal(actual_val, expected_val)
 })
 
+context("which vendor")
+
+test_that("which_vendor() detects Vensim", {
+  raw_xml         <- xml2::read_xml(
+  '<?xml version="1.0" encoding="utf-8" ?>
+  <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+	  <header>
+		  <product version="1.0" lang="en">Vensim</product>
+		  <vendor>Ventana Systems, Inc.</vendor>
+	  </header>
+  </xmile>')
+  actual_vendor   <- which_vendor(raw_xml)
+  expected_vendor <- "Vensim"
+  expect_equal(actual_vendor, expected_vendor)
+})
+
+test_that("which_vendor() detects isee", {
+  raw_xml         <- xml2::read_xml(
+  '<?xml version="1.0" encoding="utf-8"?>
+   <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
+	   <header>
+		   <smile version="1.0" namespace="std, isee"/>
+		   <name>pop1</name>
+		   <uuid>d683eaba-f1f7-4e19-bace-5420261df8c0</uuid>
+		   <vendor>isee systems, inc.</vendor>
+		   <product version="1.6.2" isee:build_number="1445" isee:saved_by_v1="true" lang="en">Stella Architect</product>
+	   </header>
+   </xmile>')
+  actual_vendor   <- which_vendor(raw_xml)
+  expected_vendor <- "isee"
+  expect_equal(actual_vendor, expected_vendor)
+})
+
 
