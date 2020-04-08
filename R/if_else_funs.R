@@ -38,7 +38,8 @@ translate_ifelse <- function(equation, vendor) {
 }
 
 translate_step <- function(equation) {
-  pattern_step  <- stringr::regex("STEP\\((.+?),(.+?)\\)", ignore_case = TRUE)
+  pattern_step  <- stringr::regex("STEP\\((.+?),(.+?)\\)",
+                                  ignore_case = TRUE, dotall = TRUE)
   there_is_step <- stringr::str_detect(equation, pattern_step)
 
   if(there_is_step) {
@@ -55,7 +56,7 @@ translate_step <- function(equation) {
 translate_pulse_train <- function(equation) {
   # pattern pulse train
   pattern_pt  <- stringr::regex("PULSE_TRAIN\\((.+?),(.+?),(.+?),(.+?)\\)",
-                                ignore_case = TRUE)
+                                ignore_case = TRUE, dotall = TRUE)
   # is there a pulse train?
   there_is_pt <- stringr::str_detect(equation, pattern_pt)
 
@@ -131,6 +132,39 @@ translate_pulse <- function(equation, vendor) {
       if_false     <- stringr::str_glue(">= {start_pulse} & time < {end_pulse}")
       condition    <- ifelse(width_pulse == 0L, if_true, if_false)
       return(stringr::str_glue("{text_before}ifelse(time {condition}, 1, 0){text_after}"))
+    }
+  }
+
+  if(vendor == "isee") {
+    pattern1 <- stringr::regex("PULSE\\((.+),(.+),(.+)\\)",
+                               dotall = TRUE, ignore_case = TRUE)
+    there_is_p1 <- stringr::str_detect(equation, pattern1)
+
+    if(there_is_p1) {
+      string_match <- stringr::str_match(equation, pattern1)
+      volume_p     <- string_match[[2]] # volume pulse
+      start_p      <- string_match[[3]] # start pulse
+      interval     <- string_match[[4]]
+
+      evaluated_interval <- eval_constant_expr(interval)
+
+      if(evaluated_interval == 0L) {
+        replacement <- stringr::str_glue(
+          "ifelse(time =={start_p }, {volume_p} / timestep(), 0)")
+
+        new_equation <- stringr::str_replace(equation, pattern1, replacement)
+        return(new_equation)
+      }
+
+      if(evaluated_interval > 0) {
+
+        pulse_points <- stringr::str_glue(
+          "seq({start_p}, max(time, {start_p}), {evaluated_interval})")
+        replacement <- stringr::str_glue(
+          "ifelse(time %in% {pulse_points}, {volume_p} / timestep(), 0)")
+        new_equation <- stringr::str_replace(equation, pattern1, replacement)
+        return(new_equation)
+      }
     }
   }
   equation
