@@ -59,8 +59,29 @@ translate_pulse_train <- function(equation) {
   there_is_pt <- stringr::str_detect(equation, pattern_pt)
 
   if(there_is_pt) {
-    pt_condition <- create_pt_condition(equation, pattern_pt)
-    translation  <- stringr::str_glue("ifelse({pt_condition}, 1, 0)")
+    match_result <- stringr::str_match(equation, pattern_pt)
+    start_pt    <- match_result[[2]]
+    duration_pt <- match_result[[3]]
+    repeat_pt   <- match_result[[4]]
+    end_pt      <- match_result[[5]]
+    params_pt    <- list(start_pt    = start_pt,
+                         duration_pt = duration_pt,
+                         repeat_pt   = repeat_pt,
+                         end_pt      = end_pt)
+
+    num_params  <- lapply(params_pt, function(param) {
+      suppressWarnings(as.numeric(param))
+    })
+
+    is_any_NA <- any(is.na(num_params))
+
+    if(is_any_NA){
+      translation <- stringr::str_glue(
+        "sd_pulse_train(time, {start_pt},{duration_pt},{repeat_pt},{end_pt})")
+      return(stringr::str_replace(equation, pattern_pt, translation))
+    }
+
+    translation  <- do.call("create_pt_statement", num_params)
     new_equation <- stringr::str_replace(equation, pattern_pt, translation)
 
     equation     <- new_equation
@@ -70,13 +91,7 @@ translate_pulse_train <- function(equation) {
 }
 
 # Create condition for pulse train
-create_pt_condition <- function(equation, pattern_pt) {
-  match_result <- stringr::str_match(equation, pattern_pt)
-  start_pt     <- as.numeric(match_result[[2]])
-  duration_pt  <- as.numeric(match_result[[3]])
-  repeat_pt    <- as.numeric(match_result[[4]])
-  end_pt       <- as.numeric(match_result[[5]])
-
+create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
   intervals_start      <- seq(from = start_pt, to = end_pt, by = repeat_pt)
   intervals_should_end <- intervals_start + duration_pt
   intervals_actual_end <- ifelse(intervals_should_end > end_pt, end_pt,
@@ -91,7 +106,8 @@ create_pt_condition <- function(equation, pattern_pt) {
     stringr::str_glue("(time >= {.x} & time {operator} {.y[[2]]})")
   })
 
-  paste(conditions, collapse = " | ")
+  pt_condition <- paste(conditions, collapse = " | ")
+  stringr::str_glue("ifelse({pt_condition}, 1, 0)")
 }
 
 # Translate Pulse

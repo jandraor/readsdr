@@ -64,19 +64,22 @@ test_that("translate_pulse_train() returns the correct translation for a simple 
   expect_equal(actual_val, expected_val)
 })
 
-test_that("create_pt_condition() returns the correct condition", {
-  test_equation <- "PULSE_TRAIN(5, 3, 10, 20)"
-  pattern_pt    <- stringr::regex("PULSE_TRAIN\\((.+?),(.+?),(.+?),(.+?)\\)")
-  actual_val    <- create_pt_condition(test_equation, pattern_pt)
-  expected_val  <- "(time >= 5 & time < 8) | (time >= 15 & time < 18)"
+test_that("translate_pulse_train() returns the correct translation for a parameterised PULSE_TRAIN", {
+  test_equation <- "PULSE_TRAIN(a, b, c, d)"
+  actual_val    <- translate_pulse_train(test_equation)
+  expected_val  <- "sd_pulse_train(time, a, b, c, d)"
   expect_equal(actual_val, expected_val)
 })
 
-test_that("create_pt_condition() returns the correct condition when the end of intervals is greater than the end time", {
-  test_equation <- "PULSE_TRAIN(5, 3, 10, 17)"
-  pattern_pt    <- stringr::regex("PULSE_TRAIN\\((.+?),(.+?),(.+?),(.+?)\\)")
-  actual_val    <- create_pt_condition(test_equation, pattern_pt)
-  expected_val  <- "(time >= 5 & time < 8) | (time >= 15 & time <= 17)"
+test_that("create_pt_statement() returns the correct condition", {
+  actual_val    <- create_pt_statement(5, 3, 10, 20)
+  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time < 18), 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("create_pt_statement() returns the correct condition when the end of intervals is greater than the end time", {
+  actual_val    <- create_pt_statement(5, 3, 10, 17)
+  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time <= 17), 1, 0)"
   expect_equal(actual_val, expected_val)
 })
 
