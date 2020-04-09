@@ -15,14 +15,13 @@
 sd_pulse_train <- function(time, start_pulse, duration_pulse,
                            repeat_pt, end_pulse) {
 
-  if(time < start_pulse) return (0)
+  if(time < start_pulse | time > end_pulse) return (0)
 
   start_candidates <- seq(start_pulse, time, repeat_pt)
   pos              <- findInterval(time, start_candidates)
   optim_start      <- start_candidates[pos] # Avoids unnecessary previous intervals
 
   optim_end <- min(time, end_pulse) # Avoids unnecessary forward intervals
-
   pt_statement <- create_pt_statement(optim_start, duration_pulse,
                                      repeat_pt, optim_end)
 
@@ -43,6 +42,7 @@ sd_pulse_train <- function(time, start_pulse, duration_pulse,
 create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
 
   if(duration_pt == 0L) {
+
     pulse_points <- stringr::str_glue("seq({start_pt}, {end_pt}, {repeat_pt})")
     pt_statement <- stringr::str_glue("ifelse(time %in% {pulse_points}, 1, 0)")
     return(pt_statement)
@@ -64,4 +64,21 @@ create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
 
   pt_condition <- paste(conditions, collapse = " | ")
   stringr::str_glue("ifelse({pt_condition}, 1, 0)")
+}
+
+
+#' Replicate the behaviour of pulse from Stella
+#'
+#' @param time A number
+#' @param volume A number
+#' @param start_p A number
+#' @param interval A number
+#'
+#' @return A number
+#' @export
+#'
+#' @examples
+sd_pulse_s <- function(time, volume, start_p, interval) {
+  pulse_s_statement <- get_pulse_s_statement(volume, start_p, interval)
+  eval(parse(text = pulse_s_statement))
 }

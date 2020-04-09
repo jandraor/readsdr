@@ -112,26 +112,35 @@ translate_pulse <- function(equation, vendor) {
       start_p      <- string_match[[3]] # start pulse
       interval     <- string_match[[4]]
 
-      evaluated_interval <- eval_constant_expr(interval)
+      interval_num <- suppressWarnings(as.numeric(interval))
 
-      if(evaluated_interval == 0L) {
-        replacement <- stringr::str_glue(
-          "ifelse(time =={start_p }, {volume_p} / timestep(), 0)")
-
-        new_equation <- stringr::str_replace(equation, pattern1, replacement)
+      if(is.na(interval_num)) {
+        new_equation <- stringr::str_glue(
+          "sd_pulse_s(time, {volume_p},{start_p},{interval})"
+        )
         return(new_equation)
       }
 
-      if(evaluated_interval > 0) {
-
-        pulse_points <- stringr::str_glue(
-          "seq({start_p}, max(time, {start_p}), {evaluated_interval})")
-        replacement <- stringr::str_glue(
-          "ifelse(time %in% {pulse_points}, {volume_p} / timestep(), 0)")
-        new_equation <- stringr::str_replace(equation, pattern1, replacement)
-        return(new_equation)
-      }
+      replacement  <- get_pulse_s_statement(volume_p, start_p, interval_num)
+      new_equation <- stringr::str_replace(equation, pattern1, replacement)
+      return(new_equation)
     }
   }
   equation
+}
+
+get_pulse_s_statement <- function(volume_p, start_p, interval_num) {
+
+  if(interval_num == 0L) {
+    statement <- stringr::str_glue(
+      "ifelse(time =={start_p}, {volume_p} / timestep(), 0)")
+    return(statement)
+  }
+
+  if(interval_num > 0) {
+    pulse_points <- stringr::str_glue(
+      "seq({start_p}, max(time, {start_p}), {interval_num})")
+    statement <- stringr::str_glue(
+      "ifelse(time %in% {pulse_points}, {volume_p} / timestep(), 0)")
+  }
 }

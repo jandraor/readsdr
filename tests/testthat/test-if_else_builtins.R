@@ -48,6 +48,12 @@ test_that("sd_pulse_train() works for intervals of size 0", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sd_pulse_train() deals with values after the end ", {
+  actual_val   <- sd_pulse_train(22, 2, 3, 10, 20)
+  expected_val <- 0
+  expect_equal(actual_val, expected_val)
+})
+
 context("create_pt_statement")
 
 test_that("create_pt_statement() returns the correct condition", {
@@ -65,5 +71,22 @@ test_that("create_pt_statement() returns the correct condition when the end of i
 test_that("create_pt_statement() deals with intervals equal to 0", {
   actual_val    <- create_pt_statement(5, 0, 1, 10)
   expected_val  <- "ifelse(time %in% seq(5, 10, 1), 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+# sd_pulse_s ===================================================================
+context("sd_pulse_s")
+
+test_that("sd_pulse_s() returns 1 in an interval equal to zero", {
+  timestep      <- function() 0.25
+  actual_val    <- sd_pulse_s(2, 1, 2, 0)
+  expected_val  <- 4
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("sd_pulse_s() returns 0  in an interval equal to zero", {
+  timestep      <- function() 0.25
+  actual_val    <- sd_pulse_s(1, 1, 2, 0)
+  expected_val  <- 0
   expect_equal(actual_val, expected_val)
 })

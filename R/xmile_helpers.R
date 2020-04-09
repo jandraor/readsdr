@@ -91,6 +91,15 @@ sanitise_aux_equation <- function(equation, vendor) {
     eval_constant_expr() # Must go at the end
 }
 
+#' Evaluate constant expression
+#'
+#' @param equation A string
+#'
+#' @return A string
+#'
+#' @examples
+#' eval_constant_expr(3 + 3) # returns 6
+#' eval_constant_expr(a + 3) # returns a + 3
 eval_constant_expr <- function(equation) {
   tryCatch(
     error = function(cnd) equation,

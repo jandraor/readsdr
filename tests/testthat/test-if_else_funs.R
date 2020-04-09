@@ -126,6 +126,7 @@ test_that("translate_pulse() returns the correct translation for a compounded
   expect_equal(actual_val, expected_val)
 })
 
+# Translate PULSE from Stella===================================================
 context("Translate PULSE from Stella")
 
 test_that("translate_pulse() returns the correct translation for a PULSE with
@@ -165,5 +166,21 @@ test_that("translate_pulse() returns the correct translation for a PULSE with
   expected_val  <- "ifelse(time %in% seq( 2, max(time,  2), 3), 0.1 / timestep(), 0)"
   expect_equal(actual_val, expected_val)
 })
+
+test_that("translate_pulse() returns the correct translation for a PULSE with
+three numeric arguments from Stella and interval higher than 0", {
+
+  test_equation <- "PULSE(0.1, 2, interval_var)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "sd_pulse_s(time, 0.1, 2, interval_var)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("get_pulse_s_statement() returns the correct statement", {
+  actual_val   <- get_pulse_s_statement(1, 2, 0)
+  expected_val <- "ifelse(time ==2, 1 / timestep(), 0)"
+  expect_equal(actual_val, expected_val)
+})
+
 
 
