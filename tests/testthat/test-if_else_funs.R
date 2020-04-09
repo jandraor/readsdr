@@ -74,7 +74,7 @@ context("Translate PULSE TRAIN")
 test_that("translate_pulse_train() returns the correct translation for a simple PULSE_TRAIN", {
   test_equation <- "PULSE_TRAIN(5, 3, 10, 20)"
   actual_val    <- translate_pulse_train(test_equation)
-  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time < 18), 1, 0)"
+  expected_val  <- "sd_pulse_train(time, 5, 3, 10, 20)"
   expect_equal(actual_val, expected_val)
 })
 
@@ -85,29 +85,17 @@ test_that("translate_pulse_train() returns the correct translation for a paramet
   expect_equal(actual_val, expected_val)
 })
 
-test_that("create_pt_statement() returns the correct condition", {
-  actual_val    <- create_pt_statement(5, 3, 10, 20)
-  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time < 18), 1, 0)"
-  expect_equal(actual_val, expected_val)
-})
-
-test_that("create_pt_statement() returns the correct condition when the end of intervals is greater than the end time", {
-  actual_val    <- create_pt_statement(5, 3, 10, 17)
-  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time <= 17), 1, 0)"
-  expect_equal(actual_val, expected_val)
-})
-
 test_that("translate_pulse_train() ignores cases", {
   test_equation <- "pULsE_TRAIn(5, 3, 10, 20)"
   actual_val    <- translate_pulse_train(test_equation)
-  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time < 18), 1, 0)"
+  expected_val  <- "sd_pulse_train(time, 5, 3, 10, 20)"
   expect_equal(actual_val, expected_val)
 })
 
 test_that("translate_pulse_train() deals with breaklines", {
   test_equation <- "PULSE_TRAIN(5,\n3,\n10,\n20)"
   actual_val    <- translate_pulse_train(test_equation)
-  expected_val  <- "ifelse((time >= 5 & time < 8) | (time >= 15 & time < 18), 1, 0)"
+  expected_val  <- "sd_pulse_train(time, 5,\n3,\n10,\n20)"
   expect_equal(actual_val, expected_val)
 })
 

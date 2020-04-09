@@ -1,7 +1,7 @@
 Package: readsdr
 Type: Package
 Title: Translate models from System Dynamics software into R
-Version: 0.0.0.9010
+Version: 0.0.0.9011
 Authors@R: as.person(
     "Jair Andrade <jair.albert.andrade@gmail.com> [aut, cre]"
   )

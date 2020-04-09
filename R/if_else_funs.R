@@ -66,50 +66,16 @@ translate_pulse_train <- function(equation) {
     duration_pt <- match_result[[3]]
     repeat_pt   <- match_result[[4]]
     end_pt      <- match_result[[5]]
-    params_pt    <- list(start_pt    = start_pt,
-                         duration_pt = duration_pt,
-                         repeat_pt   = repeat_pt,
-                         end_pt      = end_pt)
 
-    num_params  <- lapply(params_pt, function(param) {
-      suppressWarnings(as.numeric(param))
-    })
 
-    is_any_NA <- any(is.na(num_params))
-
-    if(is_any_NA){
-      translation <- stringr::str_glue(
+    translation <- stringr::str_glue(
         "sd_pulse_train(time, {start_pt},{duration_pt},{repeat_pt},{end_pt})")
-      return(stringr::str_replace(equation, pattern_pt, translation))
-    }
 
-    translation  <- do.call("create_pt_statement", num_params)
     new_equation <- stringr::str_replace(equation, pattern_pt, translation)
-
-    equation     <- new_equation
+    return(new_equation)
   }
 
   equation
-}
-
-# Create condition for pulse train
-create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
-  intervals_start      <- seq(from = start_pt, to = end_pt, by = repeat_pt)
-  intervals_should_end <- intervals_start + duration_pt
-  intervals_actual_end <- ifelse(intervals_should_end > end_pt, end_pt,
-                                 intervals_should_end)
-
-  comparison_end_intv  <- mapply(c, intervals_should_end, intervals_actual_end,
-                                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
-
-  conditions <- purrr::map2_chr(intervals_start, comparison_end_intv, ~ {
-    operator     <- ifelse(.y[[1]] == .y[[2]], "<", "<=")
-
-    stringr::str_glue("(time >= {.x} & time {operator} {.y[[2]]})")
-  })
-
-  pt_condition <- paste(conditions, collapse = " | ")
-  stringr::str_glue("ifelse({pt_condition}, 1, 0)")
 }
 
 # Translate Pulse
