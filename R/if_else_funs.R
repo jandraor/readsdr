@@ -102,6 +102,8 @@ translate_pulse <- function(equation, vendor) {
   }
 
   if(vendor == "isee") {
+
+    # Pattern 1 is a PULSE with three args
     pattern1 <- stringr::regex("PULSE\\((.+),(.+),(.+)\\)",
                                dotall = TRUE, ignore_case = TRUE)
     there_is_p1 <- stringr::str_detect(equation, pattern1)
@@ -125,7 +127,42 @@ translate_pulse <- function(equation, vendor) {
       new_equation <- stringr::str_replace(equation, pattern1, replacement)
       return(new_equation)
     }
+
+    # Pattern 2 is a PULSE with two args
+
+    pattern2 <- stringr::regex("PULSE\\((.+),(.+)\\)",
+                               dotall = TRUE, ignore_case = TRUE)
+
+    there_is_p2 <- stringr::str_detect(equation, pattern2)
+
+    if(there_is_p2) {
+      string_match <- stringr::str_match(equation, pattern2)
+      volume_p     <- string_match[[2]] # volume pulse
+      start_p      <- string_match[[3]] # start pulse
+      replacement <- stringr::str_glue(
+        "ifelse(time >= {start_p}, {volume_p} / timestep(), 0)")
+      new_equation <- stringr::str_replace(equation, pattern2, replacement)
+      return(new_equation)
+    }
+
+    # Pattern 3 is a PULSE with one arg
+
+    pattern3 <- stringr::regex("PULSE\\((.+)\\)",
+                               dotall = TRUE, ignore_case = TRUE)
+
+    there_is_p3 <- stringr::str_detect(equation, pattern3)
+
+    if(there_is_p3) {
+      string_match <- stringr::str_match(equation, pattern3)
+      volume_p     <- string_match[[2]] # volume pulse
+
+      replacement <- stringr::str_glue("{volume_p} / timestep()")
+      new_equation <- stringr::str_replace(equation, pattern3, replacement)
+      return(new_equation)
+    }
   }
+
+
   equation
 }
 

@@ -176,6 +176,46 @@ three numeric arguments from Stella and interval higher than 0", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("translate_pulse() returns the correct translation for a PULSE with
+two arguments from Stella", {
+
+  test_equation <- "PULSE(0.1, 2)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "ifelse(time >=  2, 0.1 / timestep(), 0)"
+  expect_equal(actual_val, expected_val)
+
+})
+
+test_that("translate_pulse() returns the correct translation for a compounded
+PULSE with two arguments from Stella", {
+
+  test_equation <- "a + PULSE(0.1, 2)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "a + ifelse(time >=  2, 0.1 / timestep(), 0)"
+  expect_equal(actual_val, expected_val)
+
+})
+
+test_that("translate_pulse() returns the correct translation for a PULSE with
+one argument from Stella", {
+
+  test_equation <- "PULSE(0.1)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "0.1 / timestep()"
+  expect_equal(actual_val, expected_val)
+
+})
+
+test_that("translate_pulse() returns the correct translation for a compounded
+PULSE with one argument from Stella", {
+
+  test_equation <- "a + PULSE(0.1)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "a + 0.1 / timestep()"
+  expect_equal(actual_val, expected_val)
+
+})
+
 test_that("get_pulse_s_statement() returns the correct statement", {
   actual_val   <- get_pulse_s_statement(1, 2, 0)
   expected_val <- "ifelse(time ==2, 1 / timestep(), 0)"
