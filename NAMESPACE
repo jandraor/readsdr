@@ -3,5 +3,6 @@
 export(call_graphical_funs)
 export(create_stan_function)
 export(read_xmile)
+export(sd_pulse_s)
 export(sd_pulse_train)
 importFrom(magrittr,"%>%")
