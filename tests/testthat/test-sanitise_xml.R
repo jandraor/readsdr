@@ -79,7 +79,8 @@ test_that("sanitise_xml() does not alter the original xml code", {
         <aux name = "var3">
           <eqn>b + c</eqn>
         </aux>
-      </variables>'
+      </variables>
+    </model>'
 
   actual_output <- sanitise_xml(test_text)
 
@@ -95,7 +96,8 @@ test_that("sanitise_xml() does not alter the original xml code", {
         <aux name = "var3">
           <eqn>b + c</eqn>
         </aux>
-      </variables>'
+      </variables>
+    </model>'
 
   expect_equal(actual_output, expected_output)
 })

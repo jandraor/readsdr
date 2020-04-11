@@ -1,25 +1,16 @@
 extract_structure_from_XMILE <- function(filepath) {
 
-  file_extension <- stringr::str_match(filepath, "^.+\\.(.+)$")[[2]]
-
-  if(file_extension == "stmx") {
-    raw_xml    <- xml2::read_xml(filepath)
-  }
-
-  if(file_extension == "xmile") {
-    raw_xml    <- readChar(filepath, file.info(filepath)$size) %>%
-      sanitise_xml() %>% xml2::read_xml()
-  }
-
-  vendor <- which_vendor(raw_xml)
+  raw_xml <- safe_read(filepath)
+  vendor  <- which_vendor(raw_xml)
 
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
 
-  variables_xml  <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
+  variables_xml   <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
 
   auxs_xml        <- variables_xml %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
   vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor)
   variables       <- vars_and_consts$variables %>% arrange_variables()
   constants       <- vars_and_consts$constants
@@ -132,5 +123,25 @@ which_vendor <- function(raw_xml) {
   if(is_isee)   vendor <- "isee"
 
   vendor
+}
+
+safe_read <- function(filepath) {
+
+  tryCatch(
+    error = function(cnd) {
+
+      tryCatch(
+        error = function(cnd) {
+          stop("Invalid XML file")
+
+        },
+        readChar(filepath, file.info(filepath)$size) %>%
+          sanitise_xml() %>% xml2::read_xml()
+      )
+
+    },
+
+    xml2::read_xml(filepath)
+  )
 }
 

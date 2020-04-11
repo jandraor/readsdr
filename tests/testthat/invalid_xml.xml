@@ -1,0 +1,7 @@
+<model>
+  <variables>
+    <aux name = "var1">
+      <eqn>a < b</eqn>
+    </aux>
+  </variables>
+</model

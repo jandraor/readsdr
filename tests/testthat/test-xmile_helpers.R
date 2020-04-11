@@ -248,4 +248,31 @@ test_that("which_vendor() detects isee", {
   expect_equal(actual_vendor, expected_vendor)
 })
 
+context("Safe read")
+
+test_that("safe_read() extracts the xml from a file", {
+  test_xml <-
+    '<model>
+       <variables>
+         <aux name = "var1">
+           <eqn>a + b</eqn>
+         </aux>
+       </variables>
+    </model>'
+
+  actual_output <- safe_read(test_xml)
+  expect_is(actual_output, "xml_document")
+})
+
+test_that("safe_read() deals with less than operator", {
+  filepath      <- "./test_xml_less_than.xml"
+  actual_output <- safe_read(filepath)
+  expect_is(actual_output, "xml_document")
+})
+
+test_that("safe_read() throws an error for invalid xml", {
+  filepath      <- "./invalid_xml.xml"
+  expect_error(safe_read(filepath), "Invalid XML file")
+})
+
 
