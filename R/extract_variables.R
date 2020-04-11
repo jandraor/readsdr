@@ -14,9 +14,11 @@
 #' @return A character vector with the unique elements in the \code{rhs}
 #'
 #' @examples
+#' \donttest{
 #' lhs <- z
 #' rhs <- x ^ 2 + 2 * x * y + y ^ 2
 #' extract_variables(lhs, rhs)
+#' }
 extract_variables <- function(lhs, rhs) {
   raw_elements <- stringr::str_split(rhs, "\\b")[[1]] %>%
     stringi::stri_remove_empty()

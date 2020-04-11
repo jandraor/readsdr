@@ -13,7 +13,7 @@ translate_graph_func <- function(gf_xml) {
 
   x_points <- seq(x_min, x_max, length.out = length_y)
 
-  graph_fun <- approxfun(
+  graph_fun <- stats::approxfun(
     x = x_points,
     y = ypts,
     method = "linear",
@@ -31,7 +31,7 @@ translate_Vensim_graph_func <- function(equation){
   x_points <- match_data_points[[1]][, 2] %>% as.numeric()
   y_points <- match_data_points[[1]][, 3] %>% as.numeric()
 
-  graph_fun <- approxfun(
+  graph_fun <- stats::approxfun(
     x = x_points,
     y = y_points,
     method = "linear",

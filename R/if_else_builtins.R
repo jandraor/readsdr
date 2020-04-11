@@ -38,7 +38,9 @@ sd_pulse_train <- function(time, start_pulse, duration_pulse,
 #' @return A string
 #'
 #' @examples
+#' \donttest{
 #' create_pt_statement(5, 3, 10, 20)
+#' }
 create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
 
   if(duration_pt == 0L) {

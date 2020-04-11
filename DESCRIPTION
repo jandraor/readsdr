@@ -26,6 +26,8 @@ Imports:
     purrr,
     dplyr,
     rlang,
-    stringi
+    stringi,
+    magrittr,
+    stats
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr

@@ -15,9 +15,11 @@
 #' computational order.
 #'
 #' @examples
+#' \donttest{
 #' unordered_vars <- list(list(name = "b", equation = "a + 1"),
 #'                        list(name = "a", equation = "alpha"))
 #' ordered_vars   <- arrange_variables(unordered_vars)
+#' }
 
 arrange_variables <- function(var_list) {
 
