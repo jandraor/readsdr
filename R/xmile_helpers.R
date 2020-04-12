@@ -78,7 +78,7 @@ sanitise_aux_equation <- function(equation, vendor) {
     stringr::str_replace_all("\\bMAX\\b", "max") %>%
     translate_logical_operators(vendor) %>%
     translate_comparison_operators() %>%
-    stringr::str_replace_all("\\bTime\\b|\\bTIME\\b", "time") %>%
+    translate_time_builtins() %>%
     eval_constant_expr() # Must go at the end
 }
 
