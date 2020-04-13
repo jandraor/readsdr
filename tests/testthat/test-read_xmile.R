@@ -105,7 +105,7 @@ test_that("read_xmile() produces a model function that returns all levels, varia
   }
 })
 
-test_that("read_xmile() returns a nodes dataframe with the correct columns", {
+test_that("read_xmile() returns a nodes-df with the correct columns", {
   for(file in files) {
     mdl   <- read_xmile(file)
     nodes_df <- mdl$graph_dfs$nodes
@@ -231,4 +231,60 @@ test_that("read_xmile() returns the expected stock's initial value", {
   expected_val <- 100
   expect_equal(actual_val, expected_val)
 })
+
+
+sd_simulate <- function(mdl, method = "euler") {
+  # Create the start time, finish time, and time step
+  START  <- mdl$description$parameters$start
+  FINISH <- mdl$description$parameters$stop
+  STEP   <- mdl$description$parameters$dt
+
+  # Create time vector
+  simtime <- seq(START, FINISH, by = STEP)
+
+  data.frame(ode(y      = mdl$deSolve_components$stocks,
+                 times  = simtime,
+                 func   = mdl$deSolve_components$func,
+                 parms  = mdl$deSolve_components$consts,
+                 method = method))
+}
+
+test_that("read_xmile() works for a model that has a NOT statement
+from Stella", {
+  test_model <-
+    '<root>
+      <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+        <header>
+		      <vendor>isee systems, inc.</vendor>
+		    </header>
+	      <sim_specs>
+	        <start>0</start>
+		      <stop>4</stop>
+		      <dt reciprocal="true">4</dt>
+	      </sim_specs>
+	   	  <variables>
+			    <stock name="population">
+				    <eqn>100</eqn>
+				    <inflow>net_growth</inflow>
+			    </stock>
+			    <flow name="net growth">
+				    <eqn>population * growth_rate</eqn>
+			    </flow>
+			    <aux name="growth rate">
+				    <eqn>IF(NOT (TIME = 3)) THEN 0 ELSE 1</eqn>
+			    </aux>
+        </variables>
+      </doc1>
+    </root>'
+
+  mdl    <- read_xmile(test_model)
+  output <- sd_simulate(mdl)
+
+  actual_val   <- output[output$time == 3.25, "population"]
+  expected_val <- 125
+  expect_equal(actual_val, expected_val)
+})
+
+
+
 

@@ -215,6 +215,7 @@ test_that("check_elem_name() returns the input if there is no error", {
   expect_equal(actual_val, expected_val)
 })
 
+# which vendor()================================================================
 context("which vendor")
 
 test_that("which_vendor() detects Vensim", {
