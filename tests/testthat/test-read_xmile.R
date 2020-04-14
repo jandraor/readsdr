@@ -72,7 +72,7 @@ test_that("read_xmile() returns a runnable model", {
     # Create time vector
     simtime <- seq(START, FINISH, by = STEP)
 
-    o <- data.frame(ode(y      = mdl$deSolve_components$stocks,
+    o <- data.frame(deSolve::ode(y      = mdl$deSolve_components$stocks,
                         times  = simtime,
                         func   = mdl$deSolve_components$func,
                         parms  = mdl$deSolve_components$consts,
@@ -95,7 +95,7 @@ test_that("read_xmile() produces a model function that returns all levels, varia
     # Create time vector
     simtime <- seq(START, FINISH, by = STEP)
 
-    o <- data.frame(ode(y = mdl$deSolve_components$stocks,
+    o <- data.frame(deSolve::ode(y = mdl$deSolve_components$stocks,
                         times = simtime,
                         func = mdl$deSolve_components$func,
                         parms = mdl$deSolve_components$consts,
@@ -121,7 +121,7 @@ test_that("read_xmile() returns the correct inputs for constructing a graph", {
   for(file in files) {
     mdl       <- read_xmile(file)
 
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
     expect_is(gr, "igraph")
   }
@@ -135,9 +135,9 @@ test_that("read_xmile() returns the correct number of edges", {
   for(file in files) {
     index     <- which(file == files)
     mdl       <- read_xmile(file)
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
-    n_edges <- gsize(gr)
+    n_edges <- igraph::gsize(gr)
 
     expect_equal(n_edges, expected_edges[index])
   }
@@ -150,9 +150,9 @@ test_that("read_xmile() returns the correct number of nodes", {
     index     <- which(file == files)
     mdl       <- read_xmile(file)
 
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
-    n_nodes <- gorder(gr)
+    n_nodes <- igraph::gorder(gr)
 
     expect_equal(n_nodes, expected_nodes[index])
   }
@@ -165,10 +165,10 @@ test_that("read_xmile() returns the correct number of flows", {
     index     <- which(file == files)
     mdl       <- read_xmile(file)
 
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
 
-    n_flows <- length(E(gr)[[type == "flow"]])
+    n_flows <- length(igraph::E(gr)[[type == "flow"]])
 
     expect_equal(n_flows, expected_flows[index])
   }
@@ -181,10 +181,10 @@ test_that("read_xmile() returns the correct structure for identifying strong com
   for(file in files) {
     index     <- which(file == files)
     mdl       <- read_xmile(file)
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
 
-    strong_components   <- components(gr, mode = "strong")
+    strong_components   <- igraph::components(gr, mode = "strong")
     n_strong_components <- strong_components$no
 
     expect_equal(n_strong_components, expected_sc[index])
@@ -198,16 +198,16 @@ test_that("read_xmile() returns the correct structure for identifying nodes in s
     index     <- which(file == files)
     mdl       <- read_xmile(file)
 
-    gr <- graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
+    gr <- igraph::graph_from_data_frame(mdl$graph_dfs$edges, directed = T,
                                 vertices = mdl$graph_dfs$nodes)
 
-    members <- membership(clusters(gr, mode = "strong"))
+    members <- igraph::membership(igraph::clusters(gr, mode = "strong"))
 
-    strong_subgraphs <- map(unique(members), gr = gr, function (x, gr){
-      induced.subgraph(gr, which(members == x)) })
+    strong_subgraphs <- purrr::map(unique(members), gr = gr, function (x, gr){
+      igraph::induced.subgraph(gr, which(members == x)) })
 
     subgraphs_sizes <- sapply(strong_subgraphs,
-                              function(subgraph) gsize(subgraph))
+                              function(subgraph) igraph::gsize(subgraph))
 
     n_edges_in_sc <- sum(subgraphs_sizes)
 
@@ -242,7 +242,7 @@ sd_simulate <- function(mdl, method = "euler") {
   # Create time vector
   simtime <- seq(START, FINISH, by = STEP)
 
-  data.frame(ode(y      = mdl$deSolve_components$stocks,
+  data.frame(deSolve::ode(y      = mdl$deSolve_components$stocks,
                  times  = simtime,
                  func   = mdl$deSolve_components$func,
                  parms  = mdl$deSolve_components$consts,
