@@ -61,6 +61,33 @@ For reading Vensim models, they must be exported as .xmile.
 `vignette("Introduction_to_readsdr")` gives more detail on how to use
 the package.
 
-<!-- ## Acknowledgments -->
+## Supported builtins
+
+  - **Stella**
+      - Comparison operators (`=`, `<>`)
+      - Logical operators (`AND`, `OR`, `NOT`)
+      - `If Else Then`<sup>1</sup>
+      - Inequality operators (`<`, `>`)
+      - `Pulse` <sup>1</sup>
+      - `Step`
+      - Endogenous table functions
+  - **Vensim**
+      - Comparison operators (`=`, `<>`)
+      - Logical operators (`:AND:`, `:OR:`, `:NOT:`)
+      - `IF_THEN_ELSE`<sup>1</sup>
+      - Inequality operators (`<`, `>`)
+      - `Pulse` <sup>1</sup>
+      - `Pulse Train` <sup>1</sup>
+      - `Step`
+      - Endogenous table functions
+
+<sup>1</sup> Restricted to one-of-a-kind statement per variable.
+
+## Acknowledgments
 
 <!-- Thanks to: -->
+
+## References
+
+[Duggan, J. (2016). *System Dynamics Modeling with R*.
+Springer.](http://www.springer.com/us/book/9783319340418)
