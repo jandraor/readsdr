@@ -5,6 +5,10 @@
 
 <!-- badges: start -->
 
+[![R build
+status](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions?workflow=R-CMD-check)
+[![Codecov test
+coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
 <!-- badges: end -->
 
 ## Overview
@@ -54,7 +58,8 @@ summary(mdl)
 
 For reading Vensim models, they must be exported as .xmile.
 
-`vignette("readsdr")` gives more detail on how to use the package.
+`vignette("Introduction_to_readsdr")` gives more detail on how to use
+the package.
 
 <!-- ## Acknowledgments -->
 
