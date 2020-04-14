@@ -19,7 +19,9 @@ Suggests:
     igraph,
     deSolve,
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2,
+    tidyr
 Imports: 
     stringr,
     xml2,
