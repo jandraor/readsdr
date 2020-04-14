@@ -83,27 +83,37 @@ translate_pulse_train <- function(equation) {
 translate_pulse <- function(equation, vendor) {
 
   if(vendor == "Vensim") {
-    pattern_pulse  <- stringr::regex("(.*?)PULSE\\((.+?),(.+?)\\)(.*?)",
+    pattern_pulse  <- stringr::regex("PULSE\\((.+?),(.+?)\\)",
                                      dotall = TRUE)
     there_is_pulse <- stringr::str_detect(equation, pattern_pulse)
 
     if(there_is_pulse) {
       string_match <- stringr::str_match(equation, pattern_pulse)
-      text_before  <- string_match[[2]]
-      text_after   <- string_match[[5]]
-      start_pulse  <- as.numeric(string_match[[3]])
-      width_pulse  <- as.numeric(string_match[[4]])
-      end_pulse    <- start_pulse + width_pulse
-      if_true      <- paste0('== ', start_pulse)
-      if_false     <- stringr::str_glue(">= {start_pulse} & time < {end_pulse}")
-      condition    <- ifelse(width_pulse == 0L, if_true, if_false)
-      return(stringr::str_glue("{text_before}ifelse(time {condition}, 1, 0){text_after}"))
+      pulse_start  <- string_match[[2]]
+      pulse_width  <- string_match[[3]]
+      start_num    <- suppressWarnings(as.numeric(pulse_start))
+      width_num    <- suppressWarnings(as.numeric(pulse_width))
+
+      if(is.na(start_num) | is.na(width_num)) {
+        replacement  <- stringr::str_glue(
+          "sd_pulse_v(time,{pulse_start},{pulse_width})"
+        )
+        new_equation <- stringr::str_replace(equation, pattern_pulse,
+                                             replacement)
+        return(new_equation)
+      }
+
+      replacement  <- get_pulse_v_statement(start_num, width_num)
+      new_equation <- stringr::str_replace(equation, pattern_pulse,
+                                           replacement)
+      return(new_equation)
     }
   }
 
   if(vendor == "isee") {
 
     # Pattern 1 is a PULSE with three args
+    # It is a pulse train
     pattern1 <- stringr::regex("PULSE\\((.+),(.+),(.+)\\)",
                                dotall = TRUE, ignore_case = TRUE)
     there_is_p1 <- stringr::str_detect(equation, pattern1)
@@ -117,9 +127,11 @@ translate_pulse <- function(equation, vendor) {
       interval_num <- suppressWarnings(as.numeric(interval))
 
       if(is.na(interval_num)) {
-        new_equation <- stringr::str_glue(
+        replacement <- stringr::str_glue(
           "sd_pulse_s(time, {volume_p},{start_p},{interval})"
         )
+        new_equation <- stringr::str_replace(equation, pattern1,
+                                             replacement)
         return(new_equation)
       }
 
@@ -129,6 +141,7 @@ translate_pulse <- function(equation, vendor) {
     }
 
     # Pattern 2 is a PULSE with two args
+    # It is a magnified step
 
     pattern2 <- stringr::regex("PULSE\\((.+),(.+)\\)",
                                dotall = TRUE, ignore_case = TRUE)
@@ -146,6 +159,7 @@ translate_pulse <- function(equation, vendor) {
     }
 
     # Pattern 3 is a PULSE with one arg
+    # It magnifies the variable
 
     pattern3 <- stringr::regex("PULSE\\((.+)\\)",
                                dotall = TRUE, ignore_case = TRUE)
@@ -156,12 +170,11 @@ translate_pulse <- function(equation, vendor) {
       string_match <- stringr::str_match(equation, pattern3)
       volume_p     <- string_match[[2]] # volume pulse
 
-      replacement <- stringr::str_glue("{volume_p} / timestep()")
+      replacement  <- stringr::str_glue("{volume_p} / timestep()")
       new_equation <- stringr::str_replace(equation, pattern3, replacement)
       return(new_equation)
     }
   }
-
 
   equation
 }
@@ -180,4 +193,12 @@ get_pulse_s_statement <- function(volume_p, start_p, interval_num) {
     statement <- stringr::str_glue(
       "ifelse(time %in% {pulse_points}, {volume_p} / timestep(), 0)")
   }
+}
+
+get_pulse_v_statement <- function(pulse_start, pulse_width) {
+  end_pulse <- pulse_start  + pulse_width
+  if_true   <- paste0('== ', pulse_start)
+  if_false  <- stringr::str_glue(">= {pulse_start} & time < {end_pulse}")
+  condition <- ifelse(pulse_width == 0L, if_true, if_false)
+  statement <- stringr::str_glue("ifelse(time {condition}, 1, 0)")
 }

@@ -99,7 +99,7 @@ test_that("translate_pulse_train() deals with breaklines", {
   expect_equal(actual_val, expected_val)
 })
 
-# Translate PULSE function======================================================
+# Translate PULSE function from Vensim==========================================
 context("Translate PULSE from Vensim")
 
 test_that("translate_pulse() returns the correct translation for a PULSE from
@@ -123,6 +123,14 @@ test_that("translate_pulse() returns the correct translation for a compounded
   test_equation <- "0.1 * PULSE(1, 0)"
   actual_val    <- translate_pulse(test_equation, "Vensim")
   expected_val  <- "0.1 * ifelse(time == 1, 1, 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_pulse() returns the correct translation for a parameterised
+PULSE from Vensim", {
+  test_equation <- "PULSE(startTime,duration)"
+  actual_val    <- translate_pulse(test_equation, "Vensim")
+  expected_val  <- "sd_pulse_v(time,startTime,duration)"
   expect_equal(actual_val, expected_val)
 })
 
@@ -176,6 +184,15 @@ three numeric arguments from Stella and interval higher than 0", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("translate_pulse() returns the correct translation for a compounded
+PULSE with three numeric arguments from Stella and interval higher than 0", {
+
+  test_equation <- "test_var + PULSE(0.1, 2, interval_var)"
+  actual_val    <- translate_pulse(test_equation, "isee")
+  expected_val  <- "test_var + sd_pulse_s(time, 0.1, 2, interval_var)"
+  expect_equal(actual_val, expected_val)
+})
+
 test_that("translate_pulse() returns the correct translation for a PULSE with
 two arguments from Stella", {
 
@@ -219,6 +236,12 @@ PULSE with one argument from Stella", {
 test_that("get_pulse_s_statement() returns the correct statement", {
   actual_val   <- get_pulse_s_statement(1, 2, 0)
   expected_val <- "ifelse(time ==2, 1 / timestep(), 0)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("get_pulse_v_statement() returns the correct statement", {
+  actual_val   <- get_pulse_v_statement(1, 2)
+  expected_val <- "ifelse(time >= 1 & time < 3, 1, 0)"
   expect_equal(actual_val, expected_val)
 })
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/if_else_builtins.R
 \name{sd_pulse_s}
 \alias{sd_pulse_s}
-\title{Replicate the behaviour of pulse from Stella}
+\title{Replicate the behaviour of the PULSE function from Stella}
 \usage{
 sd_pulse_s(time, volume, start_p, interval)
 }
@@ -19,5 +19,12 @@ sd_pulse_s(time, volume, start_p, interval)
 A number
 }
 \description{
-Replicate the behaviour of pulse from Stella
+This function must be placed inside the object that will be passed as the
+argument \code{func} to deSolve's \code{ode} function.
+}
+\examples{
+\donttest{
+sd_pulse_s(2, 1, 2, 0)
+}
+
 }

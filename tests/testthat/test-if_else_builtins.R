@@ -91,3 +91,14 @@ test_that("sd_pulse_s() returns 0  in an interval equal to zero", {
   expected_val  <- 0
   expect_equal(actual_val, expected_val)
 })
+
+# sd_pulse_v ===================================================================
+context("sd_pulse_v")
+
+test_that("sd_pulse_v() behaves like a pulse from Vensim", {
+  expect_equal(sd_pulse_v(0, 1, 2), 0)
+  expect_equal(sd_pulse_v(1, 1, 2), 1)
+  expect_equal(sd_pulse_v(2, 1, 2), 1)
+  expect_equal(sd_pulse_v(3, 1, 2), 0)
+  expect_equal(sd_pulse_v(4, 1, 2), 0)
+})
