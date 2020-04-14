@@ -2,7 +2,7 @@
 title: "Introduction to readsdr"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction_to_readsdr}
+  %\VignetteIndexEntry{readsdr}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
