@@ -1,3 +1,20 @@
+get_deSolve_elems <- function(mdl_structure) {
+  levels    <- mdl_structure$levels
+  variables <- mdl_structure$variables
+  constants <- mdl_structure$constants
+
+  ds_model_func <- generate_model_func(variables, levels, constants)
+  ds_stocks     <- generate_stocks_vector(levels)
+  ds_consts     <- generate_constants_vector(constants)
+
+  deSolve_components <- list(
+    stocks = ds_stocks,
+    consts = ds_consts,
+    func   = ds_model_func)
+
+  deSolve_components
+}
+
 generate_stocks_vector <- function(stocks) {
   stocks_vector <- sapply(stocks, function(stock){
     stockElement <- stock$initValue

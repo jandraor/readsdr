@@ -29,15 +29,13 @@
 
 read_xmile <- function(filepath) {
 
-  XMILE_structure  <- extract_structure_from_XMILE(filepath)
-  parameters       <- XMILE_structure$parameters
-  levels           <- XMILE_structure$levels
-  variables        <- XMILE_structure$variables
-  constants        <- XMILE_structure$constants
+  model_structure  <- extract_structure_from_XMILE(filepath)
+  parameters       <- model_structure$parameters
+  levels           <- model_structure$levels
+  variables        <- model_structure$variables
+  constants        <- model_structure$constants
 
-  ds_model_func <- generate_model_func(variables, levels, constants)
-  ds_stocks     <- generate_stocks_vector(levels)
-  ds_consts     <- generate_constants_vector(constants)
+  deSolve_components <- get_deSolve_elems(model_structure)
 
   nodes_df <- generate_nodes_df(levels, variables, constants)
   edges_df <- generate_edges_df(levels, variables, constants)
@@ -48,10 +46,7 @@ read_xmile <- function(filepath) {
       levels     = levels,
       variables  = variables,
       constants  = constants),
-    deSolve_components = list(
-      stocks = ds_stocks,
-      consts = ds_consts,
-      func   = ds_model_func),
+    deSolve_components = deSolve_components,
     graph_dfs = list(
       nodes = nodes_df,
       edges = edges_df
