@@ -1,9 +1,15 @@
 get_deSolve_elems <- function(mdl_structure) {
-  levels    <- mdl_structure$levels
-  variables <- mdl_structure$variables
-  constants <- mdl_structure$constants
+  levels      <- mdl_structure$levels
+  variables   <- mdl_structure$variables
+  constants   <- mdl_structure$constants
 
-  ds_model_func <- generate_model_func(variables, levels, constants)
+
+
+  ds_graphs_funs <- generate_gf_list(variables)
+  there_are_gf   <- ifelse(length(ds_graphs_funs) > 0, TRUE, FALSE)
+
+  ds_model_func <- generate_model_func(variables, levels, constants,
+                                       there_are_gf)
   ds_stocks     <- generate_stocks_vector(levels)
   ds_consts     <- generate_constants_vector(constants)
 
@@ -11,6 +17,10 @@ get_deSolve_elems <- function(mdl_structure) {
     stocks = ds_stocks,
     consts = ds_consts,
     func   = ds_model_func)
+
+  if(there_are_gf){
+     deSolve_components$graph_funs <- ds_graphs_funs
+  }
 
   deSolve_components
 }
@@ -83,21 +93,50 @@ construct_return_statement <- function(stocks, variables, constants) {
   paste0('return (list(', body_return,'))')
 }
 
-generate_model_func <- function (variables, stocks, constants) {
+generate_model_func <- function (variables, stocks, constants, graph_fun) {
   variables        <- arrange_variables(variables)
   var_equations    <- construct_vars_text(variables)
   net_flows        <- construct_nf_text(stocks)
   return_statement <- construct_return_statement(stocks, variables, constants)
 
+  without_graph_fun <- 'with(as.list(c(stocks, auxs)), {'
+  with_graph_fun    <- 'with(as.list(c(stocks, auxs, graph_funs)), {'
+
+  with_statement    <- ifelse(graph_fun, with_graph_fun, without_graph_fun)
+
   func_body <- paste(
-    'with(as.list(c(stocks, auxs)), {',
+    with_statement,
     var_equations,
     net_flows,
     return_statement,
     '})', sep = "\n")
 
+  func_args <- NULL
+
+  if(!graph_fun) {
+    func_args <- rlang::exprs(time = , stocks =, auxs = )
+  }
+
+  if(graph_fun) {
+    func_args <- rlang::exprs(time = , stocks =, auxs = , graph_funs = )
+  }
+
   model_func <- rlang::new_function(
-    args = rlang::exprs(time = , stocks =, auxs = ),
+    args = func_args,
     body = rlang::parse_expr(func_body)
   )
+}
+
+# Generate a list of graphical functions
+generate_gf_list <- function(variable_list) {
+
+  filtered_list <- lapply(variable_list, function(var_obj) {
+    var_obj$graph_fun
+  }) %>% remove_NULL()
+
+  graph_fun_names       <- purrr::map_chr(filtered_list, "name")
+  graph_fun_list        <- purrr::map(filtered_list, "fun")
+  names(graph_fun_list) <- graph_fun_names
+
+  graph_fun_list
 }
