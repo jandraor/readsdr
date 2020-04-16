@@ -1,6 +1,29 @@
+#get_igraph_inputs--------------------------------------------------------------
+
+structure_m1 <- list(
+  parameters = NULL,
+  levels = list(
+    list(name      = "Population",
+         equation  = "net_growth",
+         initValue = 100)
+  ),
+  variables = list(
+    list(name     = "net_growth",
+         equation = "Population*growth_rate")
+  ),
+  constants = list(
+    list(name  = "growth_rate",
+         value = 0.01)
+  ))
+
+test_that("get_igraph_inputs() returns the expected elements", {
+  expect_named(get_igraph_inputs(structure_m1), c("nodes", "edges"))
+})
+
 stocks    <- list(list(name = "population",
                        equation = "births",
                        initValue = 100))
+
 
 variables <- list(list(name = "births", equation = "population*birthRate"),
                   list(name = "birthRate", equation = "birthRate2"))
@@ -15,6 +38,8 @@ test_that("generate_edges_df() ignores info-links whose tail is a constant", {
   edges_df <- generate_edges_df(stocks, variables, constants)
   expect_equal(nrow(edges_df), 3)
 })
+
+# generate_nodes_df()-----------------------------------------------------------
 
 test_that("generate_nodes_df replaces auxiliar consts with their value in equations", {
   nodes_df <- generate_nodes_df(stocks2, variables2, constants2)

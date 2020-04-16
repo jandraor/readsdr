@@ -29,27 +29,13 @@
 
 read_xmile <- function(filepath) {
 
-  model_structure  <- extract_structure_from_XMILE(filepath)
-  parameters       <- model_structure$parameters
-  levels           <- model_structure$levels
-  variables        <- model_structure$variables
-  constants        <- model_structure$constants
-
+  model_structure    <- extract_structure_from_XMILE(filepath)
   deSolve_components <- get_deSolve_elems(model_structure)
-
-  nodes_df <- generate_nodes_df(levels, variables, constants)
-  edges_df <- generate_edges_df(levels, variables, constants)
+  igraph_inputs      <- get_igraph_inputs(model_structure)
 
   list(
-    description = list(
-      parameters = parameters,
-      levels     = levels,
-      variables  = variables,
-      constants  = constants),
+    description        = model_structure,
     deSolve_components = deSolve_components,
-    graph_dfs = list(
-      nodes = nodes_df,
-      edges = edges_df
-    )
+    graph_dfs          = igraph_inputs
   )
 }

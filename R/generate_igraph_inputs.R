@@ -1,3 +1,18 @@
+get_igraph_inputs <- function(model_structure) {
+
+  levels           <- model_structure$levels
+  variables        <- model_structure$variables
+  constants        <- model_structure$constants
+
+  nodes_df <- generate_nodes_df(levels, variables, constants)
+  edges_df <- generate_edges_df(levels, variables, constants)
+
+  list(
+    nodes = nodes_df,
+    edges = edges_df
+  )
+}
+
 generate_nodes_df <- function(stocks, variables, constants) {
   const_names <- sapply(constants, function(const) const$name)
 
