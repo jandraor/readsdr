@@ -51,3 +51,9 @@ test_that("extract_variables() ignores ifelse functions", {
   expected_vars <- c("a", "b")
   expect_equal(actual_vars, expected_vars)
 })
+
+test_that("extract_variables() ignores logical operators ", {
+  test_lhs      <- "test_var"
+  equation      <- "ifelse(!(a>b)&a>c|c<b, a, b)"
+  expect_equal(extract_variables(test_lhs, equation), c("a", "b", "c"))
+})
