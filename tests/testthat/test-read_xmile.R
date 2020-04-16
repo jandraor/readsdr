@@ -277,9 +277,9 @@ from Stella", {
       </doc1>
     </root>'
 
-  mdl    <- read_xmile(test_model)
-  output <- sd_simulate(mdl)
-
+  # It is anticipated that this operation will throw a warning
+  mdl          <- suppressWarnings(read_xmile(test_model))
+  output       <- sd_simulate(mdl)
   actual_val   <- output[output$time == 3.25, "population"]
   expected_val <- 125
   expect_equal(actual_val, expected_val)

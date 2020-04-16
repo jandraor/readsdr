@@ -31,7 +31,14 @@ read_xmile <- function(filepath) {
 
   model_structure    <- extract_structure_from_XMILE(filepath)
   deSolve_components <- get_deSolve_elems(model_structure)
-  igraph_inputs      <- get_igraph_inputs(model_structure)
+
+  igraph_inputs      <- tryCatch(
+    error = function(cnd) {
+      warning("NULL graph inputs")
+      NULL
+    },
+    get_igraph_inputs(model_structure)
+  )
 
   list(
     description        = model_structure,

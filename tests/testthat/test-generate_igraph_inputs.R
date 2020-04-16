@@ -1,4 +1,4 @@
-#get_igraph_inputs--------------------------------------------------------------
+
 
 structure_m1 <- list(
   parameters = NULL,
@@ -15,6 +15,8 @@ structure_m1 <- list(
     list(name  = "growth_rate",
          value = 0.01)
   ))
+
+#get_igraph_inputs()------------------------------------------------------------
 
 test_that("get_igraph_inputs() returns the expected elements", {
   expect_named(get_igraph_inputs(structure_m1), c("nodes", "edges"))
@@ -41,9 +43,21 @@ test_that("generate_edges_df() ignores info-links whose tail is a constant", {
 
 # generate_nodes_df()-----------------------------------------------------------
 
-test_that("generate_nodes_df replaces auxiliar consts with their value in equations", {
+test_that("generate_nodes_df() replaces auxiliar consts with their value in equations", {
   nodes_df <- generate_nodes_df(stocks2, variables2, constants2)
   expect_equal(nodes_df[[2, "equation"]], "population*0.1")
+})
+
+test_that("generate_nodes_df() throws an error should a variable directly
+depends on time", {
+
+  variables <- list(
+    list(name     = "net_growth",
+         equation = "ifelse(time>1Population*growth_rate,0)")
+  )
+  expect_error(
+    generate_nodes_df(structure_m1$levels, variables, structure_m1$constants),
+    "A variable depends on time")
 })
 
 test_that("construct_var_edge() ignores scalars in equations", {

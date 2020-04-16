@@ -27,6 +27,10 @@ generate_nodes_df <- function(stocks, variables, constants) {
   variables_df <- purrr::map_df(variables, function(variable) {
     equation        <- variable$equation
     extracted_vars  <- extract_variables(variable$name, equation)
+
+    if("time" %in% extracted_vars) stop("A variable depends on time",
+                                         call. = FALSE)
+
     detected_consts <- extracted_vars[extracted_vars %in% const_names]
     n_det_consts    <- length(detected_consts)
 
