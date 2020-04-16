@@ -34,10 +34,13 @@ arrange_variables <- function(var_list) {
 
   equations_df <- data.frame(stringsAsFactors = FALSE, equation = equations) %>%
     dplyr::group_by(equation) %>%
-    dplyr::mutate(ocurrence = dplyr::row_number()) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(id = paste(equation, ocurrence, sep = "_")) %>%
-    dplyr::select(-ocurrence)
+    dplyr::mutate("ocurrence" = dplyr::row_number()) %>%
+    dplyr::ungroup()
+
+  equations_df$id <- paste(equations_df$equation, equations_df$ocurrence,
+                           sep = "_")
+
+  equations_df$ocurrence <- NULL
 
   aux_ids   <- equations_df$id
   sorted_variables <- vector(mode = "list", length = n_equations)
