@@ -34,7 +34,8 @@ read_xmile <- function(filepath) {
 
   igraph_inputs      <- tryCatch(
     error = function(cnd) {
-      warning("NULL graph inputs")
+      warning("This model cannot be converted into a graph (network)",
+              call. = FALSE)
       NULL
     },
     get_igraph_inputs(model_structure)
