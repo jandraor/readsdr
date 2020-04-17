@@ -62,23 +62,6 @@ test_that("read_xmile() produces a model function that returns all levels, varia
   expect_equal(ncol(o), 4) # including time
 })
 
-test_that("read_xmile() reads variables with compound names separated by blanks", {
-  file           <- "one_stock_one_inflow.stmx"
-  mdl            <- read_xmile(file)
-  actual_names   <- c(mdl$description$levels[[1]]$name,
-                      mdl$description$constants[[1]]$name)
-  expected_names <- c("main_stock", "growth_rate")
-  expect_equal(actual_names, expected_names)
-})
-
-test_that("read_xmile() returns the expected stock's initial value", {
-  file         <- "initByEquation_simplest.stmx"
-  mdl          <- read_xmile(file)
-  actual_val   <- mdl$description$levels[[1]]$initValue
-  expected_val <- 100
-  expect_equal(actual_val, expected_val)
-})
-
 test_that("read_xmile() works for a model that has a NOT statement
 from Stella", {
   test_model <-

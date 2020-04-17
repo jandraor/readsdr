@@ -100,6 +100,10 @@ test_that("sanitise_elem_name() returns the sanitised name when it has a breakli
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_elem_name() deals with spaces", {
+  expect_equal(sanitise_elem_name("main stock"), "main_stock")
+})
+
 test_that("sanitise_elem_name() removes commentaries", {
   actual_val <- sanitise_elem_name("\n\t\t\t\t\t5800\n{(nic*ey)}\n\t\t\t\t\t")
   expected_val <- "5800"
