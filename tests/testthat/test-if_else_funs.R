@@ -29,6 +29,12 @@ test_that("translate_ifelse() returns an R-equivalent equation for Vensim's XMIL
   expect_equal(actual_val, expected_val)
 })
 
+test_that("translate_ifelse deals with cases for equations from Vensim", {
+  test_equation <- "if_Then_eLse(B > S, S, B)"
+  expected_val  <- "ifelse(B > S, S, B)"
+  expect_equal(translate_ifelse(test_equation, "Vensim"), expected_val)
+})
+
 # Translate STEP function=======================================================
 
 context("Translate STEP")
@@ -132,6 +138,12 @@ PULSE from Vensim", {
   actual_val    <- translate_pulse(test_equation, "Vensim")
   expected_val  <- "sd_pulse_v(time,startTime,duration)"
   expect_equal(actual_val, expected_val)
+})
+
+test_that("translate_pulse() deals with cases from a equation from Vensim", {
+  test_equation <- "Pulse(1, 0)"
+  expect_equal(translate_pulse(test_equation, "Vensim"),
+               "ifelse(time == 1, 1, 0)")
 })
 
 # Translate PULSE from Stella===================================================

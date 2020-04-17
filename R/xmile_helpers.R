@@ -74,8 +74,7 @@ sanitise_aux_equation <- function(equation, vendor) {
     translate_if_else_functions(vendor) %>%
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
-    stringr::str_replace_all("\\bMIN\\b", "min") %>%
-    stringr::str_replace_all("\\bMAX\\b", "max") %>%
+    translate_extrema() %>%
     translate_logical_operators(vendor) %>%
     translate_comparison_operators() %>%
     translate_time_builtins() %>%

@@ -31,7 +31,8 @@ translate_ifelse <- function(equation, vendor) {
   }
 
   if(vendor == "Vensim") {
-    equation <- stringr::str_replace(equation, "IF_THEN_ELSE", "ifelse")
+    pattern  <- stringr::regex("IF_THEN_ELSE", ignore_case = TRUE)
+    equation <- stringr::str_replace(equation, pattern, "ifelse")
   }
 
   equation
@@ -84,7 +85,7 @@ translate_pulse <- function(equation, vendor) {
 
   if(vendor == "Vensim") {
     pattern_pulse  <- stringr::regex("PULSE\\((.+?),(.+?)\\)",
-                                     dotall = TRUE)
+                                     dotall = TRUE, ignore_case = TRUE)
     there_is_pulse <- stringr::str_detect(equation, pattern_pulse)
 
     if(there_is_pulse) {
