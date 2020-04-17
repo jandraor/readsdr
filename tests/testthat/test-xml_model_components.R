@@ -1,4 +1,60 @@
-# create_vars_consts_obj_xmile() ===============================================
+context("XML model components")
+
+test_model <-
+  '<root>
+      <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+        <header>
+		      <vendor>isee systems, inc.</vendor>
+		    </header>
+	      <sim_specs>
+	        <start>0</start>
+		      <stop>4</stop>
+		      <dt reciprocal="true">4</dt>
+	      </sim_specs>
+	   	  <variables>
+			    <stock name="population">
+				    <eqn>100</eqn>
+				    <inflow>net_growth</inflow>
+			    </stock>
+			    <flow name="net growth">
+				    <eqn>population * growth_rate</eqn>
+			    </flow>
+			    <aux name="growth rate">
+				    <eqn>0.01</eqn>
+			    </aux>
+        </variables>
+      </doc1>
+    </root>'
+
+
+# create_param_obj_xmile()------------------------------------------------------
+
+
+test_that("create_param_obj_xmile() returns the expected DT", {
+  sim_specs <- xml2::read_xml(test_model) %>%
+    xml2::xml_find_all(".//d1:sim_specs")
+  output <- create_param_obj_xmile(sim_specs)
+  expect_equal(output$dt, 0.25)
+})
+
+
+# create_vars_consts_obj_xmile()------------------------------------------------
+
+test_that("create_vars_consts_obj_xmile() returns the expected variables &
+constants", {
+  vars_consts <- xml2::read_xml(test_model) %>%
+    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+
+  output <- create_vars_consts_obj_xmile(vars_consts, "isee")
+
+  expect_equal(output$variables,
+               list(list(name     = "net_growth",
+                         equation = "population*growth_rate")))
+
+  expect_equal(output$constants,
+               list(list(name = "growth_rate", value = 0.01)))
+})
+
 test_that("create_vars_consts_obj_xmile() returns an empty list there are no
   vars and consts", {
 
