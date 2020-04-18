@@ -66,22 +66,22 @@ the package.
   - **Stella**
       - Comparison operators (`=`, `<>`)
       - Logical operators (`AND`, `OR`, `NOT`)
-      - `If Else Then`<sup>1</sup>
+      - `If Else Then`
       - Inequality operators (`<`, `>`)
       - `Pulse` <sup>1</sup>
-      - `Step`
+      - `Step` <sup>1</sup>
       - Endogenous table functions
   - **Vensim**
       - Comparison operators (`=`, `<>`)
       - Logical operators (`:AND:`, `:OR:`, `:NOT:`)
-      - `IF_THEN_ELSE`<sup>1</sup>
+      - `IF_THEN_ELSE`
       - Inequality operators (`<`, `>`)
       - `Pulse` <sup>1</sup>
       - `Pulse Train` <sup>1</sup>
-      - `Step`
+      - `Step` <sup>1</sup>
       - Endogenous table functions
 
-<sup>1</sup> Restricted to one-of-a-kind statement per variable.
+<sup>1</sup> Restricted to Euler integration.
 
 ## Acknowledgments
 

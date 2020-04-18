@@ -14,7 +14,12 @@ translate_if_else_functions <- function(equation, vendor) {
 translate_ifelse <- function(equation, vendor) {
 
   if(vendor == "isee") {
-    there_is_if_statement <- stringr::str_detect(equation, "\\bIF\\b")
+    detection_pattern     <- "\\bIF\\b"
+    there_is_if_statement <- stringr::str_detect(equation, detection_pattern)
+
+    n_ifs <- stringr::str_count(equation, detection_pattern)
+
+    if(n_ifs > 1) stop("Only one IF-ELSE statement per variable is permitted")
 
     if(there_is_if_statement) {
       pattern      <- stringr::regex("IF\\((.+)\\).*THEN(.*)ELSE(.*)",
@@ -31,8 +36,12 @@ translate_ifelse <- function(equation, vendor) {
   }
 
   if(vendor == "Vensim") {
-    pattern  <- stringr::regex("IF_THEN_ELSE", ignore_case = TRUE)
-    equation <- stringr::str_replace(equation, pattern, "ifelse")
+    pattern      <- stringr::regex("IF_THEN_ELSE", ignore_case = TRUE)
+    n_ifs        <- stringr::str_count(equation, pattern)
+
+    if(n_ifs > 1) stop("Only one IF-ELSE statement per variable is permitted")
+
+    equation     <- stringr::str_replace(equation, pattern, "ifelse")
   }
 
   equation
@@ -43,12 +52,13 @@ translate_step <- function(equation) {
                                   ignore_case = TRUE, dotall = TRUE)
   there_is_step <- stringr::str_detect(equation, pattern_step)
 
+
   if(there_is_step) {
     new_equation <- stringr::str_replace(equation, pattern_step,
                                          "ifelse(time >=\\2, \\1, 0)")
 
     new_equation <- translate_step(new_equation)
-    equation <- new_equation
+    equation     <- new_equation
   }
 
   equation
@@ -61,13 +71,17 @@ translate_pulse_train <- function(equation) {
   # is there a pulse train?
   there_is_pt <- stringr::str_detect(equation, pattern_pt)
 
-  if(there_is_pt) {
-    match_result <- stringr::str_match(equation, pattern_pt)
-    start_pt    <- match_result[[2]]
-    duration_pt <- match_result[[3]]
-    repeat_pt   <- match_result[[4]]
-    end_pt      <- match_result[[5]]
 
+  if(there_is_pt) {
+    n_pt        <- stringr::str_count(equation, pattern_pt)
+
+    if(n_pt > 1) stop("Only one PULSE_TRAIN statement per variable is permitted")
+
+    match_result <- stringr::str_match(equation, pattern_pt)
+    start_pt     <- match_result[[2]]
+    duration_pt  <- match_result[[3]]
+    repeat_pt    <- match_result[[4]]
+    end_pt       <- match_result[[5]]
 
     translation <- stringr::str_glue(
         "sd_pulse_train(time, {start_pt},{duration_pt},{repeat_pt},{end_pt})")
@@ -82,6 +96,14 @@ translate_pulse_train <- function(equation) {
 # Translate Pulse
 
 translate_pulse <- function(equation, vendor) {
+
+  # Screening
+  pattern_screen  <- stringr::regex("PULSE\\(.+?\\)",
+                                    dotall = TRUE, ignore_case = TRUE)
+
+  n_pulses        <- stringr::str_count(equation, pattern_screen)
+
+  if(n_pulses > 1) stop("Only one PULSE statement per variable is permitted")
 
   if(vendor == "Vensim") {
     pattern_pulse  <- stringr::regex("PULSE\\((.+?),(.+?)\\)",

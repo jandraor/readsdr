@@ -66,22 +66,22 @@ For reading Vensim models, they must be exported as .xmile.
 * **Stella**
     + Comparison operators (`=`, `<>`)
     + Logical operators (`AND`, `OR`, `NOT`) 
-    + `If Else Then`^1^
+    + `If Else Then`
     + Inequality operators (`<`, `>`)
     + `Pulse` ^1^
-    + `Step`
+    + `Step` ^1^
     + Endogenous table functions
 * **Vensim**
     + Comparison operators (`=`, `<>`)
     + Logical operators (`:AND:`, `:OR:`, `:NOT:`) 
-    + `IF_THEN_ELSE`^1^
+    + `IF_THEN_ELSE`
     + Inequality operators (`<`, `>`) 
     + `Pulse` ^1^
     + `Pulse Train` ^1^
-    + `Step`
+    + `Step` ^1^
     + Endogenous table functions
     
-^1^ Restricted to one-of-a-kind statement per variable.
+^1^ Restricted to Euler integration.
 
 ## Acknowledgments
 
