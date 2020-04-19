@@ -49,12 +49,12 @@ structure_m2 <- list(
 # get_deSolve_elems()-----------------------------------------------------------
 test_that("get_deSolve_elems() returns the basic elements", {
   expect_named(get_deSolve_elems(structure_m1),
-               c("stocks", "consts", "func"))
+               c("stocks", "consts", "func", "sim_params"))
 })
 
 test_that("get_deSolve_elems() returns the graph_fun element", {
   expect_named(get_deSolve_elems(structure_m2 ),
-               c("stocks", "consts", "func", "graph_funs"))
+               c("stocks", "consts", "func", "sim_params", "graph_funs"))
 })
 
 # construct_return_statement()--------------------------------------------------

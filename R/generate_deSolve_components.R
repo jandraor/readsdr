@@ -3,8 +3,6 @@ get_deSolve_elems <- function(mdl_structure) {
   variables   <- mdl_structure$variables
   constants   <- mdl_structure$constants
 
-
-
   ds_graphs_funs <- generate_gf_list(variables)
   there_are_gf   <- ifelse(length(ds_graphs_funs) > 0, TRUE, FALSE)
 
@@ -14,9 +12,10 @@ get_deSolve_elems <- function(mdl_structure) {
   ds_consts     <- generate_constants_vector(constants)
 
   deSolve_components <- list(
-    stocks = ds_stocks,
-    consts = ds_consts,
-    func   = ds_model_func)
+    stocks     = ds_stocks,
+    consts     = ds_consts,
+    func       = ds_model_func,
+    sim_params = mdl_structure$parameters)
 
   if(there_are_gf){
      deSolve_components$graph_funs <- ds_graphs_funs
