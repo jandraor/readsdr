@@ -118,3 +118,11 @@ test_that("construct_var_edge() accounts for repeated variables", {
                           stringsAsFactors = FALSE)
   expect_equal(actual, expected)
 })
+
+# construct_stock_edge()--------------------------------------------------------
+
+test_that('construct_stock_edge returns NULL constant-alike stocks', {
+  stock_obj <- list(name     = "test_stock",
+                    equation = "0")
+  expect_equal(construct_stock_edge(stock_obj), NULL)
+} )

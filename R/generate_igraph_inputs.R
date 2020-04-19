@@ -62,16 +62,9 @@ generate_nodes_df <- function(stocks, variables, constants) {
 
 generate_edges_df <- function(stocks, variables, constants) {
 
-  stocks_edges <- purrr::map_df(stocks, function(stock) {
-    rhs <- stringr::str_split(stock$equation, pattern = "\\+|-|\\*|/")[[1]]
-    rhs <- rhs[rhs != ""]
-    data.frame(from = rhs,
-               to = rep(stock$name, length(rhs)),
-               type = "flow",
-               stringsAsFactors = F)
-  })
+  stocks_edges <- purrr::map_df(stocks, construct_stock_edge)
 
-  const_names <- sapply(constants, function(constant) constant$name)
+  const_names     <- sapply(constants, function(constant) constant$name)
 
   variables_edges <- purrr::map_df(variables, const_names = const_names,
                                    construct_var_edge)
@@ -87,4 +80,15 @@ construct_var_edge <- function(variable, const_names) {
 
   data.frame(from = rhs, to = rep(variable$name, length(rhs)),
              type = "info_link", stringsAsFactors = F)
+}
+
+construct_stock_edge <- function(stock_obj) {
+  rhs <- extract_variables(stock_obj$name, stock_obj$equation)
+
+  if(length(rhs) == 0L) return(NULL)
+
+  data.frame(from = rhs,
+             to = rep(stock_obj$name, length(rhs)),
+             type = "flow",
+             stringsAsFactors = F)
 }
