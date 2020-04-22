@@ -64,9 +64,14 @@ compute_init_value <- function(var_name, equation, auxs) {
 
 sanitise_elem_name <- function(elem_name) {
   elem_name %>%
-    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\n|\t|~","") %>%
     stringr::str_replace_all(" |\\\\n", "_")
+}
+
+sanitise_init_value <- function(init_value) {
+  init_value %>%
+    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
+    stringr::str_replace_all("\n|\t|~","")
 }
 
 sanitise_aux_equation <- function(equation, vendor) {

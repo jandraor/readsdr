@@ -1,4 +1,6 @@
+context("XMILE helpers")
 
+# compute_init_value()----------------------------------------------------------
 test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant", {
   stock_name    <- "test_stock"
   equation      <- "c"
@@ -70,7 +72,8 @@ test_that("compute_init_value() calculates the initial value in an equation when
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() calculates the initial value when there are graph function along the process", {
+test_that("compute_init_value() calculates the initial value when there are
+graph function along the process", {
   stock_name         <- "Population"
   test_equation      <- "desired_init"
   test_auxs          <- list(
@@ -92,22 +95,28 @@ test_that("compute_init_value() calculates the initial value when there are grap
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
-#===============================================================================
 
-test_that("sanitise_elem_name() returns the sanitised name when it has a breakline in between", {
-  actual_val <- sanitise_elem_name("flow\\ntest")
-  expected_val <- "flow_test"
-  expect_equal(actual_val, expected_val)
+# sanitise_elem_name()----------------------------------------------------------
+
+test_that("sanitise_elem_name() returns the sanitised name when it has a
+breakline in between", {
+  expect_equal(sanitise_elem_name("flow\\ntest"), "flow_test")
 })
 
 test_that("sanitise_elem_name() deals with spaces", {
   expect_equal(sanitise_elem_name("main stock"), "main_stock")
 })
 
-test_that("sanitise_elem_name() removes commentaries", {
-  actual_val <- sanitise_elem_name("\n\t\t\t\t\t5800\n{(nic*ey)}\n\t\t\t\t\t")
-  expected_val <- "5800"
-  expect_equal(actual_val, expected_val)
+# sanitise_init_value()---------------------------------------------------------
+
+test_that("sanitise_init_value() removes commentaries", {
+  actual_val <- sanitise_init_value("\n\t\t\t\t\t5800\n{(nic*ey)}\n\t\t\t\t\t")
+  expect_equal(actual_val, "5800")
+})
+
+test_that("sanitise_init_value() removes commentaries", {
+  actual_val <- sanitise_init_value("total_population - 1")
+  expect_equal(actual_val, "total_population - 1")
 })
 
 #===============================================================================

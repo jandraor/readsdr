@@ -78,7 +78,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
 
     initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
       xml2::xml_text() %>%
-      sanitise_elem_name()
+      sanitise_init_value()
 
     auxs <- c(auxs, list(list(name = stock_name, equation = initValue)))
 
