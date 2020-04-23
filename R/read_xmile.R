@@ -47,3 +47,35 @@ read_xmile <- function(filepath) {
     graph_dfs          = igraph_inputs
   )
 }
+
+#' Parse XMILE to deSolve components
+#'
+#' \code{xmile_to_deSolve} returns a list that serves as an input for
+#' deSolve's ODE function.
+#'
+#' This function extracts the xml from the file specified via \code{filepath}
+#' to generate a list with the necessary elements to simulate with
+#' \link[deSolve]{deSolve}.
+#'
+#' @inheritParams read_xmile
+#'
+#' @return This function returns a list with at least four elements.
+#' \emph{stocks}, a numeric vector that contains initial values. \emph{consts},
+#' a numeric vector with the model's constants. \emph{func}, the function that
+#' wraps the model's equations. \emph{sim_params}, a list with control
+#' parameters. If the model includes a table or graphical function, this
+#' function returns the element \emph{graph_funs}, a list with these functions.
+#'
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' xmile_to_deSolve("mdl.xmile")
+#' }
+#' \donttest{
+#' xmile_to_deSolve("mdl.stmx")
+#' }
+xmile_to_deSolve <- function(filepath) {
+  model_structure    <- extract_structure_from_XMILE(filepath)
+  deSolve_components <- get_deSolve_elems(model_structure)
+}

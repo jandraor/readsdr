@@ -1,7 +1,7 @@
 Package: readsdr
 Type: Package
 Title: Translate models from System Dynamics software into R
-Version: 0.0.0.9020
+Version: 0.0.0.9021
 Authors@R: as.person(
     "Jair Andrade <jair.albert.andrade@gmail.com> [aut, cre]"
   )
@@ -17,7 +17,6 @@ RoxygenNote: 6.1.1
 Suggests: 
     testthat (>= 2.1.0),
     igraph,
-    deSolve,
     knitr,
     rmarkdown,
     ggplot2,
@@ -30,6 +29,7 @@ Imports:
     rlang,
     stringi,
     magrittr,
-    stats
+    stats,
+    deSolve
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr

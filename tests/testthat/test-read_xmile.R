@@ -97,3 +97,9 @@ from Stella", {
   expected_val <- 125
   expect_equal(actual_val, expected_val)
 })
+
+#xmile_to_deSolve()-------------------------------------------------------------
+
+test_that("xmile_to_deSolve() returns a list", {
+  expect_is(xmile_to_deSolve(test_model), "list")
+})
