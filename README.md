@@ -52,7 +52,7 @@ mdl      <- read_xmile(filepath)
 summary(mdl)
 #>                    Length Class  Mode
 #> description        4      -none- list
-#> deSolve_components 3      -none- list
+#> deSolve_components 4      -none- list
 #> graph_dfs          2      -none- list
 ```
 
@@ -82,6 +82,11 @@ the package.
       - Endogenous table functions
 
 <sup>1</sup> Restricted to Euler integration.
+
+## Notes
+
+  - *uniflow* and *non-negative* stock features from Stella are **not**
+    supported.
 
 ## Acknowledgments
 

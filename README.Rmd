@@ -83,6 +83,10 @@ For reading Vensim models, they must be exported as .xmile.
     
 ^1^ Restricted to Euler integration.
 
+## Notes
+
+* *uniflow* and *non-negative* stock features from Stella are **not** supported.
+
 ## Acknowledgments
 
 <!-- Thanks to: -->
