@@ -47,6 +47,11 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
     pos_param                     <- which(pars == param)
     replacement                   <- paste0("params[", pos_param,"]")
     pos_const                     <- which(param == const_names)
+
+    if(length(pos_const) == 0L) {
+      stop(stringr::str_glue("'{param}' not found"), call. = FALSE)
+    }
+
     constants[[pos_const]]$value  <- replacement
   }
 

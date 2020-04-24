@@ -182,6 +182,12 @@ test_that("create_stan_function() parameterise the function", {
   expect_equal(actual_15th_line, expected_15th_line)
 })
 
+test_that("create_stan_function() throws an error when the parameter does not
+exist", {
+  expect_error(create_stan_function(lv, "lotka_volterra", pars = "wrong_par"),
+               "'wrong_par' not found")
+})
+
 test_that("create_stan_function() returns equations in computational  order", {
   stan_function <- create_stan_function(test_model, "test_model")
 
