@@ -111,40 +111,50 @@ mdl      <- read_xmile(filepath)
 ```
 
 _read_xmile_ returns a list of three elements. The element _description_ 
-contains the simulation parameters and the model variables as lists. From this
-element, we can replicate the simulation period specified originally in 
-Stella.
+contains the simulation parameters and the model variables as lists. 
 
 ```{r}
-# Create the start time, finish time, and time step
-START  <- mdl$description$parameters$start
-FINISH <- mdl$description$parameters$stop
-STEP   <- mdl$description$parameters$dt
+description <- mdl$description
 
-# Create time vector
-simtime <- seq(START, FINISH, by = STEP)
+model_summary <- data.frame(n_stocks    = length(description$levels),
+                            n_variables = length(description$variables),
+                            n_consts    = length(description$constants))
+print(model_summary)
 ```
 
 To simulate a model with deSolve, we use the function _ode_. This routine
 takes as arguments, a vector with the model's stocks, the simulation time,
 the equations wrapped in a function, the model's constants and the integration
 method. Indeed, the second element from _read_xmile_ is a list with all these
-inputs but the integration method. deSolve returns a matrix which then is 
-converted to a dataframe for convenience.
+inputs but the integration method. If this is the only element of interest,
+readsdr provides **xmile_to_deSolve**. _ode_ returns a matrix which then is 
+converted to a data frame for convenience. readsdr offers **sd_simulate** to 
+simplify this process.
 
 
 ```{r}
+deSolve_components <- mdl$deSolve_components
+
+all.equal(deSolve_components, xmile_to_deSolve(filepath))
+
 library(deSolve)
 
-output_deSolve <- ode(y      = mdl$deSolve_components$stocks,
+simtime <- seq(deSolve_components$sim_params$start,
+               deSolve_components$sim_params$stop,
+               deSolve_components$sim_params$dt)
+
+output_deSolve <- ode(y      = deSolve_components$stocks,
                       times  = simtime,
-                      func   = mdl$deSolve_components$func,
-                      parms  = mdl$deSolve_components$consts, 
+                      func   = deSolve_components$func,
+                      parms  = deSolve_components$consts, 
                       method = "euler")
 
 result_df <- data.frame(output_deSolve)
 
 head(result_df)
+
+result_df2 <- sd_simulate(deSolve_components)
+identical(result_df, result_df2)
 ```
 
 With the results in a data frame, we can manipulate the data structure for 
@@ -168,7 +178,7 @@ ggplot(tidy_result_df, aes(x = time, y = value)) +
   theme(legend.position = "bottom")
 ```
 
-Finally, the third element from read_xmile is a list of two data frames. 
+Finally, the third element from _read_xmile_ is a list of two data frames. 
 These structures describe the model as a graph in terms of vertices and edges,
 and serve as input to the functions in [igraph](igraph.org), a library 
 collection for creating and manipulating graphs and analyzing networks.
