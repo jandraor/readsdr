@@ -1,7 +1,8 @@
 context("XMILE helpers")
 
 # compute_init_value()----------------------------------------------------------
-test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant", {
+test_that("compute_init_value() extracts the expected initial value when it is
+the defined by a constant", {
   stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(list(name = "c", equation = "100"))
@@ -10,7 +11,8 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() extracts the expected initial value when it is the defined by a one-level nested equation", {
+test_that("compute_init_value() extracts the expected initial value when it is
+the defined by a one-level nested equation", {
   stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(
@@ -22,7 +24,8 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() extracts the expected initial value when it is the defined by a two-level nested equation", {
+test_that("compute_init_value() extracts the expected initial value when it is
+the defined by a two-level nested equation", {
   stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(
@@ -38,7 +41,8 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant and variable", {
+test_that("compute_init_value() extracts the expected initial value when it is
+the defined by a constant and variable", {
   stock_name    <- "test_stock"
   equation      <- "3 + c"
   auxs          <- list(
@@ -48,7 +52,8 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() extracts the expected initial value when it is the defined by a constant and a one-level nested variable", {
+test_that("compute_init_value() extracts the expected initial value when it is
+the defined by a constant and a one-level nested variable", {
   stock_name    <- "test_stock"
   equation      <- "5 * c"
   auxs          <- list(
@@ -60,7 +65,8 @@ test_that("compute_init_value() extracts the expected initial value when it is t
   expect_equal(actual_val, expected_val)
 })
 
-test_that("compute_init_value() calculates the initial value in an equation when all variables are defined by constants", {
+test_that("compute_init_value() calculates the initial value in an equation when
+all variables are defined by constants", {
   stock_name         <- "test_stock"
   test_equation      <- "ey*ep/eyvm"
   test_auxs          <- list(
@@ -94,6 +100,13 @@ graph function along the process", {
   actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
+})
+
+test_that("compute_init_value() indicates the stock's name for which the
+process failed", {
+  auxs <- list()
+  expect_error(compute_init_value("test_stock", "1000-seed_value", auxs),
+               "Can't compute the init value of 'test_stock'")
 })
 
 # sanitise_elem_name()----------------------------------------------------------
