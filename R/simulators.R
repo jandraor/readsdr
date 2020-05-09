@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sd_simulate(ds_inputs)
 #' sd_simulate(ds_inputs, 0, 10, 0.25, "rk4")
 #' }

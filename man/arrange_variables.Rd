@@ -25,7 +25,7 @@ This function iterates over each element until the variables are ordered in
 computational order.
 }
 \examples{
-\donttest{
+\dontrun{
 unordered_vars <- list(list(name = "b", equation = "a + 1"),
                        list(name = "a", equation = "alpha"))
 ordered_vars   <- arrange_variables(unordered_vars)

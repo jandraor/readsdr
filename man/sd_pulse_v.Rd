@@ -20,7 +20,7 @@ A number
 Replicate the behaviour of the PULSE function from Vensim
 }
 \examples{
-\donttest{
+\dontrun{
 sd_pulse_v(1, 1, 2)
 }
 }

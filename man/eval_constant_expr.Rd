@@ -16,7 +16,7 @@ A string
 Evaluate constant expression
 }
 \examples{
-\donttest{
+\dontrun{
 eval_constant_expr(3 + 3) # returns 6
 eval_constant_expr(a + 3) # returns a + 3
 }

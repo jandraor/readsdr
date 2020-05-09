@@ -4,8 +4,7 @@
 \alias{create_stan_function}
 \title{Create a Stan's ODE function from an XMILE file}
 \usage{
-create_stan_function(filepath, func_name, pars = NULL,
-  override.consts = NULL)
+create_stan_function(filepath, func_name, pars = NULL, override.consts = NULL)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -32,7 +31,7 @@ This function extracts the xml from the file specified via \code{filepath} to
 generate the code for an equivalent model in Stan.
 }
 \examples{
-\donttest{
+\dontrun{
 create_stan_function("mdl.xmile", "my_model")
 }
 }

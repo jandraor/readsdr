@@ -17,7 +17,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' create_stan_function("mdl.xmile", "my_model")
 #' }
 

@@ -29,10 +29,10 @@ to generate a list with the necessary elements to simulate with
 \link[deSolve]{deSolve}.
 }
 \examples{
-\donttest{
+\dontrun{
 xmile_to_deSolve("mdl.xmile")
 }
-\donttest{
+\dontrun{
 xmile_to_deSolve("mdl.stmx")
 }
 }

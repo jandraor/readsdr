@@ -30,10 +30,10 @@ the inputs for simulating through \link[deSolve]{deSolve}, and the inputs for
 creating a \link[igraph]{igraph} object.
 }
 \examples{
-\donttest{
+\dontrun{
 read_xmile("mdl.xmile")
 }
-\donttest{
+\dontrun{
 read_xmile("mdl.stmx")
 }
 }

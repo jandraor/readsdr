@@ -22,7 +22,7 @@ A string
 Create Pulse Train statement
 }
 \examples{
-\donttest{
+\dontrun{
 create_pt_statement(5, 3, 10, 20)
 }
 }

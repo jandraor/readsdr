@@ -20,10 +20,10 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' read_xmile("mdl.xmile")
 #' }
-#' \donttest{
+#' \dontrun{
 #' read_xmile("mdl.stmx")
 #' }
 
@@ -69,10 +69,10 @@ read_xmile <- function(filepath) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' xmile_to_deSolve("mdl.xmile")
 #' }
-#' \donttest{
+#' \dontrun{
 #' xmile_to_deSolve("mdl.stmx")
 #' }
 xmile_to_deSolve <- function(filepath) {

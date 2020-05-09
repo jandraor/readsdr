@@ -38,7 +38,7 @@ sd_pulse_train <- function(time, start_pulse, duration_pulse,
 #' @return A string
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' create_pt_statement(5, 3, 10, 20)
 #' }
 create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
@@ -83,7 +83,7 @@ create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sd_pulse_s(2, 1, 2, 0)
 #' }
 #'
@@ -102,7 +102,7 @@ sd_pulse_s <- function(time, volume, start_p, interval) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' sd_pulse_v(1, 1, 2)
 #' }
 sd_pulse_v <- function(time, startPulse, duration) {

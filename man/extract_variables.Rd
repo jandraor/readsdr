@@ -25,9 +25,9 @@ where x is a vector of n elements. \code{extract_variables} identify all
 arguments in \code{f}.
 }
 \examples{
-\donttest{
-lhs <- z
-rhs <- x ^ 2 + 2 * x * y + y ^ 2
+\dontrun{
+lhs <- "z"
+rhs <- "x ^ 2 + 2 * x * y + y ^ 2"
 extract_variables(lhs, rhs)
 }
 }
