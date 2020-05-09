@@ -88,9 +88,20 @@ the package.
   - *uniflow* and *non-negative* stock features from Stella are **not**
     supported.
 
+  - No built-in is supported for translations to Stan code.
+
 ## Acknowledgments
 
-<!-- Thanks to: -->
+Thanks to:
+
+  - [Rogelio Oliva](http://people.tamu.edu/~roliva/) for advocating the
+    need to create an open-source tool for the System Dynamics community
+    and push forward this endeavour.
+  - Sergey Naumov for his ideas to implement several functions in this
+    package.
+  - [Jim
+    Duggan](http://www.nuigalway.ie/our-research/people/engineering-and-informatics/jamesduggan/)
+    from whom I borrowed ideas to implement this package.
 
 ## References
 
