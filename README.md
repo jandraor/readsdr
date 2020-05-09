@@ -5,10 +5,10 @@
 
 <!-- badges: start -->
 
-[![R build
-status](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions?workflow=R-CMD-check)
 [![Codecov test
 coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
+[![R build
+status](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
 <!-- badges: end -->
 
 ## Overview
