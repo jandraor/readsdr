@@ -1,10 +1,8 @@
 Package: readsdr
 Type: Package
-Title: Translate models from System Dynamics software into R
-Version: 0.0.0.9021
-Authors@R: as.person(
-    "Jair Andrade <jair.albert.andrade@gmail.com> [aut, cre]"
-  )
+Title: Translate Models from System Dynamics Software into R
+Version: 0.1.0
+Authors@R: person("Jair", "Andrade", email = "jair.albert.andrade@gmail.com", role = c("aut", "cre"))
 Description: The goal of 'readsdr' is to bridge the design capabilities from
     specialised System Dynamics software with the powerful numerical tools 
     offered by R libraries. The package accomplishes this goal by parsing .xmile 
