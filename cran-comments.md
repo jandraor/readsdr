@@ -10,3 +10,8 @@
 0 errors | 0 warnings | 1 note
 
 * This is a new release.
+
+## Changes made following first submission 10th May 2020.
+
+* Ensured that LICENSE file followed CRAN format
+* Fixed links in vignettes (http protocol)
