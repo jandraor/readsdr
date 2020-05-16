@@ -10,10 +10,9 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' sd_simulate(ds_inputs)
-#' sd_simulate(ds_inputs, 0, 10, 0.25, "rk4")
-#' }
+#' path      <- system.file("models", "SIR.stmx", package = "readsdr")
+#' ds_inputs <- xmile_to_deSolve(path)
+#' sd_simulate(ds_inputs, 0, 1, 0.25, "rk4")
 sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
                         timestep = NULL, integ_method = "euler") {
 

@@ -31,7 +31,6 @@ This function extracts the xml from the file specified via \code{filepath} to
 generate the code for an equivalent model in Stan.
 }
 \examples{
-\dontrun{
-create_stan_function("mdl.xmile", "my_model")
-}
+path <- system.file("models", "SIR.stmx", package = "readsdr")
+create_stan_function(path, "my_model")
 }

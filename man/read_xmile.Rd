@@ -30,10 +30,6 @@ the inputs for simulating through \link[deSolve]{deSolve}, and the inputs for
 creating a \link[igraph]{igraph} object.
 }
 \examples{
-\dontrun{
-read_xmile("mdl.xmile")
-}
-\dontrun{
-read_xmile("mdl.stmx")
-}
+path <- system.file("models", "SIR.stmx", package = "readsdr")
+read_xmile(path)
 }

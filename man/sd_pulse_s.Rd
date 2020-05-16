@@ -23,8 +23,7 @@ This function must be placed inside the object that will be passed as the
 argument \code{func} to deSolve's \code{ode} function.
 }
 \examples{
-\dontrun{
+timestep <- function() 0.25 # replicates timestep() from deSolve
 sd_pulse_s(2, 1, 2, 0)
-}
 
 }

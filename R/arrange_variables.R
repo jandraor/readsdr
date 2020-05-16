@@ -4,7 +4,11 @@
 #'    computational order
 #'
 #' This function iterates over each element until the variables are ordered in
-#' computational order.
+#' computational order. This is how should be used:
+#'
+#' unordered_vars <- list(list(name = "b", equation = "a + 1"),
+#'                        list(name = "a", equation = "alpha"))
+#' ordered_vars   <- arrange_variables(unordered_vars)
 #'
 #' @param var_list A list of lists. Each second-level list corresponds to a
 #' variable in the model and must be a name-equation pair. Given that variables
@@ -14,12 +18,7 @@
 #' @return A list consisting of the elements in \code{var_list} but arranged in
 #' computational order.
 #'
-#' @examples
-#' \dontrun{
-#' unordered_vars <- list(list(name = "b", equation = "a + 1"),
-#'                        list(name = "a", equation = "alpha"))
-#' ordered_vars   <- arrange_variables(unordered_vars)
-#' }
+#' @noRd
 
 arrange_variables <- function(var_list) {
 

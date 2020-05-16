@@ -17,9 +17,8 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' create_stan_function("mdl.xmile", "my_model")
-#' }
+#' path <- system.file("models", "SIR.stmx", package = "readsdr")
+#' create_stan_function(path, "my_model")
 
 create_stan_function <- function (filepath, func_name, pars = NULL,
                                   override.consts = NULL) {

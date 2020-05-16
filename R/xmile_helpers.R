@@ -96,15 +96,13 @@ sanitise_aux_equation <- function(equation, vendor) {
 
 #' Evaluate constant expression
 #'
+#' eval_constant_expr(3 + 3) # returns 6
+#' eval_constant_expr(a + 3) # returns a + 3
+#'
 #' @param equation A string
 #'
 #' @return A string
-#'
-#' @examples
-#' \dontrun{
-#' eval_constant_expr(3 + 3) # returns 6
-#' eval_constant_expr(a + 3) # returns a + 3
-#' }
+#' @noRd
 eval_constant_expr <- function(equation) {
   tryCatch(
     error = function(cnd) equation,
@@ -158,4 +156,3 @@ safe_read <- function(filepath) {
     xml2::read_xml(filepath)
   )
 }
-

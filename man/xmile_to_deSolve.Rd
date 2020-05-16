@@ -29,10 +29,6 @@ to generate a list with the necessary elements to simulate with
 \link[deSolve]{deSolve}.
 }
 \examples{
-\dontrun{
-xmile_to_deSolve("mdl.xmile")
-}
-\dontrun{
-xmile_to_deSolve("mdl.stmx")
-}
+path <- system.file("models", "SIR.stmx", package = "readsdr")
+xmile_to_deSolve(path)
 }

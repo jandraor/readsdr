@@ -1,13 +1,16 @@
 Package: readsdr
 Type: Package
-Title: Translate Models from System Dynamics Software into R
+Title: Translate Models from System Dynamics Software into 'R'
 Version: 0.1.0
-Authors@R: person("Jair", "Andrade", email = "jair.albert.andrade@gmail.com", role = c("aut", "cre"))
+Authors@R: person("Jair", "Andrade", email = "jair.albert.andrade@gmail.com", 
+                  role = c("aut", "cre"),
+                  comment = c(ORCID = "0000-0002-1412-7868"))
 Description: The goal of 'readsdr' is to bridge the design capabilities from
     specialised System Dynamics software with the powerful numerical tools 
-    offered by R libraries. The package accomplishes this goal by parsing 
-    'XMILE' files ('Vensim' and 'Stella') models into R objects to construct 
-    networks (graph theory), ODE functions for 'deSolve' and 'Stan'.
+    offered by 'R' libraries. The package accomplishes this goal by parsing 
+    'XMILE' files ('Vensim' and 'Stella') models into 'R' objects to construct 
+    networks (graph theory); 'ODE' functions for 'Stan'; and inputs to simulate
+    via 'deSolve' as described in Duggan (2016) <doi:10.1007/978-3-319-34043-2>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

@@ -20,13 +20,8 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' read_xmile("mdl.xmile")
-#' }
-#' \dontrun{
-#' read_xmile("mdl.stmx")
-#' }
-
+#' path <- system.file("models", "SIR.stmx", package = "readsdr")
+#' read_xmile(path)
 read_xmile <- function(filepath) {
 
   model_structure    <- extract_structure_from_XMILE(filepath)
@@ -69,12 +64,8 @@ read_xmile <- function(filepath) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' xmile_to_deSolve("mdl.xmile")
-#' }
-#' \dontrun{
-#' xmile_to_deSolve("mdl.stmx")
-#' }
+#' path <- system.file("models", "SIR.stmx", package = "readsdr")
+#' xmile_to_deSolve(path)
 xmile_to_deSolve <- function(filepath) {
   model_structure    <- extract_structure_from_XMILE(filepath)
   deSolve_components <- get_deSolve_elems(model_structure)

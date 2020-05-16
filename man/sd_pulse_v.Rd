@@ -20,7 +20,6 @@ A number
 Replicate the behaviour of the PULSE function from Vensim
 }
 \examples{
-\dontrun{
+timestep <- function() 0.25 # replicates timestep() from deSolve
 sd_pulse_v(1, 1, 2)
-}
 }

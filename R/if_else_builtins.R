@@ -83,9 +83,8 @@ create_pt_statement <- function(start_pt, duration_pt, repeat_pt, end_pt) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' timestep <- function() 0.25 # replicates timestep() from deSolve
 #' sd_pulse_s(2, 1, 2, 0)
-#' }
 #'
 sd_pulse_s <- function(time, volume, start_p, interval) {
   pulse_s_statement <- get_pulse_s_statement(volume, start_p, interval)
@@ -102,9 +101,8 @@ sd_pulse_s <- function(time, volume, start_p, interval) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' timestep <- function() 0.25 # replicates timestep() from deSolve
 #' sd_pulse_v(1, 1, 2)
-#' }
 sd_pulse_v <- function(time, startPulse, duration) {
   pulse_v_statement <- get_pulse_v_statement(startPulse, duration)
   eval(parse(text = pulse_v_statement))

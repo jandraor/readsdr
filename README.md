@@ -20,8 +20,7 @@ offered by R libraries. The package accomplishes this goal by parsing
 [Stella](https://www.iseesystems.com/) models) into R objects to
 construct [networks](http://igraph.org) (graph theory), ODE functions
 for [deSolve](http://desolve.r-forge.r-project.org/) and
-[Stan](https://mc-stan.org/)
-.
+[Stan](https://mc-stan.org/).
 
 ## Installation
 
@@ -85,10 +84,12 @@ the package.
 
 ## Notes
 
-  - *uniflow* and *non-negative* stock features from Stella are **not**
-    supported.
+  - *uniflow* and *non-negative* stock features from *Stella* are
+    **not** supported.
 
-  - No built-in is supported for translations to Stan code.
+  - No built-in is supported for translations to *Stan* code.
+
+  - Modules from *Stella* are **not** supported.
 
 ## Acknowledgments
 

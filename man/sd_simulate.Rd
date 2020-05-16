@@ -30,8 +30,7 @@ a data frame
 Simulate a System Dynamics model
 }
 \examples{
-\dontrun{
-sd_simulate(ds_inputs)
-sd_simulate(ds_inputs, 0, 10, 0.25, "rk4")
-}
+path      <- system.file("models", "SIR.stmx", package = "readsdr")
+ds_inputs <- xmile_to_deSolve(path)
+sd_simulate(ds_inputs, 0, 1, 0.25, "rk4")
 }

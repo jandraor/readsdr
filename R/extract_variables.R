@@ -4,7 +4,12 @@
 #'
 #' This function assumes an expression in the canonical form \code{y = f(x)},
 #' where x is a vector of n elements. \code{extract_variables} identify all
-#' arguments in \code{f}.
+#' arguments in \code{f}. This is how it should be used:
+#'
+#' #' lhs <- "z"
+#' rhs <- "x ^ 2 + 2 * x * y + y ^ 2"
+#' extract_variables(lhs, rhs)
+#'
 #'
 #' @param lhs A string with the name of the equation's subject, represented by
 #'   \code{y} in the canonical form.
@@ -12,13 +17,8 @@
 #' by \code{f(x)} in the canonical form.
 #'
 #' @return A character vector with the unique elements in the \code{rhs}
-#'
-#' @examples
-#' \dontrun{
-#' lhs <- "z"
-#' rhs <- "x ^ 2 + 2 * x * y + y ^ 2"
-#' extract_variables(lhs, rhs)
-#' }
+#' @noRd
+
 extract_variables <- function(lhs, rhs) {
   raw_elements <- stringr::str_split(rhs, "\\b")[[1]] %>%
     stringi::stri_remove_empty()
