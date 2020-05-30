@@ -24,3 +24,7 @@
 * Removed documentation for internal functions.
 * Removed dontrun from examples of external functions
 
+## Changes made following second submission 16th May 2020.
+
+* Removed example from external function "create_pt_statement".
+
