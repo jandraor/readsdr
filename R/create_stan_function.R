@@ -32,7 +32,7 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
   n_stocks      <- length(levels)
   level_names   <- sapply(levels, function(level) level$name)
 
-  function_name_line       <- paste0("  real[] ", func_name, "(real t,")
+  function_name_line       <- paste0("  real[] ", func_name, "(real time,")
   diff_eq_declaration_line <- paste0("  real dydt[", n_stocks, "];")
 
   const_names   <- sapply(constants, function(constant) constant$name)

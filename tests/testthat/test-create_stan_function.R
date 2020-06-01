@@ -83,7 +83,7 @@ test_model <-
 test_that("create_stan_function() returns the expected string", {
   expected_stan_function <- paste(
     "functions {",
-    "  real[] lotka_volterra(real t,",
+    "  real[] lotka_volterra(real time,",
     "              real[] y,",
     "              real[] params,",
     "              real[] x_r,",
@@ -115,8 +115,8 @@ test_that("create_stan_function() returns a string", {
 
 test_that("create_stan_function() assign the expected name to the function", {
   stan_function <- create_stan_function(lv, "lotka_volterra")
-  second_line <- strsplit(stan_function, "\n")[[1]][[2]]
-  expected_line <-   "  real[] lotka_volterra(real t,"
+  second_line   <- strsplit(stan_function, "\n")[[1]][[2]]
+  expected_line <-   "  real[] lotka_volterra(real time,"
   expect_equal(second_line, expected_line)
 })
 
@@ -193,7 +193,7 @@ test_that("create_stan_function() returns equations in computational  order", {
 
   expected_function <- paste(
     "functions {",
-    "  real[] test_model(real t,",
+    "  real[] test_model(real time,",
     "              real[] y,",
     "              real[] params,",
     "              real[] x_r,",
@@ -218,7 +218,7 @@ test_that("create_stan_function() allows user to override constant values", {
 
   expected_stan_function <- paste(
     "functions {",
-    "  real[] lotka_volterra(real t,",
+    "  real[] lotka_volterra(real time,",
     "              real[] y,",
     "              real[] params,",
     "              real[] x_r,",
