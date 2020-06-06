@@ -17,7 +17,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gcc_v: [8]
         config:
           - {os: windows-latest, r: 'release'}
           - {os: macOS-latest, r: 'release'}
@@ -62,7 +61,7 @@ jobs:
 
       - name: Install macOS dependencies
         if: matrix.config.os == 'macOS-latest' && matrix.config.r == 'devel'
-        run: brew install gcc@${GCC_V} || brew upgrade gcc@${GCC_V} || true
+        run: brew install gcc@8 || brew upgrade gcc@8 || true
 
       - name: Install dependencies
         run: |
