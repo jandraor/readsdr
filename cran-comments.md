@@ -1,7 +1,8 @@
 ## Test environments
 * local mac OS install, R 4.0.0
+* local Windows install, R 4.0.1
 * Windows Server 2019 (on Github actions), R.4.0.0
-* macOS 10.15.4 (on Github actions), R-devel, R.4.0.0 
+* macOS 10.15.4 (on Github actions), R.4.0.0 
 * ubuntu 16.04 (on Github actions), R 4.0.0
 
 
@@ -26,5 +27,5 @@
 
 ## Changes made following second submission 16th May 2020.
 
-* Removed example from external function "create_pt_statement".
+* Removed example from internal function "create_pt_statement".
 
