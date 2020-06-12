@@ -9,6 +9,8 @@
 coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
 [![R build
 status](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.org/package=readsdr)
 <!-- badges: end -->
 
 ## Overview
@@ -24,18 +26,14 @@ for [deSolve](http://desolve.r-forge.r-project.org/) and
 
 ## Installation
 
-<!-- You can install the released version of readsdr from [CRAN](https://CRAN.R-project.org) with: -->
+You can install the released version of readsdr from
+[CRAN](https://CRAN.R-project.org) with:
 
-<!-- ``` r -->
+``` r
+install.packages("readsdr")
+```
 
-<!-- install.packages("readsdr") -->
-
-<!-- ``` -->
-
-<!-- And the development version from [GitHub](https://github.com/) with: -->
-
-You can install the development version from
-[GitHub](https://github.com/) with:
+And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
@@ -57,8 +55,9 @@ summary(mdl)
 
 For reading Vensim models, they must be exported as .xmile.
 
-`vignette("Introduction_to_readsdr")` gives more detail on how to use
-the package.
+For information on how to use this package, see the
+[vignette](https://cran.r-project.org/web/packages/readsdr/vignettes/Introduction_to_readsdr.html)
+or type `vignette("Introduction_to_readsdr")` in R.
 
 ## Supported builtins
 
