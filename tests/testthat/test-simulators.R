@@ -57,3 +57,15 @@ test_that("sd_simulate() handles graphical functions", {
   output <- sd_simulate(deSolve_m2)
   expect_equal(output[nrow(output), "Population"], 102.015050)
 })
+
+test_that("sd_sensitivity_run() returns the expected output for constant sensitivity", {
+  consts_df <- data.frame(growth_rate = c(0.01, 0.02))
+  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df)
+  expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
+})
+
+test_that("sd_sensitivity_run() returns the expected output for sensitivity of initial vlaues ", {
+  stocks_df <- data.frame(Population = c(10,100))
+  output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df)
+  expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
+})

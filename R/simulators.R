@@ -41,3 +41,78 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 
   data.frame(results)
 }
+
+sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
+                               start_time = NULL, stop_time = NULL,
+                               timestep = NULL, integ_method = "euler") {
+
+  if(!(integ_method %in% c("euler", "rk4"))) stop("Invalid integration method")
+
+  if(is.null(start_time)) start_time  <- ds_inputs$sim_params$start
+  if(is.null(stop_time))  stop_time   <- ds_inputs$sim_params$stop
+  if(is.null(timestep))   timestep    <- ds_inputs$sim_params$dt
+
+  # Create time vector
+  simtime     <- seq(start_time, stop_time, by = timestep)
+
+  ode_args <- list(y      = NULL,
+                   times  = simtime,
+                   func   = ds_inputs$func,
+                   parms  = NULL,
+                   method = integ_method)
+
+
+  if(!is.null(consts_df)) {
+
+    const_sensitivity_list <- do.call(function(...) Map(list,...), consts_df)
+
+  }else {
+    ode_args$parms <- ds_inputs$consts
+  }
+
+
+  if(!is.null(stocks_df)) {
+
+    stock_sensitivity_list <- do.call(function(...) Map(list,...), stocks_df)
+
+  } else {
+    ode_args$y <- ds_inputs$stocks
+  }
+
+#-------------------------------------------------------------------------------
+
+  if(!is.null(consts_df) & is.null(stocks_df)) {
+    iters   <- nrow(consts_df)
+    df_list <- const_sensitivity(const_sensitivity_list, ode_args)
+  }
+
+  if(is.null(consts_df) & !is.null(stocks_df)) {
+    iters   <- nrow(stocks_df)
+    df_list <- stock_sensitivity(stock_sensitivity_list, ode_args)
+  }
+
+  sensitivity_df       <- do.call("rbind", df_list)
+  sensitivity_df$iter  <- rep(1:iters, each = length(simtime))
+  sensitivity_df
+}
+
+const_sensitivity <- function(const_sensitivity_list, ode_args) {
+  df_list <- lapply(const_sensitivity_list, function(const_list) {
+    ode_args$parms <- unlist(const_list)
+    result_matrix  <- do.call(deSolve::ode, ode_args)
+    data.frame(result_matrix)
+  })
+}
+
+stock_sensitivity <- function(stock_sensitivity_list, ode_args) {
+  df_list <- lapply(stock_sensitivity_list, function(stock_list) {
+    ode_args$y <- unlist(stock_list)
+    result_matrix  <- do.call(deSolve::ode, ode_args)
+    data.frame(result_matrix)
+  })
+}
+
+const_stock_sensitivity <- function(const_sensitivity_list,
+                                    stock_sensitivity_list, ode_args) {
+
+}
