@@ -69,3 +69,23 @@ test_that("sd_sensitivity_run() returns the expected output for sensitivity of i
   output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df)
   expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
 })
+
+test_that("sd_sensitivity_run() works for simultaneous sensitivity to stocks and constants", {
+  consts_df <- data.frame(growth_rate = c(0.01, 0.02))
+  stocks_df <- data.frame(Population = c(100, 10))
+  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
+                                  stocks_df = stocks_df)
+  expect_equal(output[c(5, 10), "Population"], c(101.003756, 	10.2015050))
+})
+
+test_that("sd_sensitivity_run() returns an error when the input data frames are
+of unequal size", {
+  consts_df <- data.frame(growth_rate = c(0.01))
+  stocks_df <- data.frame(Population = c(100, 10))
+
+  expect_error(
+    sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
+                       stocks_df = stocks_df),
+    "the number of rows in both data frames (consts & stocks) must be of equal size",
+    fixed = TRUE)
+})

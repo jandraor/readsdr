@@ -42,6 +42,17 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
   data.frame(results)
 }
 
+#' Perform a sensitivity run on a System Dynamics model
+#'
+#' @param consts_df
+#' @param stocks_df
+#'
+#' @inheritParams sd_simulate
+#'
+#' @return A data frame
+#' @export
+#'
+#' @examples
 sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
                                start_time = NULL, stop_time = NULL,
                                timestep = NULL, integ_method = "euler") {
@@ -79,7 +90,7 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
     ode_args$y <- ds_inputs$stocks
   }
 
-#-------------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
 
   if(!is.null(consts_df) & is.null(stocks_df)) {
     iters   <- nrow(consts_df)
@@ -89,6 +100,19 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
   if(is.null(consts_df) & !is.null(stocks_df)) {
     iters   <- nrow(stocks_df)
     df_list <- stock_sensitivity(stock_sensitivity_list, ode_args)
+  }
+
+  if(!is.null(consts_df) & !is.null(stocks_df)) {
+    row_consts <- nrow(consts_df)
+    row_stocks <- nrow(stocks_df)
+
+    if(row_consts != row_stocks) {
+      stop("the number of rows in both data frames (consts & stocks) must be of equal size", call. = FALSE)
+    }
+
+    iters   <- nrow(consts_df)
+    df_list <- const_stock_sensitivity(const_sensitivity_list,
+                                       stock_sensitivity_list, ode_args)
   }
 
   sensitivity_df       <- do.call("rbind", df_list)
@@ -106,7 +130,7 @@ const_sensitivity <- function(const_sensitivity_list, ode_args) {
 
 stock_sensitivity <- function(stock_sensitivity_list, ode_args) {
   df_list <- lapply(stock_sensitivity_list, function(stock_list) {
-    ode_args$y <- unlist(stock_list)
+    ode_args$y     <- unlist(stock_list)
     result_matrix  <- do.call(deSolve::ode, ode_args)
     data.frame(result_matrix)
   })
@@ -115,4 +139,14 @@ stock_sensitivity <- function(stock_sensitivity_list, ode_args) {
 const_stock_sensitivity <- function(const_sensitivity_list,
                                     stock_sensitivity_list, ode_args) {
 
+  df_list <- purrr::map2(
+    const_sensitivity_list, stock_sensitivity_list,
+    function(const_list, stock_list) {
+
+      ode_args$y     <- unlist(stock_list)
+      ode_args$parms <- unlist(const_list)
+      result_matrix  <- do.call(deSolve::ode, ode_args)
+      data.frame(result_matrix)
+
+    })
 }
