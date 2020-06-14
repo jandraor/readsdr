@@ -44,8 +44,14 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 
 #' Perform a sensitivity run on a System Dynamics model
 #'
-#' @param consts_df
-#' @param stocks_df
+#' \code{sd_sensitivity_run} returns a data frame with the simulation of a
+#' model for several iterations of different inputs.
+#'
+#' @param consts_df A data frame that contains the values of constants to
+#'   simulate. Each column corresponds to a constant and each row to an
+#'   iteration.
+#' @param stocks_df A data frame that containts the initial value of stocks to
+#' be explored. Each column corresponds to a stock and each row to an iteration.
 #'
 #' @inheritParams sd_simulate
 #'
@@ -53,6 +59,10 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 #' @export
 #'
 #' @examples
+#' path      <- system.file("models", "SIR.stmx", package = "readsdr")
+#' ds_inputs <- xmile_to_deSolve(path)
+#' consts_df <- data.frame(i = c(0.25, 0.30))
+#' sd_sensitivity_run(ds_inputs, consts_df)
 sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
                                start_time = NULL, stop_time = NULL,
                                timestep = NULL, integ_method = "euler") {
@@ -72,17 +82,38 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
                    parms  = NULL,
                    method = integ_method)
 
+  if("graph_funs" %in% names(ds_inputs)) {
+    ode_args$graph_funs <- ds_inputs$graph_funs
+  }
 
+  consts_names <- names(ds_inputs$consts)
+  stocks_names <- names(ds_inputs$stocks)
+
+
+  #-----------------------------------------------------------------------------
   if(!is.null(consts_df)) {
+    sens_consts     <- colnames(consts_df)
+    missing_consts  <- consts_names[!consts_names %in% sens_consts]
+
+    if(length(missing_consts) > 0) {
+      consts_df <- fill_df(consts_df, missing_consts, ds_inputs$consts)
+    }
 
     const_sensitivity_list <- do.call(function(...) Map(list,...), consts_df)
 
   }else {
     ode_args$parms <- ds_inputs$consts
   }
+  #-----------------------------------------------------------------------------
 
-
+  #-----------------------------------------------------------------------------
   if(!is.null(stocks_df)) {
+    sens_stocks     <- colnames(stocks_df)
+    missing_stocks  <- stocks_names[!stocks_names %in% sens_stocks]
+
+    if(length(missing_stocks) > 0) {
+      stocks_df <- fill_df(stocks_df, missing_stocks, ds_inputs$stocks)
+    }
 
     stock_sensitivity_list <- do.call(function(...) Map(list,...), stocks_df)
 
@@ -149,4 +180,13 @@ const_stock_sensitivity <- function(const_sensitivity_list,
       data.frame(result_matrix)
 
     })
+}
+
+fill_df <- function(df, missing, elems) {
+
+  for(ms in missing) {
+    df[ms] <- elems[ms]
+  }
+
+  df
 }
