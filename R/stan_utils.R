@@ -36,9 +36,54 @@ extract_timeseries_var <- function(var_name, posterior_df) {
   var_ts
 }
 
-# Extract stock over time
 
-# Get stock inits
+#' Extract the values over time of a stock from a Stan fit
+#'
+#' @param stock_name A string that indicates the stock's name for which the
+#' function will construct the timeseries.
+#' @param all_stocks A vector of strings that contains the names of all the
+#' stocks in the model. This vector must have the same order as the differential
+#' equations in the Stan code.
+#' @param ODE_output A string that indicates the name of the variable where
+#' model's output in stored in Stan.
+#'
+#' @inheritParams extract_timeseries_var
+#'
+#' @return A data frame
+#' @export
+#'
+#' @examples
+#' posterior_df <- data.frame(`yhat[1,2]` = rep(0, 2), `yhat[2,2]` = rep(1, 2),
+#'                             check.names = FALSE)
+#' stocks       <- c("S1", "S2")
+#' extract_timeseries_stock("S2", posterior_df, stocks, "yhat")
+extract_timeseries_stock <- function(stock_name, posterior_df, all_stocks,
+                                     ODE_output) {
+
+  posterior_cols <- colnames(posterior_df)
+  pos_stock      <- which(stock_name == all_stocks)
+  pattern        <- stringr::str_glue("{ODE_output}\\[\\d+,{pos_stock}\\]")
+  pos_search     <- grep(pattern, posterior_cols)
+  search_cols    <- posterior_cols[pos_search]
+  search_df      <- posterior_df[, search_cols]
+
+  stock_ts       <- purrr::imap_dfr(search_df, function(col, label) {
+
+    pattern      <- stringr::str_glue("{ODE_output}\\[(\\d+),\\d+\\]")
+    match_output <- stringr::str_match(label, pattern)
+    time_var     <- as.numeric(match_output[[2]])
+
+    data.frame(stringsAsFactors = FALSE,
+               iter  = seq_along(col),
+               time = time_var,
+               value = col)
+  })
+
+  stock_ts$stock <- stock_name
+  stock_ts       <- stock_ts[, c(1:2, 4, 3)]
+  stock_ts
+}
+
 
 #' Stan's transformed data block for ODE models
 #'
