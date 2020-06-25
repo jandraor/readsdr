@@ -10,6 +10,8 @@
 #'   considered as parameters in the ODE function.
 #' @param override.consts A list in which each element is a name-value pair that
 #' replaces values of constants.
+#' @param additional_funs A vector of strings. Each string corresponds to a
+#' user-defined function.
 #' @inheritParams read_xmile
 #'
 #' @return A string with the code containing the model's equations in the
@@ -21,7 +23,8 @@
 #' create_stan_function(path, "my_model")
 
 create_stan_function <- function (filepath, func_name, pars = NULL,
-                                  override.consts = NULL) {
+                                  override.consts = NULL,
+                                  additional_funs = NULL) {
 
   XMILE_structure  <- extract_structure_from_XMILE(filepath)
 
@@ -75,7 +78,7 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
       regex_pattern <- stringr::regex(paste0("\\b", sf,"\\b"))
       equation      <- stringr::str_replace_all(
         equation, regex_pattern, paste0("y", counter, "[", stock_pos, "]"))
-      counter <- counter + 1
+      counter       <- counter + 1
     }
 
     equation <- stringr::str_replace_all(equation, "y\\d+", "y")
@@ -105,6 +108,9 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
   }) %>% paste(collapse = "\n")
 
 
+
+
+
   stan_function <- paste(
     "functions {",
     function_name_line ,
@@ -118,6 +124,12 @@ create_stan_function <- function (filepath, func_name, pars = NULL,
     diff_eq,
     "  return dydt;",
     "  }",
-    "}",
     sep = "\n")
+
+  if(!is.null(additional_funs)) {
+    af_text       <- paste(additional_funs, sep = "\n")
+    stan_function <- paste(stan_function, af_text, sep = "\n")
+  }
+
+  stan_function    <- paste(stan_function, "}", sep = "\n")
 }

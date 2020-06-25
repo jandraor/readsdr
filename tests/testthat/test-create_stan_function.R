@@ -241,4 +241,45 @@ test_that("create_stan_function() allows user to override constant values", {
   expect_equal(stan_function, expected_stan_function)
 })
 
+test_that("create_stan_function() allows user to add other functions", {
+  expected_stan_function <- paste(
+    "functions {",
+    "  real[] lotka_volterra(real time,",
+    "              real[] y,",
+    "              real[] params,",
+    "              real[] x_r,",
+    "              int[] x_i) {",
+    "  real dydt[2];",
+    "  real Bx;",
+    "  real Dx;",
+    "  real By;",
+    "  real Dy;",
+    "  Bx = 1*y[1];",
+    "  Dx = 0.2*y[1]*y[2];",
+    "  By = 0.04*y[1]*y[2];",
+    "  Dy = 0.5*y[2];",
+    "  dydt[1] = Bx-Dx;",
+    "  dydt[2] = By-Dy;",
+    "  return dydt;",
+    "  }",
+    "  real test_sum(int y, int x) {",
+    "    return x + y;",
+    "  }",
+    "}",
+    sep = "\n")
+
+  user_function <- paste(
+    "  real test_sum(int y, int x) {",
+    "    return x + y;",
+    "  }",
+    sep = "\n")
+
+  expect_equal(create_stan_function(lv, "lotka_volterra",
+                                    additional_funs = list(user_function)),
+               expected_stan_function)
+})
+
+
+
+
 

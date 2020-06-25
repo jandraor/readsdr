@@ -4,7 +4,13 @@
 \alias{create_stan_function}
 \title{Create a Stan's ODE function from an XMILE file}
 \usage{
-create_stan_function(filepath, func_name, pars = NULL, override.consts = NULL)
+create_stan_function(
+  filepath,
+  func_name,
+  pars = NULL,
+  override.consts = NULL,
+  additional_funs = NULL
+)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -18,6 +24,9 @@ considered as parameters in the ODE function.}
 
 \item{override.consts}{A list in which each element is a name-value pair that
 replaces values of constants.}
+
+\item{additional_funs}{A vector of strings. Each string corresponds to a
+user-defined function.}
 }
 \value{
 A string with the code containing the model's equations in the
