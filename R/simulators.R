@@ -115,6 +115,7 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
       stocks_df <- fill_df(stocks_df, missing_stocks, ds_inputs$stocks)
     }
 
+    stocks_df              <- stocks_df[, c(stocks_names), drop = FALSE]
     stock_sensitivity_list <- do.call(function(...) Map(list,...), stocks_df)
 
   } else {

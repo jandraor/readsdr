@@ -83,7 +83,7 @@ test_that("sd_sensitivity_run() returns the expected output for constant sensiti
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
 })
 
-test_that("sd_sensitivity_run() returns the expected output for sensitivity of initial vlaues ", {
+test_that("sd_sensitivity_run() returns the expected output for sensitivity of initial values ", {
   stocks_df <- data.frame(Population = c(10,100))
   output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df)
   expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
@@ -133,4 +133,10 @@ test_that("sd_sensitivity_run() works for a subset of constants & stocks", {
   output    <- sd_sensitivity_run(deSolve_m3, consts_df = consts_df,
                                   stocks_df = stocks_df)
   expect_equal(output[c(5, 10), "Population"], c(10.1003756, 100))
+})
+
+test_that("sd_sensitivity_run() deals with the order of the stocks", {
+  stocks_df <- data.frame(Cumulative_Deaths = c(0, 10))
+  output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df)
+  expect_equal(output[c(5, 10), "Cumulative_Deaths"], c(1, 11))
 })
