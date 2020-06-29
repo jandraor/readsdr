@@ -140,3 +140,10 @@ test_that("sd_sensitivity_run() deals with the order of the stocks", {
   output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df)
   expect_equal(output[c(5, 10), "Cumulative_Deaths"], c(1, 11))
 })
+
+test_that("sd_sensitivity_run() works with several cores", {
+  consts_df <- data.frame(growth_rate = c(0.01, 0.02))
+  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
+                                  multicore = TRUE)
+  expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
+})

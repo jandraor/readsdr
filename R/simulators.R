@@ -53,6 +53,8 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 #' @param stocks_df A data frame that containts the initial value of stocks to
 #' be explored. Each column corresponds to a stock and each row to an iteration.
 #'
+#' @param multicore A boolean value that indicates whether the process
+#' is parallelised.
 #' @inheritParams sd_simulate
 #'
 #' @return A data frame
@@ -65,7 +67,8 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 #' sd_sensitivity_run(ds_inputs, consts_df)
 sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
                                start_time = NULL, stop_time = NULL,
-                               timestep = NULL, integ_method = "euler") {
+                               timestep = NULL, integ_method = "euler",
+                               multicore = FALSE) {
 
   if(!(integ_method %in% c("euler", "rk4"))) stop("Invalid integration method")
 
@@ -126,7 +129,7 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
 
   if(!is.null(consts_df) & is.null(stocks_df)) {
     iters   <- nrow(consts_df)
-    df_list <- const_sensitivity(const_sensitivity_list, ode_args)
+    df_list <- const_sensitivity(const_sensitivity_list, ode_args, multicore)
   }
 
   if(is.null(consts_df) & !is.null(stocks_df)) {
@@ -152,12 +155,28 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
   sensitivity_df
 }
 
-const_sensitivity <- function(const_sensitivity_list, ode_args) {
-  df_list <- lapply(const_sensitivity_list, function(const_list) {
-    ode_args$parms <- unlist(const_list)
-    result_matrix  <- do.call(deSolve::ode, ode_args)
-    data.frame(result_matrix)
-  })
+const_sensitivity <- function(const_sensitivity_list, ode_args, multicore) {
+
+  if(multicore) {
+    n_cores <- parallel::detectCores()
+
+    if(n_cores > 1) {
+      df_list <- parallel::mclapply(const_sensitivity_list, do_const_sens,
+                                    mc.cores = n_cores - 1,
+                                    ode_args = ode_args)
+      return(df_list)
+    }
+
+  }
+
+  df_list <- lapply(const_sensitivity_list, do_const_sens,
+                    ode_args = ode_args)
+}
+
+do_const_sens <- function(const_list, ode_args) {
+   ode_args$parms <- unlist(const_list)
+   result_matrix  <- do.call(deSolve::ode, ode_args)
+   data.frame(result_matrix)
 }
 
 stock_sensitivity <- function(stock_sensitivity_list, ode_args) {
