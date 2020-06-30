@@ -134,7 +134,7 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
 
   if(is.null(consts_df) & !is.null(stocks_df)) {
     iters   <- nrow(stocks_df)
-    df_list <- stock_sensitivity(stock_sensitivity_list, ode_args)
+    df_list <- stock_sensitivity(stock_sensitivity_list, ode_args, multicore)
   }
 
   if(!is.null(consts_df) & !is.null(stocks_df)) {
@@ -169,8 +169,7 @@ const_sensitivity <- function(const_sensitivity_list, ode_args, multicore) {
 
   }
 
-  df_list <- lapply(const_sensitivity_list, do_const_sens,
-                    ode_args = ode_args)
+  df_list <- lapply(const_sensitivity_list, do_const_sens, ode_args = ode_args)
 }
 
 do_const_sens <- function(const_list, ode_args) {
@@ -179,12 +178,27 @@ do_const_sens <- function(const_list, ode_args) {
    data.frame(result_matrix)
 }
 
-stock_sensitivity <- function(stock_sensitivity_list, ode_args) {
-  df_list <- lapply(stock_sensitivity_list, function(stock_list) {
-    ode_args$y     <- unlist(stock_list)
-    result_matrix  <- do.call(deSolve::ode, ode_args)
-    data.frame(result_matrix)
-  })
+stock_sensitivity <- function(stock_sensitivity_list, ode_args, multicore) {
+
+  if(multicore) {
+    n_cores <- parallel::detectCores()
+
+    if(n_cores > 1) {
+      df_list <- parallel::mclapply(stock_sensitivity_list, do_init_sens,
+                                    mc.cores = n_cores - 1,
+                                    ode_args = ode_args)
+      return(df_list)
+    }
+
+  }
+
+  df_list <- lapply(stock_sensitivity_list, do_init_sens, ode_args = ode_args)
+}
+
+do_init_sens <- function(stock_list, ode_args) {
+  ode_args$y     <- unlist(stock_list)
+  result_matrix  <- do.call(deSolve::ode, ode_args)
+  data.frame(result_matrix)
 }
 
 const_stock_sensitivity <- function(const_sensitivity_list,

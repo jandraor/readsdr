@@ -146,4 +146,9 @@ test_that("sd_sensitivity_run() works with several cores", {
   output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
                                   multicore = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
+
+  stocks_df <- data.frame(Population = c(10,100))
+  output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df,
+                                  multicore = TRUE)
+  expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
 })
