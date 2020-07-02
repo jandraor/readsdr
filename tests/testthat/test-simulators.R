@@ -144,11 +144,20 @@ test_that("sd_sensitivity_run() deals with the order of the stocks", {
 test_that("sd_sensitivity_run() works with several cores", {
   consts_df <- data.frame(growth_rate = c(0.01, 0.02))
   output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
-                                  multicore = TRUE)
+                                  multicore = TRUE, n_cores = 2)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
+
 
   stocks_df <- data.frame(Population = c(10,100))
   output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df,
-                                  multicore = TRUE)
+                                  multicore = TRUE, n_cores = 2)
   expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
+
+
+  consts_df <- data.frame(growth_rate = c(0.01, 0.02))
+  stocks_df <- data.frame(Population = c(100, 10))
+  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
+                                  stocks_df = stocks_df,
+                                  multicore = TRUE, n_cores = 2)
+  expect_equal(output[c(5, 10), "Population"], c(101.003756, 	10.2015050))
 })

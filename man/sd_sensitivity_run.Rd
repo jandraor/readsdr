@@ -11,7 +11,9 @@ sd_sensitivity_run(
   start_time = NULL,
   stop_time = NULL,
   timestep = NULL,
-  integ_method = "euler"
+  integ_method = "euler",
+  multicore = FALSE,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -31,6 +33,11 @@ be explored. Each column corresponds to a stock and each row to an iteration.}
 \item{timestep}{A number}
 
 \item{integ_method}{A string. Either "euler" or "rk4"}
+
+\item{multicore}{A boolean value that indicates whether the process
+is parallelised. This option only works for Unix-based systems.}
+
+\item{n_cores}{An integer.}
 }
 \value{
 A data frame
