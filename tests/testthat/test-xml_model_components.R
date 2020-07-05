@@ -28,6 +28,25 @@ test_model <-
       </doc1>
     </root>'
 
+smooth1_xml <-  xml2::read_xml(
+  '<root>
+     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+       <header>
+		     <vendor>isee systems, inc.</vendor>
+		   </header>
+	     <sim_specs>
+	       <start>0</start>
+		     <stop>4</stop>
+		     <dt reciprocal="true">4</dt>
+	     </sim_specs>
+	     <variables>
+         <aux name="S1">
+           <eqn>SMTH1(0.5,  5,  1)</eqn>
+         </aux>
+       </variables>
+     </doc1>
+   </root>')
+
 
 
 # create_param_obj_xmile()------------------------------------------------------
@@ -249,25 +268,6 @@ test_that("create_vars_consts_obj_xmile() works with PULSE from Vensim", {
 })
 
 test_that("create_vars_consts_obj_xmile() translates SMTH1 builtin", {
-  smooth1_xml <-  xml2::read_xml(
-    '<root>
-     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
-       <header>
-		     <vendor>isee systems, inc.</vendor>
-		   </header>
-	     <sim_specs>
-	       <start>0</start>
-		     <stop>4</stop>
-		     <dt reciprocal="true">4</dt>
-	     </sim_specs>
-	     <variables>
-         <aux name="S1">
-           <eqn>SMTH1(0.5,  5,  1)</eqn>
-         </aux>
-       </variables>
-     </doc1>
-   </root>')
-
   auxs_xml     <- xml2::xml_find_all(smooth1_xml, ".//d1:flow|.//d1:aux")
 
   actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee")
@@ -492,4 +492,31 @@ test_that("create_level_obj_xmile() throws an error when there are no stocks", {
          value = "30"))
 
   expect_error(create_level_obj_xmile(test_stocks_xml, test_vars, test_consts))
+})
+
+test_that("create_level_obj_xmile() takes into account builtin stocks", {
+
+  test_stocks_xml <- xml2::xml_find_all(smooth1_xml, ".//d1:stock")
+
+
+  variables <- list(
+      list(name     = "adjust_S1",
+           equation = "(0.5-S1)/5"))
+
+  constants <- list()
+
+  builtin_stocks <- list(
+    list(name      = "S1",
+         equation  = "adjust_S1",
+         initValue = 1)
+    )
+
+
+  actual_val      <- create_level_obj_xmile(test_stocks_xml, variables,
+                                            constants, builtin_stocks)
+  expected_val <- list(name      = "S1",
+                       equation  = "adjust_S1",
+                       initValue = 1)
+
+  expect_equal(actual_val[[1]], expected_val)
 })

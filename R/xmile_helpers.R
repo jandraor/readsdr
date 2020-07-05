@@ -16,7 +16,15 @@ extract_structure_from_XMILE <- function(filepath) {
   constants       <- vars_and_consts$constants
 
   stocks_xml     <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
-  levels         <- create_level_obj_xmile(stocks_xml, variables, constants)
+
+  args_fun       <- list(stocks_xml = stocks_xml, variables = variables,
+                         constants = constants)
+
+  if("builtin_stocks" %in% names(vars_and_consts)) {
+    args_fun$builtin_stocks <- vars_and_consts$builtin_stocks
+  }
+
+  levels         <- do.call("create_level_obj_xmile", args_fun)
 
   list(parameters = parameters,
        levels = levels,

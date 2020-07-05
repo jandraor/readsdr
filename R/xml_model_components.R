@@ -17,10 +17,12 @@ create_param_obj_xmile <- function(sim_specs) {
        dt = dt)
 }
 
-create_level_obj_xmile <- function(stocks_xml, variables, constants) {
+create_level_obj_xmile <- function(stocks_xml, variables, constants,
+                                   builtin_stocks = NULL) {
 
-  if(length(stocks_xml) == 0L) stop("A model must contain stocks",
-                                    call. = FALSE)
+  if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
+    stop("A model must contain stocks", call. = FALSE)
+  }
 
   # This makes consts & auxs have the same properties
   constants <- lapply(constants, function(const) {
@@ -28,6 +30,10 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants) {
   })
 
   stocks_list <- lapply(stocks_xml, extract_stock_info)
+
+  if(!is.null(builtin_stocks)) {
+    stocks_list <- c(builtin_stocks, stocks_list)
+  }
 
   stock_auxs <- lapply(stocks_list, function(stock) {
     list(name = stock$name, equation = stock$initValue)
