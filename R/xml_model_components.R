@@ -70,8 +70,9 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
   if(length(pos_Time) == 1) auxs_xml <- auxs_xml[-pos_Time]
   #-----------------------------------------------------------------------------
   n_vars_consts <- length(auxs_xml)
-  vars          <- list()
-  consts        <- list()
+  vars           <- list()
+  consts         <- list()
+  builtin_stocks <- list()
 
   if(n_vars_consts == 0L) {
     return(list(variables = vars, constants = consts))
@@ -79,11 +80,15 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
 
   counter_v     <- 1
   counter_c     <- 1
+  counter_s     <- 1
 
   for(i in 1:n_vars_consts){
+
     aux_xml  <- auxs_xml[[i]]
+
     equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
       xml2::xml_text() %>% sanitise_aux_equation(vendor)
+
     is_const <- !is.na(suppressWarnings(as.numeric(equation)))
 
     var_name <- aux_xml %>% xml2::xml_attr("name") %>%
@@ -91,6 +96,29 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
 
     # if the aux is a variable
     if(!is_const) {
+
+      #-------------------------------------------------------------------------
+      # Smooth functions
+      #-------------------------------------------------------------------------
+
+      # Stella
+      stl_smooth <- stringr::str_detect(equation, "SMTH1")
+
+      if(stl_smooth) {
+
+        S1_translation      <- translate_SMOOTH1(var_name, equation, "isee")
+        variable            <- S1_translation$variable
+        vars[[counter_v]]   <- variable
+        counter_v           <- counter_v + 1
+
+        builtin_stocks[[counter_s]] <- S1_translation$stock
+        counter_s                   <- counter_s + 1
+        next
+      }
+
+      #-------------------------------------------------------------------------
+      # Graphical functions
+      #-------------------------------------------------------------------------
       there_is_graph_fun <- FALSE
 
       # Vensim
@@ -115,6 +143,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
         graph_fun          <- list(name = fun_name,
                                    fun = func)
       }
+      #-------------------------------------------------------------------------
 
       variable          <- list(name = var_name,
                                 equation = equation)
@@ -136,8 +165,14 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
     }
   }
 
-  list(variables = vars,
-       constants = consts)
+  vars_consts_obj <- list(variables = vars,
+                          constants = consts)
+
+  if(length(builtin_stocks) > 0) {
+    vars_consts_obj$builtin_stocks <- builtin_stocks
+  }
+
+  vars_consts_obj
 }
 
 extract_stock_info <- function(stock_xml) {

@@ -1,5 +1,7 @@
 context("XML model components")
 
+
+
 test_model <-
   '<root>
       <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -25,6 +27,7 @@ test_model <-
         </variables>
       </doc1>
     </root>'
+
 
 
 # create_param_obj_xmile()------------------------------------------------------
@@ -242,6 +245,45 @@ test_that("create_vars_consts_obj_xmile() works with PULSE from Vensim", {
            equation = "0.01*ifelse(time==1,1,0)")),
     constants = list()
   )
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_vars_consts_obj_xmile() translates SMTH1 builtin", {
+  smooth1_xml <-  xml2::read_xml(
+    '<root>
+     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+       <header>
+		     <vendor>isee systems, inc.</vendor>
+		   </header>
+	     <sim_specs>
+	       <start>0</start>
+		     <stop>4</stop>
+		     <dt reciprocal="true">4</dt>
+	     </sim_specs>
+	     <variables>
+         <aux name="S1">
+           <eqn>SMTH1(0.5,  5,  1)</eqn>
+         </aux>
+       </variables>
+     </doc1>
+   </root>')
+
+  auxs_xml     <- xml2::xml_find_all(smooth1_xml, ".//d1:flow|.//d1:aux")
+
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee")
+
+  expected_obj <- list(
+    variables = list(
+      list(name     = "adjust_S1",
+           equation = "(0.5-S1)/5")),
+    constants = list(),
+    builtin_stocks = list(
+      list(name      = "S1",
+           equation  = "adjust_S1",
+           initValue = 1)
+    )
+  )
+
   expect_equal(actual_obj, expected_obj)
 })
 
