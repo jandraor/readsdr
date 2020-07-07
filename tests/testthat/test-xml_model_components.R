@@ -47,6 +47,25 @@ smooth1_xml <-  xml2::read_xml(
      </doc1>
    </root>')
 
+smooth3_xml <-  xml2::read_xml(
+  '<root>
+     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+       <header>
+		     <vendor>isee systems, inc.</vendor>
+		   </header>
+	     <sim_specs>
+	       <start>0</start>
+		     <stop>4</stop>
+		     <dt reciprocal="true">4</dt>
+	     </sim_specs>
+	     <variables>
+         <aux name="S3">
+           <eqn>SMTH3(0.5,  6,  1)</eqn>
+         </aux>
+       </variables>
+     </doc1>
+   </root>')
+
 
 
 # create_param_obj_xmile()------------------------------------------------------
@@ -280,6 +299,36 @@ test_that("create_vars_consts_obj_xmile() translates SMTH1 builtin", {
     builtin_stocks = list(
       list(name      = "S1",
            equation  = "adjust_S1",
+           initValue = 1)
+    )
+  )
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_vars_consts_obj_xmile() translates SMTH3 builtin", {
+  auxs_xml     <- xml2::xml_find_all(smooth3_xml, ".//d1:flow|.//d1:aux")
+
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee")
+
+  expected_obj <- list(
+    variables = list(
+      list(name     = "adjust_S3",
+           equation = "(S3_2-S3)/2"),
+      list(name     = "adjust_S3_2",
+           equation = "(S3_3-S3_2)/2"),
+      list(name     = "adjust_S3_3",
+           equation = "(0.5-S3_3)/2")),
+    constants = list(),
+    builtin_stocks = list(
+      list(name      = "S3",
+           equation  = "adjust_S3",
+           initValue = 1),
+      list(name      = "S3_2",
+           equation  = "adjust_S3_2",
+           initValue = 1),
+      list(name      = "S3_3",
+           equation  = "adjust_S3_3",
            initValue = 1)
     )
   )

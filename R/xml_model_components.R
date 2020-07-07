@@ -122,6 +122,23 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
         next
       }
 
+      stl_smooth <- stringr::str_detect(equation, "SMTH3")
+
+      if(stl_smooth) {
+
+        S3_translation  <- translate_SMOOTH3(var_name, equation, "isee")
+        variable_list   <- S3_translation$variable_list
+
+        for(i in 1:3) {
+          vars[[counter_v]]   <- variable_list[[i]]
+          counter_v           <- counter_v + 1
+
+          builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
+          counter_s                   <- counter_s + 1
+        }
+        next
+      }
+
       #-------------------------------------------------------------------------
       # Graphical functions
       #-------------------------------------------------------------------------
