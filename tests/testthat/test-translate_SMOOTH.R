@@ -87,6 +87,25 @@ test_that("translate_SMTHN() returns the expected object for delays of order hig
 
 })
 
+test_that("translate_SMTHN() returns the expected object for delays of order
+equal to 1", {
+  test_equation <- "SMTHN(0.5, 2, 1, 1)"
+  actual_obj    <- translate_SMOOTHN("SN", test_equation, "isee")
+
+  expected_obj  <- list(
+    variable_list = list(
+      list(name     = "adjust_SN",
+           equation = "(0.5-SN)/2")),
+    stock_list = list(
+      list(name      = "SN",
+           equation  = "adjust_SN",
+           initValue = 1)),
+    delay_order = 1)
+
+  expect_equal(actual_obj, expected_obj)
+
+})
+
 test_that("translate_SMTHN() throws an error when the delay order parameter is not an integer", {
   test_equation <- "SMTHN(0.5, 8, param_order,  1)"
   expect_error(translate_SMOOTHN("SN", test_equation, "isee"),

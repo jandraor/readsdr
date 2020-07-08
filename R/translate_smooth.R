@@ -7,14 +7,19 @@ translate_SMOOTH1 <- function(name, equation, vendor) {
   delay        <- trimws(string_match[[3]])
   init         <- trimws(string_match[[4]])
 
-  equation     <- stringr::str_glue("({goal}-{name})/{delay}")
-  flow_name    <- stringr::str_glue("adjust_{name}")
+  stc_vars_S1(name, goal, delay, init)
+}
 
-  list(variable = list(name     = as.character(flow_name),
-                       equation = as.character(equation)),
-       stock    = list(name      = name,
-                       equation  = as.character(flow_name),
-                       initValue = as.numeric(init)))
+stc_vars_S1 <- function(name, goal, delay, init) {
+
+   equation     <- stringr::str_glue("({goal}-{name})/{delay}")
+   flow_name    <- stringr::str_glue("adjust_{name}")
+
+   list(variable = list(name     = as.character(flow_name),
+                        equation = as.character(equation)),
+        stock    = list(name      = name,
+                        equation  = as.character(flow_name),
+                        initValue = as.numeric(init)))
 }
 
 translate_SMOOTH3 <- function(name, equation, vendor) {
@@ -79,6 +84,7 @@ translate_SMOOTHN <- function(name, equation, vendor) {
   total_delay  <- as.numeric(total_delay)
   delay_order  <- trimws(string_match[[4]])
   delay_order  <- suppressWarnings(as.numeric(delay_order))
+  init         <- trimws(string_match[[5]])
 
   if(is.na(delay_order)) {
     msg <- paste("The delay order parameter, n, must be an integer in variable",
@@ -86,7 +92,13 @@ translate_SMOOTHN <- function(name, equation, vendor) {
     stop(msg, call. = FALSE)
   }
 
-  init         <- trimws(string_match[[5]])
+  if(delay_order == 1) {
+    stc_var_list <- stc_vars_S1(name, goal, total_delay, init)
+
+    return(list(variable_list = list(stc_var_list$variable),
+                stock_list    = list(stc_var_list$stock),
+                delay_order   = 1))
+  }
 
   variable_list <- vector(mode = "list", length = delay_order)
   stock_list    <- vector(mode = "list", length = delay_order)
