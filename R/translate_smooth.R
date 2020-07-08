@@ -68,3 +68,64 @@ translate_SMOOTH3 <- function(name, equation, vendor) {
        stock_list = stock_list)
 }
 
+translate_SMOOTHN <- function(name, equation, vendor) {
+  pattern      <- stringr::regex("SMTHN\\((.+),(.+),(.+),(.+)\\)",
+                                 dotall = TRUE)
+
+  string_match <- stringr::str_match(equation, pattern)
+
+  goal         <- trimws(string_match[[2]])
+  total_delay  <- trimws(string_match[[3]])
+  total_delay  <- as.numeric(total_delay)
+  delay_order  <- trimws(string_match[[4]])
+  delay_order  <- suppressWarnings(as.numeric(delay_order))
+
+  if(is.na(delay_order)) {
+    msg <- paste("The delay order parameter, n, must be an integer in variable",
+                  name)
+    stop(msg, call. = FALSE)
+  }
+
+  init         <- trimws(string_match[[5]])
+
+  variable_list <- vector(mode = "list", length = delay_order)
+  stock_list    <- vector(mode = "list", length = delay_order)
+
+  delay         <- total_delay / delay_order
+
+  for(i in 1:delay_order) {
+    var_name     <- paste0("adjust_", name)
+    stock_name   <- name
+
+    if(i == 1) {
+      var_equation <- stringr::str_glue("({name}_2-{name})/{delay}")
+    }
+
+    if(i > 1 & i < delay_order) {
+      var_name     <- paste0(var_name, "_", i)
+      var_equation <- stringr::str_glue("({name}_{i+1}-{name}_{i})/{delay}")
+
+      stock_name     <- paste0(stock_name, "_", i)
+
+    }
+
+    if(i == delay_order) {
+      var_name     <- paste0(var_name, "_", i)
+      var_equation <- stringr::str_glue("({goal}-{name}_{i})/{delay}")
+
+      stock_name     <- paste0(stock_name, "_", i)
+    }
+
+    variable_list[[i]] <- list(name     = var_name,
+                               equation = as.character(var_equation))
+
+    stock_list[[i]]    <- list(name      = stock_name,
+                               equation  = var_name,
+                               initValue = as.numeric(init))
+  }
+
+  list(variable_list = variable_list,
+       stock_list    = stock_list,
+       delay_order   = delay_order)
+}
+
