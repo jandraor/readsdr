@@ -41,7 +41,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
 
   auxs        <- c(variables, constants, stock_auxs)
 
-  n_stocks    <- length(stocks_xml)
+  n_stocks    <- length(stocks_list)
 
   for(i in seq_len(n_stocks)){
     initValue  <- stocks_list[[i]]$initValue
