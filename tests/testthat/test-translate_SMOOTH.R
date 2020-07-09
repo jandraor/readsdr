@@ -1,6 +1,7 @@
 context("Translate SMOOTH functions")
 
-test_that("translate_SMTH1() returns the expected object", {
+test_that("translate_SMOOTH1() returns the expected object for an equation from
+          Stella", {
   test_equation <- "SMTH1(0.5,  5,  1)"
   actual_obj    <- translate_SMOOTH1("S1", test_equation, "isee")
 
@@ -12,6 +13,24 @@ test_that("translate_SMTH1() returns the expected object", {
       name      = "S1" ,
       equation  = "adjust_S1",
       initValue = 1))
+
+  expect_equal(actual_obj, expected_obj)
+
+})
+
+test_that("translate_SMOOTH1() returns the expected object for an equation from
+Vensim", {
+  test_equation <- "SMOOTH(demand, 5)"
+  actual_obj    <- translate_SMOOTH1("expected_demand", test_equation, "Vensim")
+
+  expected_obj  <- list(
+    variable = list(
+      name     = "adjust_expected_demand",
+      equation = "(demand-expected_demand)/5"),
+    stock    = list(
+      name      = "expected_demand" ,
+      equation  = "adjust_expected_demand",
+      initValue = "demand"))
 
   expect_equal(actual_obj, expected_obj)
 

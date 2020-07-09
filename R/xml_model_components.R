@@ -108,54 +108,75 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
       #-------------------------------------------------------------------------
 
       # Stella
-      stl_smooth1 <- stringr::str_detect(equation, "SMTH1")
 
-      if(stl_smooth1) {
+      if(vendor == "isee") {
+        stl_smooth1 <- stringr::str_detect(equation, "SMTH1")
 
-        S1_translation      <- translate_SMOOTH1(var_name, equation, "isee")
-        variable            <- S1_translation$variable
-        vars[[counter_v]]   <- variable
-        counter_v           <- counter_v + 1
+        if(stl_smooth1) {
 
-        builtin_stocks[[counter_s]] <- S1_translation$stock
-        counter_s                   <- counter_s + 1
-        next
-      }
-
-      stl_smooth3 <- stringr::str_detect(equation, "SMTH3")
-
-      if(stl_smooth3) {
-
-        S3_translation  <- translate_SMOOTH3(var_name, equation, "isee")
-        variable_list   <- S3_translation$variable_list
-
-        for(i in 1:3) {
-          vars[[counter_v]]   <- variable_list[[i]]
+          S1_translation      <- translate_SMOOTH1(var_name, equation, "isee")
+          variable            <- S1_translation$variable
+          vars[[counter_v]]   <- variable
           counter_v           <- counter_v + 1
 
-          builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
+          builtin_stocks[[counter_s]] <- S1_translation$stock
           counter_s                   <- counter_s + 1
+          next
         }
-        next
+
+        stl_smooth3 <- stringr::str_detect(equation, "SMTH3")
+
+        if(stl_smooth3) {
+
+          S3_translation  <- translate_SMOOTH3(var_name, equation, "isee")
+          variable_list   <- S3_translation$variable_list
+
+          for(i in 1:3) {
+            vars[[counter_v]]   <- variable_list[[i]]
+            counter_v           <- counter_v + 1
+
+            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
+            counter_s                   <- counter_s + 1
+          }
+          next
+        }
+
+        stl_smoothN <- stringr::str_detect(equation, "SMTHN")
+
+        if(stl_smoothN) {
+          SN_translation  <- translate_SMOOTHN(var_name, equation, "isee")
+          variable_list   <- SN_translation$variable_list
+          delay_order     <- SN_translation$delay_order
+
+
+          for(i in 1:delay_order) {
+            vars[[counter_v]]   <- variable_list[[i]]
+            counter_v           <- counter_v + 1
+
+            builtin_stocks[[counter_s]] <- SN_translation$stock_list[[i]]
+            counter_s                   <- counter_s + 1
+          }
+          next
+        }
       }
 
-      stl_smoothN <- stringr::str_detect(equation, "SMTHN")
+      # Vensim
 
-      if(stl_smoothN) {
-        SN_translation  <- translate_SMOOTHN(var_name, equation, "isee")
-        variable_list   <- SN_translation$variable_list
-        delay_order     <- SN_translation$delay_order
+      if(vendor == "Vensim") {
+        vns_smooth <- stringr::str_detect(equation, "SMOOTH")
 
-
-        for(i in 1:delay_order) {
-          vars[[counter_v]]   <- variable_list[[i]]
+        if(vns_smooth) {
+          S1_translation      <- translate_SMOOTH1(var_name, equation, "Vensim")
+          variable            <- S1_translation$variable
+          vars[[counter_v]]   <- variable
           counter_v           <- counter_v + 1
 
-          builtin_stocks[[counter_s]] <- SN_translation$stock_list[[i]]
+          builtin_stocks[[counter_s]] <- S1_translation$stock
           counter_s                   <- counter_s + 1
+          next
         }
-        next
       }
+
 
       #-------------------------------------------------------------------------
       # Graphical functions

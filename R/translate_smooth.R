@@ -1,13 +1,26 @@
 translate_SMOOTH1 <- function(name, equation, vendor) {
 
-  pattern      <- stringr::regex("SMTH1\\((.+),(.+),(.+)\\)",
-                                 dotall = TRUE)
-  string_match <- stringr::str_match(equation, pattern)
-  goal         <- trimws(string_match[[2]])
-  delay        <- trimws(string_match[[3]])
-  init         <- trimws(string_match[[4]])
+  if(vendor == "isee") {
+    pattern      <- stringr::regex("SMTH1\\((.+),(.+),(.+)\\)",
+                                   dotall = TRUE)
+    string_match <- stringr::str_match(equation, pattern)
+    goal         <- trimws(string_match[[2]])
+    delay        <- trimws(string_match[[3]])
+    init         <- trimws(string_match[[4]])
 
-  stc_vars_S1(name, goal, delay, init)
+    return(stc_vars_S1(name, goal, delay, init))
+  }
+
+  if(vendor == "Vensim") {
+    pattern      <- stringr::regex("SMOOTH\\((.+),(.+)\\)",
+                                   dotall = TRUE)
+    string_match <- stringr::str_match(equation, pattern)
+    goal         <- trimws(string_match[[2]])
+    delay        <- trimws(string_match[[3]])
+
+    stc_vars_S1(name, goal, delay, goal)
+
+  }
 }
 
 stc_vars_S1 <- function(name, goal, delay, init) {
@@ -15,11 +28,15 @@ stc_vars_S1 <- function(name, goal, delay, init) {
    equation     <- stringr::str_glue("({goal}-{name})/{delay}")
    flow_name    <- stringr::str_glue("adjust_{name}")
 
+   init2 <- suppressWarnings(as.numeric(init))
+
+   if(is.na(init2)) init2 <- init
+
    list(variable = list(name     = as.character(flow_name),
                         equation = as.character(equation)),
         stock    = list(name      = name,
                         equation  = as.character(flow_name),
-                        initValue = as.numeric(init)))
+                        initValue = init2))
 }
 
 translate_SMOOTH3 <- function(name, equation, vendor) {
