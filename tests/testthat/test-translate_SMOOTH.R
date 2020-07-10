@@ -94,7 +94,8 @@ test_that("translate_SMOOTH3() returns the expected object for an equation from
 Vensim", {
   test_equation <- "SMOOTH3(demand, 6)"
 
-  actual_obj    <- translate_SMOOTH3("expected_demand", test_equation, "Vensim")
+  actual_obj    <- translate_SMOOTH3("expected_demand", test_equation, "Vensim",
+                                     "SMOOTH3")
 
   expected_obj  <- list(
     variable_list = list(
@@ -121,6 +122,44 @@ Vensim", {
         name      = "expected_demand_3" ,
         equation  = "adjust_expected_demand_3",
         initValue = "demand")
+    ),
+    delay_order = 3)
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("translate_SMOOTH3() returns the expected object for an equation from
+Vensim with initialisation", {
+  test_equation <- "SMOOTH3I(0.5, 6, 1)"
+
+  actual_obj    <- translate_SMOOTH3("S3", test_equation, "Vensim",
+                                     "SMOOTH3I")
+
+  expected_obj  <- list(
+    variable_list = list(
+      list(
+        name     = "adjust_S3",
+        equation = "(S3_2-S3)/2"),
+      list(
+        name     = "adjust_S3_2",
+        equation = "(S3_3-S3_2)/2"),
+      list(
+        name     = "adjust_S3_3",
+        equation = "(0.5-S3_3)/2")
+    ),
+    stock_list = list(
+      list(
+        name      = "S3" ,
+        equation  = "adjust_S3",
+        initValue = 1),
+      list(
+        name      = "S3_2" ,
+        equation  = "adjust_S3_2",
+        initValue = 1),
+      list(
+        name      = "S3_3" ,
+        equation  = "adjust_S3_3",
+        initValue = 1)
     ),
     delay_order = 3)
 

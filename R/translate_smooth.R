@@ -53,7 +53,7 @@ stc_vars_S1 <- function(name, goal, delay, init) {
                         initValue = init2))
 }
 
-translate_SMOOTH3 <- function(name, equation, vendor) {
+translate_SMOOTH3 <- function(name, equation, vendor, fun = NA) {
 
   if(vendor == "isee") {
     pattern      <- stringr::regex("SMTH3\\((.+),(.+),(.+)\\)",
@@ -107,16 +107,31 @@ translate_SMOOTH3 <- function(name, equation, vendor) {
   }
 
   if(vendor == "Vensim") {
-    pattern      <- stringr::regex("SMOOTH3\\((.+),(.+)\\)",
-                                   dotall = TRUE)
 
-    string_match <- stringr::str_match(equation, pattern)
-    goal         <- trimws(string_match[[2]])
-    total_delay  <- trimws(string_match[[3]])
-    total_delay  <- as.numeric(total_delay)
+    if(fun == "SMOOTH3") {
+      pattern      <- stringr::regex("SMOOTH3\\((.+),(.+)\\)",
+                                     dotall = TRUE)
 
-    stc_vars_SN(name, goal, total_delay, 3, goal)
+      string_match <- stringr::str_match(equation, pattern)
+      goal         <- trimws(string_match[[2]])
+      total_delay  <- trimws(string_match[[3]])
+      total_delay  <- as.numeric(total_delay)
 
+      return(stc_vars_SN(name, goal, total_delay, 3, goal))
+    }
+
+    if(fun == "SMOOTH3I") {
+      pattern      <- stringr::regex("SMOOTH3I\\((.+),(.+),(.+)\\)",
+                                     dotall = TRUE)
+
+      string_match <- stringr::str_match(equation, pattern)
+      goal         <- trimws(string_match[[2]])
+      total_delay  <- trimws(string_match[[3]])
+      total_delay  <- as.numeric(total_delay)
+      init         <- trimws(string_match[[4]])
+
+      stc_vars_SN(name, goal, total_delay, 3, init)
+    }
   }
 }
 

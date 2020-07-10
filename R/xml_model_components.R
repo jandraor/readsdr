@@ -177,11 +177,26 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
           next
         }
 
+        vns_smoothi <- stringr::str_detect(equation, "\\bSMOOTHI\\b")
+
+        if(vns_smoothi) {
+          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
+                                                   "SMOOTHI")
+          variable            <- S1_translation$variable
+          vars[[counter_v]]   <- variable
+          counter_v           <- counter_v + 1
+
+          builtin_stocks[[counter_s]] <- S1_translation$stock
+          counter_s                   <- counter_s + 1
+          next
+        }
+
         vns_smooth3 <- stringr::str_detect(equation, "\\bSMOOTH3\\b")
 
         if(vns_smooth3) {
 
-          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor)
+          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor,
+                                               "SMOOTH3")
           variable_list   <- S3_translation$variable_list
 
           for(i in 1:3) {
@@ -194,17 +209,21 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
           next
         }
 
-        vns_smoothi <- stringr::str_detect(equation, "\\bSMOOTHI\\b")
+        vns_smooth3i <- stringr::str_detect(equation, "\\bSMOOTH3I\\b")
 
-        if(vns_smoothi) {
-          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
-                                                   "SMOOTHI")
-          variable            <- S1_translation$variable
-          vars[[counter_v]]   <- variable
-          counter_v           <- counter_v + 1
+        if(vns_smooth3i) {
 
-          builtin_stocks[[counter_s]] <- S1_translation$stock
-          counter_s                   <- counter_s + 1
+          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor,
+                                               "SMOOTH3I")
+          variable_list   <- S3_translation$variable_list
+
+          for(i in 1:3) {
+            vars[[counter_v]]   <- variable_list[[i]]
+            counter_v           <- counter_v + 1
+
+            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
+            counter_s                   <- counter_s + 1
+          }
           next
         }
       }
