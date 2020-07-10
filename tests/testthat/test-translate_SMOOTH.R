@@ -21,7 +21,8 @@ test_that("translate_SMOOTH1() returns the expected object for an equation from
 test_that("translate_SMOOTH1() returns the expected object for an equation from
 Vensim", {
   test_equation <- "SMOOTH(demand, 5)"
-  actual_obj    <- translate_SMOOTH1("expected_demand", test_equation, "Vensim")
+  actual_obj    <- translate_SMOOTH1("expected_demand", test_equation, "Vensim",
+                                     "SMOOTH")
 
   expected_obj  <- list(
     variable = list(
@@ -34,6 +35,23 @@ Vensim", {
 
   expect_equal(actual_obj, expected_obj)
 
+})
+
+test_that("translate_SMOOTH1() returns the expected object for an equation from
+Vensim with initialisation", {
+  test_equation <- "SMOOTHI(0.5, 5, 1)"
+  actual_obj    <- translate_SMOOTH1("S1", test_equation, "Vensim", "SMOOTHI")
+
+  expected_obj  <- list(
+    variable = list(
+      name     = "adjust_S1",
+      equation = "(0.5-S1)/5"),
+    stock    = list(
+      name      = "S1" ,
+      equation  = "adjust_S1",
+      initValue = 1))
+
+  expect_equal(actual_obj, expected_obj)
 })
 
 test_that("translate_SMOOTH3() returns the expected object for an equation from

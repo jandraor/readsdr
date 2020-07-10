@@ -1,4 +1,5 @@
-translate_SMOOTH1 <- function(name, equation, vendor) {
+translate_SMOOTH1 <- function(name, equation, vendor,
+                              fun = NA) {
 
   if(vendor == "isee") {
     pattern      <- stringr::regex("SMTH1\\((.+),(.+),(.+)\\)",
@@ -12,14 +13,27 @@ translate_SMOOTH1 <- function(name, equation, vendor) {
   }
 
   if(vendor == "Vensim") {
-    pattern      <- stringr::regex("SMOOTH\\((.+),(.+)\\)",
-                                   dotall = TRUE)
-    string_match <- stringr::str_match(equation, pattern)
-    goal         <- trimws(string_match[[2]])
-    delay        <- trimws(string_match[[3]])
 
-    stc_vars_S1(name, goal, delay, goal)
+    if(fun == "SMOOTH") {
+      pattern      <- stringr::regex("SMOOTH\\((.+),(.+)\\)",
+                                     dotall = TRUE)
+      string_match <- stringr::str_match(equation, pattern)
+      goal         <- trimws(string_match[[2]])
+      delay        <- trimws(string_match[[3]])
 
+      return(stc_vars_S1(name, goal, delay, goal))
+    }
+
+    if(fun == "SMOOTHI") {
+      pattern      <- stringr::regex("SMOOTHI\\((.+),(.+),(.+)\\)",
+                                     dotall = TRUE)
+      string_match <- stringr::str_match(equation, pattern)
+      goal         <- trimws(string_match[[2]])
+      delay        <- trimws(string_match[[3]])
+      init         <- trimws(string_match[[4]])
+
+      return(stc_vars_S1(name, goal, delay, init))
+    }
   }
 }
 

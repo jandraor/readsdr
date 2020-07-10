@@ -166,7 +166,8 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
         vns_smooth <- stringr::str_detect(equation, "\\bSMOOTH\\b")
 
         if(vns_smooth) {
-          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor)
+          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
+                                                   "SMOOTH")
           variable            <- S1_translation$variable
           vars[[counter_v]]   <- variable
           counter_v           <- counter_v + 1
@@ -190,6 +191,20 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
             builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
             counter_s                   <- counter_s + 1
           }
+          next
+        }
+
+        vns_smoothi <- stringr::str_detect(equation, "\\bSMOOTHI\\b")
+
+        if(vns_smoothi) {
+          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
+                                                   "SMOOTHI")
+          variable            <- S1_translation$variable
+          vars[[counter_v]]   <- variable
+          counter_v           <- counter_v + 1
+
+          builtin_stocks[[counter_s]] <- S1_translation$stock
+          counter_s                   <- counter_s + 1
           next
         }
       }
