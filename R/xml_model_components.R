@@ -163,16 +163,33 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
       # Vensim
 
       if(vendor == "Vensim") {
-        vns_smooth <- stringr::str_detect(equation, "SMOOTH")
+        vns_smooth <- stringr::str_detect(equation, "\\bSMOOTH\\b")
 
         if(vns_smooth) {
-          S1_translation      <- translate_SMOOTH1(var_name, equation, "Vensim")
+          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor)
           variable            <- S1_translation$variable
           vars[[counter_v]]   <- variable
           counter_v           <- counter_v + 1
 
           builtin_stocks[[counter_s]] <- S1_translation$stock
           counter_s                   <- counter_s + 1
+          next
+        }
+
+        vns_smooth3 <- stringr::str_detect(equation, "\\bSMOOTH3\\b")
+
+        if(vns_smooth3) {
+
+          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor)
+          variable_list   <- S3_translation$variable_list
+
+          for(i in 1:3) {
+            vars[[counter_v]]   <- variable_list[[i]]
+            counter_v           <- counter_v + 1
+
+            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
+            counter_s                   <- counter_s + 1
+          }
           next
         }
       }

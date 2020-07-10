@@ -36,7 +36,8 @@ Vensim", {
 
 })
 
-test_that("translate_SMTH3() returns the expected object", {
+test_that("translate_SMOOTH3() returns the expected object for an equation from
+Stella", {
   test_equation <- "SMTH3(0.5,  6,  1)"
   actual_obj    <- translate_SMOOTH3("S3", test_equation, "isee")
 
@@ -69,6 +70,43 @@ test_that("translate_SMTH3() returns the expected object", {
 
   expect_equal(actual_obj, expected_obj)
 
+})
+
+test_that("translate_SMOOTH3() returns the expected object for an equation from
+Vensim", {
+  test_equation <- "SMOOTH3(demand, 6)"
+
+  actual_obj    <- translate_SMOOTH3("expected_demand", test_equation, "Vensim")
+
+  expected_obj  <- list(
+    variable_list = list(
+      list(
+        name     = "adjust_expected_demand",
+        equation = "(expected_demand_2-expected_demand)/2"),
+      list(
+        name     = "adjust_expected_demand_2",
+        equation = "(expected_demand_3-expected_demand_2)/2"),
+      list(
+        name     = "adjust_expected_demand_3",
+        equation = "(demand-expected_demand_3)/2")
+    ),
+    stock_list = list(
+      list(
+        name      = "expected_demand" ,
+        equation  = "adjust_expected_demand",
+        initValue = "demand"),
+      list(
+        name      = "expected_demand_2" ,
+        equation  = "adjust_expected_demand_2",
+        initValue = "demand"),
+      list(
+        name      = "expected_demand_3" ,
+        equation  = "adjust_expected_demand_3",
+        initValue = "demand")
+    ),
+    delay_order = 3)
+
+  expect_equal(actual_obj, expected_obj)
 })
 
 test_that("translate_SMTHN() returns the expected object for delays of order higher than 1", {
