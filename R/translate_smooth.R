@@ -2,14 +2,29 @@ translate_SMOOTH1 <- function(name, equation, vendor,
                               fun = NA) {
 
   if(vendor == "isee") {
-    pattern      <- stringr::regex("SMTH1\\((.+),(.+),(.+)\\)",
-                                   dotall = TRUE)
-    string_match <- stringr::str_match(equation, pattern)
-    goal         <- trimws(string_match[[2]])
-    delay        <- trimws(string_match[[3]])
-    init         <- trimws(string_match[[4]])
 
-    return(stc_vars_S1(name, goal, delay, init))
+    pat1         <- "SMTH1\\((.+?),(.+?),(.+?)\\)"
+    pat2         <- "SMTH1\\((.+?),(.+?)\\)"
+
+    if(stringr::str_detect(equation, pat1)) {
+
+      reg_pat      <- stringr::regex(pat1, dotall = TRUE)
+      string_match <- stringr::str_match(equation, reg_pat)
+      goal         <- trimws(string_match[[2]])
+      delay        <- trimws(string_match[[3]])
+      init         <- trimws(string_match[[4]])
+
+      return(stc_vars_S1(name, goal, delay, init))
+    }
+
+    if(stringr::str_detect(equation, pat2)) {
+      reg_pat      <- stringr::regex(pat2, dotall = TRUE)
+      string_match <- stringr::str_match(equation, reg_pat)
+      goal         <- trimws(string_match[[2]])
+      delay        <- trimws(string_match[[3]])
+
+      return(stc_vars_S1(name, goal, delay, goal))
+    }
   }
 
   if(vendor == "Vensim") {
@@ -56,54 +71,28 @@ stc_vars_S1 <- function(name, goal, delay, init) {
 translate_SMOOTH3 <- function(name, equation, vendor, fun = NA) {
 
   if(vendor == "isee") {
-    pattern      <- stringr::regex("SMTH3\\((.+),(.+),(.+)\\)",
-                                   dotall = TRUE)
 
-    string_match <- stringr::str_match(equation, pattern)
-    goal         <- trimws(string_match[[2]])
-    total_delay  <- trimws(string_match[[3]])
-    total_delay  <- as.numeric(total_delay)
-    init         <- trimws(string_match[[4]])
+    pat1         <- "SMTH3\\((.+?),(.+?),(.+?)\\)"
+    pat2         <- "SMTH3\\((.+?),(.+?)\\)"
 
-    variable_list <- vector(mode = "list", length = 3)
-    stock_list    <- vector(mode = "list", length = 3)
+    if(stringr::str_detect(equation, pat1)) {
+      reg_pat      <- stringr::regex(pat1, dotall = TRUE)
+      string_match <- stringr::str_match(equation, reg_pat)
+      goal         <- trimws(string_match[[2]])
+      total_delay  <- trimws(string_match[[3]])
+      init         <- trimws(string_match[[4]])
 
-    delay        <- total_delay / 3
-
-
-    for(i in 1:3) {
-      var_name     <- paste0("adjust_", name)
-      stock_name   <- name
-
-      if(i == 1) {
-        var_equation <- stringr::str_glue("({name}_2-{name})/{delay}")
-      }
-
-      if(i == 2) {
-        var_name     <- paste0(var_name, "_", i)
-        var_equation <- stringr::str_glue("({name}_3-{name}_2)/{delay}")
-
-        stock_name     <- paste0(stock_name, "_", i)
-
-      }
-
-      if(i == 3) {
-        var_name     <- paste0(var_name, "_", i)
-        var_equation <- stringr::str_glue("({goal}-{name}_3)/{delay}")
-
-        stock_name     <- paste0(stock_name, "_", i)
-      }
-
-      variable_list[[i]] <- list(name     = var_name,
-                                 equation = as.character(var_equation))
-
-      stock_list[[i]]    <- list(name      = stock_name,
-                                 equation  = var_name,
-                                 initValue = as.numeric(init))
+      return(stc_vars_SN(name, goal, total_delay, 3, init))
     }
 
-    return(list(variable_list = variable_list,
-                stock_list = stock_list))
+    if(stringr::str_detect(equation, pat2)) {
+      reg_pat      <- stringr::regex(pat2, dotall = TRUE)
+      string_match <- stringr::str_match(equation, reg_pat)
+      goal         <- trimws(string_match[[2]])
+      total_delay  <- trimws(string_match[[3]])
+
+      return(stc_vars_SN(name, goal, total_delay, 3, goal))
+    }
   }
 
   if(vendor == "Vensim") {
@@ -115,7 +104,6 @@ translate_SMOOTH3 <- function(name, equation, vendor, fun = NA) {
       string_match <- stringr::str_match(equation, pattern)
       goal         <- trimws(string_match[[2]])
       total_delay  <- trimws(string_match[[3]])
-      total_delay  <- as.numeric(total_delay)
 
       return(stc_vars_SN(name, goal, total_delay, 3, goal))
     }
@@ -127,30 +115,57 @@ translate_SMOOTH3 <- function(name, equation, vendor, fun = NA) {
       string_match <- stringr::str_match(equation, pattern)
       goal         <- trimws(string_match[[2]])
       total_delay  <- trimws(string_match[[3]])
-      total_delay  <- as.numeric(total_delay)
       init         <- trimws(string_match[[4]])
 
-      stc_vars_SN(name, goal, total_delay, 3, init)
+      return(stc_vars_SN(name, goal, total_delay, 3, init))
     }
   }
 }
 
 translate_SMOOTHN <- function(name, equation, vendor) {
-  pattern      <- stringr::regex("SMTHN\\((.+),(.+),(.+),(.+)\\)",
-                                 dotall = TRUE)
 
-  string_match <- stringr::str_match(equation, pattern)
+  pat1         <- "SMTHN\\((.+),(.+),(.+),(.+)\\)"
+  pat2         <- "SMTHN\\((.+),(.+),(.+)\\)"
 
-  goal         <- trimws(string_match[[2]])
-  total_delay  <- trimws(string_match[[3]])
-  total_delay  <- as.numeric(total_delay)
-  delay_order  <- trimws(string_match[[4]])
-  delay_order  <- suppressWarnings(as.numeric(delay_order))
-  init         <- trimws(string_match[[5]])
+  if(stringr::str_detect(equation, pat1)) {
+    reg_pat      <- stringr::regex(pat1, dotall = TRUE)
+    string_match <- stringr::str_match(equation, reg_pat)
+    goal         <- trimws(string_match[[2]])
+    total_delay  <- trimws(string_match[[3]])
+    delay_order  <- trimws(string_match[[4]])
+    delay_order  <- suppressWarnings(as.numeric(delay_order))
+    init         <- trimws(string_match[[5]])
+
+    if(is.na(delay_order)) {
+      msg <- paste("The delay order parameter, n, must be an integer in variable",
+                   name)
+      stop(msg, call. = FALSE)
+    }
+
+    if(delay_order == 1) {
+      stc_var_list <- stc_vars_S1(name, goal, total_delay, init)
+
+      return(list(variable_list = list(stc_var_list$variable),
+                  stock_list    = list(stc_var_list$stock),
+                  delay_order   = 1))
+    }
+
+    return(stc_vars_SN(name, goal, total_delay, delay_order, init))
+  }
+
+  if(stringr::str_detect(equation, pat2)) {
+    reg_pat      <- stringr::regex(pat2, dotall = TRUE)
+    string_match <- stringr::str_match(equation, reg_pat)
+    goal         <- trimws(string_match[[2]])
+    total_delay  <- trimws(string_match[[3]])
+    delay_order  <- trimws(string_match[[4]])
+    delay_order  <- suppressWarnings(as.numeric(delay_order))
+    init         <- goal
+  }
 
   if(is.na(delay_order)) {
     msg <- paste("The delay order parameter, n, must be an integer in variable",
-                  name)
+                 name)
     stop(msg, call. = FALSE)
   }
 
@@ -162,7 +177,7 @@ translate_SMOOTHN <- function(name, equation, vendor) {
                 delay_order   = 1))
   }
 
-  stc_vars_SN(name, goal, total_delay, delay_order, init)
+  return(stc_vars_SN(name, goal, total_delay, delay_order, init))
 }
 
 
@@ -184,7 +199,10 @@ stc_vars_SN <- function(name, goal, total_delay, delay_order, init) {
   variable_list <- vector(mode = "list", length = delay_order)
   stock_list    <- vector(mode = "list", length = delay_order)
 
-  delay         <- total_delay / delay_order
+  total_delay2  <- suppressWarnings(as.numeric(total_delay))
+  delay         <- total_delay2 / delay_order
+
+  if(is.na(total_delay2)) delay <- paste0(total_delay, "/", delay_order)
 
   init2 <- suppressWarnings(as.numeric(init))
 
