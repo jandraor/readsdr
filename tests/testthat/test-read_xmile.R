@@ -90,7 +90,8 @@ from Stella", {
       </doc1>
     </root>'
 
-  # It is anticipated that this operation will throw a warning
+  # It is anticipated that this operation will throw a warning because
+  # it has a function that cannot be converted to a graph
   mdl          <- suppressWarnings(read_xmile(test_model))
   output       <- sd_simulate(mdl)
   actual_val   <- output[output$time == 3.25, "population"]
@@ -98,8 +99,17 @@ from Stella", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("read_xmile() allows the user to override init values of stocks", {
+  stock_list <- list(population = 200)
+  mdl        <- read_xmile(test_model, stock_list = stock_list)
+  expect_equal(mdl$description$levels[[1]]$initValue, 200)
+  expect_equal(mdl$deSolve_components$stocks[[1]], 200)
+})
+
 #xmile_to_deSolve()-------------------------------------------------------------
 
 test_that("xmile_to_deSolve() returns a list", {
   expect_is(xmile_to_deSolve(test_model), "list")
 })
+
+
