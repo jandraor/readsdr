@@ -106,10 +106,39 @@ test_that("read_xmile() allows the user to override init values of stocks", {
   expect_equal(mdl$deSolve_components$stocks[[1]], 200)
 })
 
+test_that("read_xmile() allows the user to override values of constants", {
+  const_list <- list(growth_rate = 0.02)
+  mdl        <- read_xmile(test_model, const_list = const_list)
+  expect_equal(mdl$description$constants[[1]]$value, 0.02)
+  expect_equal(mdl$deSolve_components$consts[[1]], 0.02)
+})
+
 #xmile_to_deSolve()-------------------------------------------------------------
 
 test_that("xmile_to_deSolve() returns a list", {
   expect_is(xmile_to_deSolve(test_model), "list")
+})
+
+#override_consts()--------------------------------------------------------------
+
+test_that("override_consts() works for a single change in multiple options", {
+  mdl_structure <- list(constants =
+                          list(list(name  = "growth_rate2",
+                                    value = 0.1),
+                               list(name  = "growth_rate1",
+                                    value = 0.1),
+                               list(name  = "growth_rate3",
+                                    value = 0.1)))
+
+  const_list <- list(growth_rate1 = 0.2)
+
+
+  actual_obj <- override_consts(mdl_structure, const_list)
+
+  expected_obj <- mdl_structure
+  expected_obj$constants[[2]]$value <- 0.2
+
+  expect_equal(actual_obj, expected_obj)
 })
 
 
