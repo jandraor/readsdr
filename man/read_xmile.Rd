@@ -4,12 +4,18 @@
 \alias{read_xmile}
 \title{Read an XMILE file into R}
 \usage{
-read_xmile(filepath)
+read_xmile(filepath, stock_list = NULL, const_list = NULL)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
 or .xmile. Vensim files (.mdl) are not xmile files. They must be exported
 from Vensim with extension .xmile}
+
+\item{stock_list}{A list in which each element's name is the name of the
+stock to override and the element's value correspond to the new init value.}
+
+\item{const_list}{A list in which each element's name is the name of the
+constant to override and the element's value correspond to the new value.}
 }
 \value{
 This function returns a list with three elements. The first element,
