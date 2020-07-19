@@ -141,4 +141,13 @@ test_that("override_consts() works for a single change in multiple options", {
   expect_equal(actual_obj, expected_obj)
 })
 
+test_that("override_consts throws an error when the constant doesn't exist", {
+  mdl_structure <- list(constants =
+                          list(list(name  = "growth_rate1",
+                               value = 0.1)))
 
+  const_list <- list(growth_rate2 = 0.2)
+
+  expect_error(override_consts(mdl_structure, const_list),
+               "Can't find constant: growth_rate2")
+})

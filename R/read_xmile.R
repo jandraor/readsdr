@@ -101,6 +101,12 @@ override_consts <- function(mdl_structure, const_list) {
   for(i in seq_len(length(const_list))) {
     cst     <- consts_override[[i]]
     pos_cst <- which(cst == const_names)
+
+    if(length(pos_cst) == 0) {
+      msg <- paste0("Can't find constant: ", cst)
+      stop(msg, call. = FALSE)
+    }
+
     mdl_structure$constants[[pos_cst]]$value <- const_list[[cst]]
   }
 
