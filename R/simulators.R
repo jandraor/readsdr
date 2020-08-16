@@ -169,14 +169,14 @@ const_sensitivity <- function(const_sensitivity_list, ode_args, multicore,
 
     if(n_cores > 1) {
 
-      if(check_win()) break
+      if(!check_win()) {
 
-      df_list <- parallel::mclapply(const_sensitivity_list, do_const_sens,
-                                    mc.cores = n_cores,
-                                    ode_args = ode_args)
-      return(df_list)
+        df_list <- parallel::mclapply(const_sensitivity_list, do_const_sens,
+                                      mc.cores = n_cores,
+                                      ode_args = ode_args)
+        return(df_list)
+      }
     }
-
   }
 
   df_list <- lapply(const_sensitivity_list, do_const_sens, ode_args = ode_args)
@@ -197,14 +197,13 @@ stock_sensitivity <- function(stock_sensitivity_list, ode_args, multicore,
 
     if(n_cores > 1) {
 
-      if(check_win()) break
-
-      df_list <- parallel::mclapply(stock_sensitivity_list, do_init_sens,
-                                    mc.cores = n_cores,
-                                    ode_args = ode_args)
-      return(df_list)
+      if(!check_win()) {
+        df_list <- parallel::mclapply(stock_sensitivity_list, do_init_sens,
+                                      mc.cores = n_cores,
+                                      ode_args = ode_args)
+        return(df_list)
+      }
     }
-
   }
 
   df_list <- lapply(stock_sensitivity_list, do_init_sens, ode_args = ode_args)
@@ -228,12 +227,12 @@ const_stock_sensitivity <- function(const_sensitivity_list,
 
     if(n_cores > 1) {
 
-      if(check_win()) break
-
-      df_list <- parallel::mclapply(sens_list, do_const_init_sens,
-                                    mc.cores = n_cores,
-                                    ode_args = ode_args)
-      return(df_list)
+      if(!check_win()) {
+        df_list <- parallel::mclapply(sens_list, do_const_init_sens,
+                                      mc.cores = n_cores,
+                                      ode_args = ode_args)
+        return(df_list)
+      }
     }
   }
 
@@ -261,7 +260,7 @@ fill_df <- function(df, missing, elems) {
 check_win <- function() {
   is_win <- FALSE
 
-  if(.Platform$OS.type == "Windows") {
+  if(.Platform$OS.type == "windows") {
     warning("This function does not suppport parallelisation in Windows",
             .call = FALSE)
     is_win <- TRUE
