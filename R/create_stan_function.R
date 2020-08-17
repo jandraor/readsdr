@@ -7,6 +7,8 @@
 #'
 #' @param override.consts A list in which each element is a name-value pair that
 #' replaces values of constants.
+#' @param additional_funs A vector of strings. Each string corresponds to a
+#' user-defined function.
 #' @inheritParams read_xmile
 #' @inheritParams stan_ode_function
 #'

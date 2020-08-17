@@ -9,7 +9,7 @@ stan_ode_function(
   func_name,
   pars = NULL,
   const_list = NULL,
-  additional_funs = NULL
+  extra_funs = NULL
 )
 }
 \arguments{
@@ -25,7 +25,7 @@ considered as parameters in the ODE function}
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
 
-\item{additional_funs}{A vector of strings. Each string corresponds to a
+\item{extra_funs}{A vector of strings. Each string corresponds to a
 user-defined function.}
 }
 \value{
