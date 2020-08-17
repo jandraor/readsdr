@@ -4,7 +4,7 @@
 #' @param func_name A string for naming the ODE function
 #' @param pars A character vector that indicates which constants will be
 #'   considered as parameters in the ODE function
-#' @param additional_funs A vector of strings. Each string corresponds to a
+#' @param extra_funs A vector of strings. Each string corresponds to a
 #' user-defined function.
 #' @inheritParams read_xmile
 #'
@@ -17,7 +17,7 @@
 #' stan_ode_function(path, "my_model")
 stan_ode_function <- function(filepath, func_name, pars = NULL,
                               const_list = NULL,
-                              additional_funs = NULL) {
+                              extra_funs = NULL) {
 
   XMILE_structure  <- extract_structure_from_XMILE(filepath)
 
@@ -42,16 +42,21 @@ stan_ode_function <- function(filepath, func_name, pars = NULL,
 
   diff_eq <- get_diffeq(levels)
 
-  paste("functions {",
-        fun_declaration,
-        diff_eq_declaration,
-        auxs_declaration,
-        auxs_equations,
-        diff_eq,
-        "    return dydt;",
-        "  }",
-        "}", sep = "\n")
+  stan_fun <- paste("functions {",
+                    fun_declaration,
+                    diff_eq_declaration,
+                    auxs_declaration,
+                    auxs_equations,
+                    diff_eq,
+                    "    return dydt;",
+                    "  }", sep = "\n")
 
+  if(!is.null(extra_funs)) {
+    af_text  <- paste(extra_funs, sep = "\n")
+    stan_fun <- paste(stan_fun, af_text, sep = "\n")
+  }
+
+  paste(stan_fun, "}", sep = "\n")
 }
 
 get_fun_declaration <- function(func_name) {

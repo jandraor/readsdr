@@ -74,6 +74,42 @@ test_that("stan_ode_function() returns the expected string", {
   expect_equal(stan_function, expected_stan_function)
 })
 
+test_that("create_stan_function() allows user to add other functions", {
+
+  expected_stan_function <- paste(
+    "functions {",
+    "  vector lotka_volterra(real time, vector y, real[] params) {",
+    "    vector[2] dydt;",
+    "    real Bx;",
+    "    real Dx;",
+    "    real By;",
+    "    real Dy;",
+    "    Bx = 1*y[1];",
+    "    Dx = 0.2*y[1]*y[2];",
+    "    By = 0.04*y[1]*y[2];",
+    "    Dy = 0.5*y[2];",
+    "    dydt[1] = Bx-Dx;",
+    "    dydt[2] = By-Dy;",
+    "    return dydt;",
+    "  }",
+    "  real test_sum(int y, int x) {",
+    "    return x + y;",
+    "  }",
+    "}",
+    sep = "\n")
+
+  user_function <- paste(
+    "  real test_sum(int y, int x) {",
+    "    return x + y;",
+    "  }",
+    sep = "\n")
+
+  stan_function <- stan_ode_function(lv, "lotka_volterra",
+                                     extra_funs = list(user_function))
+
+  expect_equal(stan_function, expected_stan_function)
+})
+
 test_that("get_fun_declaration() returns the expected string", {
   expect_equal(get_fun_declaration("lotka_volterra"),
                "  vector lotka_volterra(real time, vector y, real[] params) {")
@@ -161,3 +197,5 @@ test_that("get_diffeq() returns the expected string", {
                      "    dydt[2] = By-Dy;",
                      sep = "\n"))
 })
+
+
