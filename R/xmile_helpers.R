@@ -91,7 +91,9 @@ sanitise_init_value <- function(init_value) {
 }
 
 sanitise_aux_equation <- function(equation, vendor) {
-  equation %>%
+  sanitised_equation <- sanitise_arrays(equation, vendor)
+
+  sanitised_equation %>%
     translate_if_else_functions(vendor) %>%
     stringr::str_replace_all("\n|\t|~| ","") %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
@@ -163,4 +165,19 @@ safe_read <- function(filepath) {
 
     xml2::read_xml(filepath)
   )
+}
+
+sanitise_arrays <- function(equation, vendor) {
+
+ if(vendor == "isee") {
+   pattern        <- "\\[(.+?)\\]"
+   there_is_array <- stringr::str_detect(equation, pattern)
+
+   if(there_is_array) {
+     equation <- stringr::str_replace(equation, "\\[(.+?)\\]", "_\\1")
+     equation <- sanitise_arrays(equation, vendor)
+   }
+ }
+
+  equation
 }
