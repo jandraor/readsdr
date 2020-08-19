@@ -179,6 +179,8 @@ interpret_equations_isee <- function(non_const_obj, aux_xml) {
 
 interpret_equations_vensim <- function(non_const_obj) {
 
+  vendor <- "Vensim"
+
   var_name <- non_const_obj[[1]]
   equation <- non_const_obj[[2]]
 
