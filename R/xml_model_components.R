@@ -30,6 +30,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   })
 
   stocks_list <- lapply(stocks_xml, extract_stock_info)
+  stocks_list <- unlist(stocks_list, recursive = FALSE)
 
   if(!is.null(builtin_stocks)) {
     stocks_list <- c(builtin_stocks, stocks_list)
@@ -65,45 +66,82 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
 
 extract_stock_info <- function(stock_xml) {
 
-  inflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
-    xml2::xml_text() %>% sanitise_elem_name()
+  dimensions <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")
+  n_dims     <- length(dimensions)
 
-  n_inflow    <- length(inflow_list)
+  is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
-  if(n_inflow > 0L) {
-    text_inflow  <- paste(inflow_list, collapse = "+")
+  if(is_arrayed) {
+    elements_xml <- xml2::xml_find_all(stock_xml, ".//d1:element")
+    subs         <- xml2::xml_attr(elements_xml, "subscript")
   }
 
-  outflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
+  inflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
     xml2::xml_text() %>% sanitise_elem_name()
 
-  n_outflow    <- length(outflow_list)
+  n_inflow    <- length(inflow_vctr)
+
+  if(n_inflow > 0L) {
+
+    inflow_list <- list(inflow_vctr)
+
+    if(is_arrayed) {
+      inflow_list <- lapply(subs, function(s) paste(inflow_vctr, s, sep = "_"))
+    }
+
+    text_inflow  <- sapply(inflow_list, function(inflows) paste(inflows,
+                                                                collapse = "+"))
+  }
+
+  outflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
+    xml2::xml_text() %>% sanitise_elem_name()
+
+  n_outflow    <- length(outflow_vctr)
 
   if(n_outflow > 0L) {
-    text_outflow  <- paste0("-", outflow_list) %>% paste(collapse = "")
+
+    outflow_list <- list(outflow_vctr)
+
+    if(is_arrayed) {
+      outflow_list <- lapply(subs, function(s) paste(outflow_vctr, s, sep = "_"))
+    }
+
+    text_outflow  <- sapply(outflow_list, function(outflows) {
+      paste0("-", outflows) %>% paste(collapse = "")
+    })
+
   }
 
   if(n_inflow > 0L && n_outflow > 0L) {
-    netflow <- paste0(text_inflow, text_outflow)
+    netflows <- paste0(text_inflow, text_outflow)
   }
 
   if(n_inflow > 0L && n_outflow == 0L) {
-    netflow <- text_inflow
+    netflows <- text_inflow
   }
 
   if(n_inflow == 0L && n_outflow > 0L) {
-    netflow <- text_outflow
+    netflows <- text_outflow
   }
 
   if(n_inflow == 0L && n_outflow == 0L) {
-    netflow <- "0"
+    netflows <- "0"
   }
 
-  stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
+  stock_names <- stock_xml %>% xml2::xml_attr("name") %>%
     sanitise_elem_name() %>% check_elem_name()
 
-  initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
+  if(is_arrayed) {
+    stock_names <- paste(stock_names, subs, sep = "_")
+  }
+
+
+  initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
     xml2::xml_text() %>% sanitise_init_value()
 
-  list(name = stock_name, equation = netflow, initValue = initValue)
+  summary_stocks <- data.frame(name      = stock_names,
+                               equation  = netflows,
+                               initValue = initValues)
+
+  unname(as_row_list(summary_stocks))
 }

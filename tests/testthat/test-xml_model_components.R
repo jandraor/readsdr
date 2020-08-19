@@ -289,3 +289,57 @@ test_that("create_level_obj_xmile() takes into account builtin stocks", {
 
   expect_equal(actual_val[[1]], expected_val)
 })
+
+test_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+		  <variables>
+			<stock name="Population">
+				<dimensions>
+					<dim name="region"/>
+				</dimensions>
+				<element subscript="A">
+					<eqn>100</eqn>
+				</element>
+				<element subscript="B">
+					<eqn>200</eqn>
+				</element>
+				<inflow>growth</inflow>
+			</stock>
+      </variables>
+    </doc1>
+  </root>')
+
+test_stocks_xml <- xml2::xml_find_all(test_xml, ".//d1:stock")
+
+test_that("create_level_obj_xmile() handles stock vectors", {
+
+  test_vars   <- list()
+  test_consts <- list()
+
+  expected_obj <- list(
+    list(
+      name      = "Population_A",
+      equation  = "growth_A",
+      initValue = 100),
+    list(
+      name      = "Population_B",
+      equation  = "growth_B",
+      initValue = 200))
+
+  actual_obj <- create_level_obj_xmile(test_stocks_xml, test_vars, test_consts)
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("extract_stock_info() handles a stock vector", {
+  expected_obj <- list(
+    list(name = "Population_A", equation = "growth_A", initValue = "100"),
+    list(name = "Population_B", equation = "growth_B", initValue = "200"))
+
+  actual_obj <- extract_stock_info(test_stocks_xml[[1]])
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+
