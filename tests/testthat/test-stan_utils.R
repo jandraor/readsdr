@@ -37,4 +37,19 @@ test_that("extract_timeseries_stock() returns the expected data frame", {
                expected_df)
 })
 
+test_that("stan_data() returns the expected string", {
+
+  expected_string <- paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    "  int<lower = 1> y[n_obs];",
+    "  real t0;",
+    "  real ts[n_obs];",
+    "  vector[n_difeq] y0;",
+    "}", sep = "\n")
+
+  expect_equal(stan_data("y"), expected_string)
+})
 

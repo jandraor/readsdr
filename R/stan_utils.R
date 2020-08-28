@@ -99,3 +99,33 @@ stan_transformed_data <- function() {
     "  int  x_i[0];",
     "}", sep = "\n")
 }
+
+
+#' Stan's data block for ODE models
+#'
+#' @param vars_vector a string vector. Each element corresponds to a vector's
+#' name for which users will supply data.
+#'
+#' @return a string that contains the Stan code for the data block.
+#' @export
+#'
+#' @examples
+#' stan_data("y")
+stan_data <- function(vars_vector) {
+
+  data_declaration_list <- lapply(vars_vector, function(var){
+    stringr::str_glue("  int<lower = 1> {var}[n_obs];")})
+
+  data_declaration <- paste(data_declaration_list, collapse = "\n")
+
+  paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    data_declaration,
+    "  real t0;",
+    "  real ts[n_obs];",
+    "  vector[n_difeq] y0;",
+    "}", sep = "\n")
+}
