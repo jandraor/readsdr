@@ -105,27 +105,34 @@ stan_transformed_data <- function() {
 #'
 #' @param vars_vector a string vector. Each element corresponds to a vector's
 #' name for which users will supply data.
+#' @param inits a boolean. Indicates whether the block includes the declaration
+#' for stocks' init values.
 #'
 #' @return a string that contains the Stan code for the data block.
 #' @export
 #'
 #' @examples
 #' stan_data("y")
-stan_data <- function(vars_vector) {
+#' stan_data("y", FALSE)
+stan_data <- function(vars_vector, inits = TRUE) {
 
   data_declaration_list <- lapply(vars_vector, function(var){
-    stringr::str_glue("  int<lower = 1> {var}[n_obs];")})
+    stringr::str_glue("  int {var}[n_obs];")})
 
   data_declaration <- paste(data_declaration_list, collapse = "\n")
 
-  paste(
+  stan_d <- paste(
     "data {",
     "  int<lower = 1> n_obs;",
     "  int<lower = 1> n_params;",
     "  int<lower = 1> n_difeq;",
     data_declaration,
     "  real t0;",
-    "  real ts[n_obs];",
-    "  vector[n_difeq] y0;",
-    "}", sep = "\n")
+    "  real ts[n_obs];", sep = "\n")
+
+  if(inits) {
+    stan_d <- paste(stan_d, "  vector[n_difeq] y0;", sep = "\n")
+  }
+
+  paste(stan_d, "}", sep = "\n")
 }

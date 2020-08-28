@@ -44,12 +44,27 @@ test_that("stan_data() returns the expected string", {
     "  int<lower = 1> n_obs;",
     "  int<lower = 1> n_params;",
     "  int<lower = 1> n_difeq;",
-    "  int<lower = 1> y[n_obs];",
+    "  int y[n_obs];",
     "  real t0;",
     "  real ts[n_obs];",
     "  vector[n_difeq] y0;",
     "}", sep = "\n")
 
   expect_equal(stan_data("y"), expected_string)
+})
+
+test_that("stan_data() allows the user to remove y0", {
+
+  expected_string <- paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    "  int y[n_obs];",
+    "  real t0;",
+    "  real ts[n_obs];",
+    "}", sep = "\n")
+
+  expect_equal(stan_data("y", inits = FALSE), expected_string)
 })
 
