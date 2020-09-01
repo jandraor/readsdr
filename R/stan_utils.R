@@ -107,6 +107,10 @@ stan_transformed_data <- function() {
 #' name for which users will supply data.
 #' @param inits a boolean. Indicates whether the block includes the declaration
 #' for stocks' init values.
+#' @param type a string vector. It must have the same length as vars_vector .
+#'  This parameter indicates the type of the variables declared by
+#'  vars_vector.
+#'
 #'
 #' @return a string that contains the Stan code for the data block.
 #' @export
@@ -114,10 +118,19 @@ stan_transformed_data <- function() {
 #' @examples
 #' stan_data("y")
 #' stan_data("y", FALSE)
-stan_data <- function(vars_vector, inits = TRUE) {
+stan_data <- function(vars_vector, type, inits = TRUE) {
 
-  data_declaration_list <- lapply(vars_vector, function(var){
-    stringr::str_glue("  int {var}[n_obs];")})
+  if(length(vars_vector) != length(type)) {
+    stop("Different length sizes between 'vars_vector' & 'type' pars",
+         call. = FALSE)
+  }
+
+  obj_list <- Map(c, type, vars_vector)
+
+  data_declaration_list <- lapply(obj_list, function(var_obj) {
+
+    stringr::str_glue("  {var_obj[[1]]} {var_obj[[2]]}[n_obs];")
+  })
 
   data_declaration <- paste(data_declaration_list, collapse = "\n")
 

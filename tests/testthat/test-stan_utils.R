@@ -50,7 +50,7 @@ test_that("stan_data() returns the expected string", {
     "  vector[n_difeq] y0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data("y"), expected_string)
+  expect_equal(stan_data("y", "int"), expected_string)
 })
 
 test_that("stan_data() allows the user to remove y0", {
@@ -65,6 +65,26 @@ test_that("stan_data() allows the user to remove y0", {
     "  real ts[n_obs];",
     "}", sep = "\n")
 
-  expect_equal(stan_data("y", inits = FALSE), expected_string)
+  expect_equal(stan_data("y", "int", inits = FALSE), expected_string)
+})
+
+test_that("stan_data() allows the user to specify the var type", {
+
+  expected_string <- paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    "  real y[n_obs];",
+    "  real t0;",
+    "  real ts[n_obs];",
+    "}", sep = "\n")
+
+  expect_equal(stan_data("y", "real", inits = FALSE), expected_string)
+})
+
+test_that("stan_data() returns an error when different sizes", {
+  expect_error(stan_data(c("y1", "y2"), "real", inits = FALSE),
+               "Different length sizes between 'vars_vector' & 'type' pars")
 })
 
