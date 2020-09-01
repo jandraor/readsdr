@@ -24,6 +24,6 @@ a string that contains the Stan code for the data block.
 Stan's data block for ODE models
 }
 \examples{
-stan_data("y")
-stan_data("y", FALSE)
+stan_data("y", "int")
+stan_data("y", "real", FALSE)
 }

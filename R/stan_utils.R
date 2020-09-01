@@ -116,8 +116,8 @@ stan_transformed_data <- function() {
 #' @export
 #'
 #' @examples
-#' stan_data("y")
-#' stan_data("y", FALSE)
+#' stan_data("y", "int")
+#' stan_data("y", "real", FALSE)
 stan_data <- function(vars_vector, type, inits = TRUE) {
 
   if(length(vars_vector) != length(type)) {
