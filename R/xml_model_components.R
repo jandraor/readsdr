@@ -1,3 +1,32 @@
+create_dims_obj <- function(raw_xml) {
+  dim_xml       <- xml2::xml_find_first(raw_xml, ".//d1:dimensions")
+  dim_elems_xml <- xml2::xml_find_all(dim_xml, ".//d1:dim")
+
+  dim_names <- sapply(dim_elems_xml, function(dim_tag) {
+    xml2::xml_attr(dim_tag, "name")
+  })
+
+  dims_list        <- lapply(dim_elems_xml, extract_dim_elems)
+  names(dims_list) <- dim_names
+
+  dims_list
+}
+
+extract_dim_elems <- function(dim_tag) {
+  flag_size <- xml2::xml_has_attr(dim_tag, "size")
+
+  if(flag_size) {
+    dim_size <- xml2::xml_attr(dim_tag, "size")
+    dim_size <- as.numeric(dim_size)
+    return(1:dim_size)
+  }
+
+  elems_xml <- xml2::xml_find_all(dim_tag, ".//d1:elem")
+
+  sapply(elems_xml, function(elem_tag) xml2::xml_attr(elem_tag, "name"))
+}
+
+
 create_param_obj_xmile <- function(sim_specs) {
   start      <- sim_specs %>% xml2::xml_find_first("//d1:start") %>%
     xml2::xml_double()
@@ -18,7 +47,7 @@ create_param_obj_xmile <- function(sim_specs) {
 }
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants,
-                                   builtin_stocks = NULL) {
+                                   builtin_stocks = NULL, dims_obj = NULL) {
 
   if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
     stop("A model must contain stocks", call. = FALSE)
@@ -29,7 +58,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
     list(name = const$name, equation = const$value)
   })
 
-  stocks_list <- lapply(stocks_xml, extract_stock_info)
+  stocks_list <- lapply(stocks_xml, extract_stock_info, dims_obj = dims_obj)
   stocks_list <- unlist(stocks_list, recursive = FALSE)
 
   if(!is.null(builtin_stocks)) {
@@ -64,16 +93,26 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   stocks_list
 }
 
-extract_stock_info <- function(stock_xml) {
+extract_stock_info <- function(stock_xml, dims_obj) {
 
-  dimensions <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")
-  n_dims     <- length(dimensions)
+  dim_xml     <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")
+  dimensions  <- xml2::xml_find_all(stock_xml, ".//d1:dim")
+  n_dims      <- length(dimensions)
 
   is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
   if(is_arrayed) {
-    elements_xml <- xml2::xml_find_all(stock_xml, ".//d1:element")
-    subs         <- xml2::xml_attr(elements_xml, "subscript")
+    dim_name     <- xml2::xml_attr(dimensions[[1]], "name")
+
+    cld_xml      <- xml2::xml_children(stock_xml)
+    child_names  <- xml2::xml_name(cld_xml)
+
+    if("eqn" %in% child_names) subs <- dims_obj[[dim_name]]
+
+    if(!("eqn" %in% child_names)) {
+      elements_xml <- xml2::xml_find_all(stock_xml, ".//d1:element")
+      subs         <- xml2::xml_attr(elements_xml, "subscript")
+    }
   }
 
   inflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%

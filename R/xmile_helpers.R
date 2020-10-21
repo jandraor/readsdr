@@ -6,19 +6,29 @@ extract_structure_from_XMILE <- function(filepath) {
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
 
-  variables_xml   <- raw_xml %>% xml2::xml_find_first(".//d1:variables")
+  #-----------------------------------------------------------------------------
+  dims_obj <- NULL
 
-  auxs_xml        <- variables_xml %>%
-    xml2::xml_find_all(".//d1:flow|.//d1:aux")
+  cld_xml      <- xml2::xml_children(raw_xml)
+  child_names  <- xml2::xml_name(cld_xml)
+
+  if("dimensions" %in% child_names) {
+    dims_obj <- create_dims_obj(raw_xml)
+  }
+  #-----------------------------------------------------------------------------
+
+  variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+
+  auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
 
   vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor)
-  variables       <- vars_and_consts$variables %>% arrange_variables()
+  variables       <- arrange_variables(vars_and_consts$variables)
   constants       <- vars_and_consts$constants
 
-  stocks_xml     <- variables_xml %>% xml2::xml_find_all(".//d1:stock")
+  stocks_xml     <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
 
   args_fun       <- list(stocks_xml = stocks_xml, variables = variables,
-                         constants = constants)
+                         constants = constants, dims_obj = dims_obj)
 
   if("builtin_stocks" %in% names(vars_and_consts)) {
     args_fun$builtin_stocks <- vars_and_consts$builtin_stocks

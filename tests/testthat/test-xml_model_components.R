@@ -337,9 +337,63 @@ test_that("extract_stock_info() handles a stock vector", {
     list(name = "Population_A", equation = "growth_A", initValue = "100"),
     list(name = "Population_B", equation = "growth_B", initValue = "200"))
 
-  actual_obj <- extract_stock_info(test_stocks_xml[[1]])
+  actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj = NULL)
 
   expect_equal(actual_obj, expected_obj)
 })
 
+test_that("extract_stock_info() handles vector stock with a unique initialisation", {
+  test_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+		  <variables>
+			  <stock name="E">
+				  <dimensions>
+					  <dim name="Age"/>
+				  </dimensions>
+				  <eqn>0</eqn>
+				  <inflow>IR</inflow>
+				  <outflow>DR</outflow>
+			  </stock>
+      </variables>
+    </doc1>
+  </root>')
 
+  test_stocks_xml <- xml2::xml_find_all(test_xml, ".//d1:stock")
+
+  expected_obj <- list(
+    list(name = "E_1", equation = "IR_1-DR_1", initValue = "0"),
+    list(name = "E_2", equation = "IR_2-DR_2", initValue = "0"),
+    list(name = "E_3", equation = "IR_3-DR_3", initValue = "0"),
+    list(name = "E_4", equation = "IR_4-DR_4", initValue = "0"))
+
+  dims_obj <- list(Age = c(1:4))
+
+  actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj)
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+# create_dims_obj()-------------------------------------------------------------
+
+test_that("create_dims_obj() returns the expected object", {
+
+  test_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+	<dimensions>
+		<dim name="Age" size="4"/>
+		<dim name="Interactions">
+			<elem name="b11"/>
+			<elem name="b12"/>
+    </dim>
+	</dimensions>
+    </doc1>
+  </root>')
+
+  actual_obj <- create_dims_obj(test_xml)
+  expected_obj <- list(Age = c(1:4),
+                       Interactions = c("b11", "b12"))
+
+  expect_equal(actual_obj, expected_obj)
+})
