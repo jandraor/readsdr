@@ -9,3 +9,5 @@ remove_NULL  <-  function(x.list) {
 get_names <- function(obj_list) {
   sapply(obj_list, function(obj) obj$name)
 }
+
+as_row_list <- function(df) do.call(function(...) Map(list,...), df)

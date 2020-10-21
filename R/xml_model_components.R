@@ -1,3 +1,32 @@
+create_dims_obj <- function(raw_xml) {
+  dim_xml       <- xml2::xml_find_first(raw_xml, ".//d1:dimensions")
+  dim_elems_xml <- xml2::xml_find_all(dim_xml, ".//d1:dim")
+
+  dim_names <- sapply(dim_elems_xml, function(dim_tag) {
+    xml2::xml_attr(dim_tag, "name")
+  })
+
+  dims_list        <- lapply(dim_elems_xml, extract_dim_elems)
+  names(dims_list) <- dim_names
+
+  dims_list
+}
+
+extract_dim_elems <- function(dim_tag) {
+  flag_size <- xml2::xml_has_attr(dim_tag, "size")
+
+  if(flag_size) {
+    dim_size <- xml2::xml_attr(dim_tag, "size")
+    dim_size <- as.numeric(dim_size)
+    return(1:dim_size)
+  }
+
+  elems_xml <- xml2::xml_find_all(dim_tag, ".//d1:elem")
+
+  sapply(elems_xml, function(elem_tag) xml2::xml_attr(elem_tag, "name"))
+}
+
+
 create_param_obj_xmile <- function(sim_specs) {
   start      <- sim_specs %>% xml2::xml_find_first("//d1:start") %>%
     xml2::xml_double()
@@ -18,7 +47,7 @@ create_param_obj_xmile <- function(sim_specs) {
 }
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants,
-                                   builtin_stocks = NULL) {
+                                   builtin_stocks = NULL, dims_obj = NULL) {
 
   if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
     stop("A model must contain stocks", call. = FALSE)
@@ -29,7 +58,8 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
     list(name = const$name, equation = const$value)
   })
 
-  stocks_list <- lapply(stocks_xml, extract_stock_info)
+  stocks_list <- lapply(stocks_xml, extract_stock_info, dims_obj = dims_obj)
+  stocks_list <- unlist(stocks_list, recursive = FALSE)
 
   if(!is.null(builtin_stocks)) {
     stocks_list <- c(builtin_stocks, stocks_list)
@@ -63,272 +93,94 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   stocks_list
 }
 
-create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
+extract_stock_info <- function(stock_xml, dims_obj) {
 
-  #-----------------------------------------------------------------------------
-  # Exception for Vensim PRO that adds the variable 'Time'
-  all_names <- sapply(auxs_xml, function(node){
-    xml2::xml_attr(node, "name")
-  })
+  dim_xml     <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")
+  dimensions  <- xml2::xml_find_all(stock_xml, ".//d1:dim")
+  n_dims      <- length(dimensions)
 
-  pos_Time <- which(all_names == "Time")
+  is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
-  if(length(pos_Time) == 1) auxs_xml <- auxs_xml[-pos_Time]
-  #-----------------------------------------------------------------------------
-  n_vars_consts <- length(auxs_xml)
-  vars           <- list()
-  consts         <- list()
-  builtin_stocks <- list()
+  if(is_arrayed) {
+    dim_name     <- xml2::xml_attr(dimensions[[1]], "name")
 
-  if(n_vars_consts == 0L) {
-    return(list(variables = vars, constants = consts))
-  }
+    cld_xml      <- xml2::xml_children(stock_xml)
+    child_names  <- xml2::xml_name(cld_xml)
 
-  counter_v     <- 1
-  counter_c     <- 1
-  counter_s     <- 1
+    if("eqn" %in% child_names) subs <- dims_obj[[dim_name]]
 
-  for(i in 1:n_vars_consts){
-
-    aux_xml  <- auxs_xml[[i]]
-
-    equation <- aux_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
-      xml2::xml_text() %>% sanitise_aux_equation(vendor)
-
-    is_const <- !is.na(suppressWarnings(as.numeric(equation)))
-
-    var_name <- aux_xml %>% xml2::xml_attr("name") %>%
-      sanitise_elem_name() %>% check_elem_name()
-
-    # if the aux is a variable
-    if(!is_const) {
-
-      #-------------------------------------------------------------------------
-      # Smooth functions
-      #-------------------------------------------------------------------------
-
-      # Stella
-
-      if(vendor == "isee") {
-        stl_smooth1 <- stringr::str_detect(equation, "SMTH1")
-
-        if(stl_smooth1) {
-
-          S1_translation      <- translate_SMOOTH1(var_name, equation, "isee")
-          variable            <- S1_translation$variable
-          vars[[counter_v]]   <- variable
-          counter_v           <- counter_v + 1
-
-          builtin_stocks[[counter_s]] <- S1_translation$stock
-          counter_s                   <- counter_s + 1
-          next
-        }
-
-        stl_smooth3 <- stringr::str_detect(equation, "SMTH3")
-
-        if(stl_smooth3) {
-
-          S3_translation  <- translate_SMOOTH3(var_name, equation, "isee")
-          variable_list   <- S3_translation$variable_list
-
-          for(i in 1:3) {
-            vars[[counter_v]]   <- variable_list[[i]]
-            counter_v           <- counter_v + 1
-
-            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
-            counter_s                   <- counter_s + 1
-          }
-          next
-        }
-
-        stl_smoothN <- stringr::str_detect(equation, "SMTHN")
-
-        if(stl_smoothN) {
-          SN_translation  <- translate_SMOOTHN(var_name, equation, "isee")
-          variable_list   <- SN_translation$variable_list
-          delay_order     <- SN_translation$delay_order
-
-
-          for(i in 1:delay_order) {
-            vars[[counter_v]]   <- variable_list[[i]]
-            counter_v           <- counter_v + 1
-
-            builtin_stocks[[counter_s]] <- SN_translation$stock_list[[i]]
-            counter_s                   <- counter_s + 1
-          }
-          next
-        }
-      }
-
-      # Vensim
-
-      if(vendor == "Vensim") {
-        vns_smooth <- stringr::str_detect(equation, "\\bSMOOTH\\b")
-
-        if(vns_smooth) {
-          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
-                                                   "SMOOTH")
-          variable            <- S1_translation$variable
-          vars[[counter_v]]   <- variable
-          counter_v           <- counter_v + 1
-
-          builtin_stocks[[counter_s]] <- S1_translation$stock
-          counter_s                   <- counter_s + 1
-          next
-        }
-
-        vns_smoothi <- stringr::str_detect(equation, "\\bSMOOTHI\\b")
-
-        if(vns_smoothi) {
-          S1_translation      <- translate_SMOOTH1(var_name, equation, vendor,
-                                                   "SMOOTHI")
-          variable            <- S1_translation$variable
-          vars[[counter_v]]   <- variable
-          counter_v           <- counter_v + 1
-
-          builtin_stocks[[counter_s]] <- S1_translation$stock
-          counter_s                   <- counter_s + 1
-          next
-        }
-
-        vns_smooth3 <- stringr::str_detect(equation, "\\bSMOOTH3\\b")
-
-        if(vns_smooth3) {
-
-          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor,
-                                               "SMOOTH3")
-          variable_list   <- S3_translation$variable_list
-
-          for(i in 1:3) {
-            vars[[counter_v]]   <- variable_list[[i]]
-            counter_v           <- counter_v + 1
-
-            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
-            counter_s                   <- counter_s + 1
-          }
-          next
-        }
-
-        vns_smooth3i <- stringr::str_detect(equation, "\\bSMOOTH3I\\b")
-
-        if(vns_smooth3i) {
-
-          S3_translation  <- translate_SMOOTH3(var_name, equation, vendor,
-                                               "SMOOTH3I")
-          variable_list   <- S3_translation$variable_list
-
-          for(i in 1:3) {
-            vars[[counter_v]]   <- variable_list[[i]]
-            counter_v           <- counter_v + 1
-
-            builtin_stocks[[counter_s]] <- S3_translation$stock_list[[i]]
-            counter_s                   <- counter_s + 1
-          }
-          next
-        }
-      }
-
-
-      #-------------------------------------------------------------------------
-      # Graphical functions
-      #-------------------------------------------------------------------------
-      there_is_graph_fun <- FALSE
-
-      # Vensim
-      if(stringr::str_detect(equation, "WITHLOOKUP")) {
-        there_is_graph_fun <- TRUE
-        translation        <- translate_Vensim_graph_func(equation)
-        fun_name           <- paste0("f_", var_name)
-        equation           <- paste0(fun_name, "(", translation$input, ")")
-        graph_fun          <- list(name = fun_name,
-                                   fun = translation$graph_fun)
-      }
-
-      # Stella
-      graph_fun_xml <- aux_xml %>% xml2::xml_find_first(".//d1:gf")
-
-      # Added the second as precaution
-      if(length(graph_fun_xml) > 0 & there_is_graph_fun == FALSE) {
-        there_is_graph_fun <- TRUE
-        func               <- translate_graph_func(graph_fun_xml)
-        fun_name           <- paste0("f_", var_name)
-        equation           <- paste0("f_", var_name, "(", equation, ")")
-        graph_fun          <- list(name = fun_name,
-                                   fun = func)
-      }
-      #-------------------------------------------------------------------------
-
-      variable          <- list(name = var_name,
-                                equation = equation)
-
-      if(there_is_graph_fun) {
-        variable$graph_fun <- graph_fun
-      }
-
-      vars[[counter_v]] <- variable
-      counter_v         <- counter_v + 1
-    }
-
-    # if the aux is a constant
-    if(is_const) {
-      const               <- list(name = var_name,
-                                  value = as.numeric(equation))
-      consts[[counter_c]] <- const
-      counter_c           <- counter_c + 1
+    if(!("eqn" %in% child_names)) {
+      elements_xml <- xml2::xml_find_all(stock_xml, ".//d1:element")
+      subs         <- xml2::xml_attr(elements_xml, "subscript")
     }
   }
 
-  vars_consts_obj <- list(variables = vars,
-                          constants = consts)
-
-  if(length(builtin_stocks) > 0) {
-    vars_consts_obj$builtin_stocks <- builtin_stocks
-  }
-
-  vars_consts_obj
-}
-
-extract_stock_info <- function(stock_xml) {
-
-  inflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
+  inflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
     xml2::xml_text() %>% sanitise_elem_name()
 
-  n_inflow    <- length(inflow_list)
+  n_inflow    <- length(inflow_vctr)
 
   if(n_inflow > 0L) {
-    text_inflow  <- paste(inflow_list, collapse = "+")
+
+    inflow_list <- list(inflow_vctr)
+
+    if(is_arrayed) {
+      inflow_list <- lapply(subs, function(s) paste(inflow_vctr, s, sep = "_"))
+    }
+
+    text_inflow  <- sapply(inflow_list, function(inflows) paste(inflows,
+                                                                collapse = "+"))
   }
 
-  outflow_list <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
+  outflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
     xml2::xml_text() %>% sanitise_elem_name()
 
-  n_outflow    <- length(outflow_list)
+  n_outflow    <- length(outflow_vctr)
 
   if(n_outflow > 0L) {
-    text_outflow  <- paste0("-", outflow_list) %>% paste(collapse = "")
+
+    outflow_list <- list(outflow_vctr)
+
+    if(is_arrayed) {
+      outflow_list <- lapply(subs, function(s) paste(outflow_vctr, s, sep = "_"))
+    }
+
+    text_outflow  <- sapply(outflow_list, function(outflows) {
+      paste0("-", outflows) %>% paste(collapse = "")
+    })
+
   }
 
   if(n_inflow > 0L && n_outflow > 0L) {
-    netflow <- paste0(text_inflow, text_outflow)
+    netflows <- paste0(text_inflow, text_outflow)
   }
 
   if(n_inflow > 0L && n_outflow == 0L) {
-    netflow <- text_inflow
+    netflows <- text_inflow
   }
 
   if(n_inflow == 0L && n_outflow > 0L) {
-    netflow <- text_outflow
+    netflows <- text_outflow
   }
 
   if(n_inflow == 0L && n_outflow == 0L) {
-    netflow <- "0"
+    netflows <- "0"
   }
 
-  stock_name <- stock_xml %>% xml2::xml_attr("name") %>%
+  stock_names <- stock_xml %>% xml2::xml_attr("name") %>%
     sanitise_elem_name() %>% check_elem_name()
 
-  initValue <- stock_xml %>% xml2::xml_find_first(".//d1:eqn") %>%
+  if(is_arrayed) {
+    stock_names <- paste(stock_names, subs, sep = "_")
+  }
+
+
+  initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
     xml2::xml_text() %>% sanitise_init_value()
 
-  list(name = stock_name, equation = netflow, initValue = initValue)
+  summary_stocks <- data.frame(name      = stock_names,
+                               equation  = netflows,
+                               initValue = initValues)
+
+  unname(as_row_list(summary_stocks))
 }

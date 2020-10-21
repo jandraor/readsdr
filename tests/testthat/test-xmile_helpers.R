@@ -302,4 +302,9 @@ test_that("safe_read() throws an error for invalid xml", {
   expect_error(safe_read(filepath), "Invalid XML file")
 })
 
+# sanitise_arrays()=============================================================
 
+test_that("sanitise_arrays() returns the expected value", {
+  expect_equal(sanitise_arrays("Population[B]*growth_rate[A]", "isee"),
+               "Population_B*growth_rate_A")
+})
