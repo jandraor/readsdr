@@ -9,11 +9,32 @@ test_that("translate_ifelse() returns an R-equivalent equation for Stella's XMIL
   expect_equal(actual_val, expected_val)
 })
 
+test_that("translate_ifelse() handles statements without parentheses for Stella's XMILE", {
+  test_equation <- "IF TIME > 240 THEN effect ELSE 1"
+  actual_val    <- translate_ifelse(test_equation, "isee")
+  expected_val  <- "ifelse( TIME > 240 ,  effect ,  1)"
+  expect_equal(actual_val, expected_val)
+})
+
 test_that("translate_ifelse() does not alter equations when there are no ifelse
 statements from Stella XMILE", {
   test_equation <- "a + b"
   actual_val    <- translate_ifelse(test_equation, "isee")
   expected_val  <- "a + b"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("if_else_condition() handles conditions with parentheses", {
+  test_equation <- "IF(NOT (TIME = 3)) THEN 0 ELSE 1"
+  actual_val    <- if_else_condition(test_equation)
+  expected_val  <- "NOT (TIME = 3)"
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("if_else_condition() handles conditions without parentheses", {
+  test_equation <- "IF NOT (TIME = 3) THEN 0 ELSE 1"
+  actual_val    <- if_else_condition(test_equation)
+  expected_val  <- " NOT (TIME = 3) "
   expect_equal(actual_val, expected_val)
 })
 

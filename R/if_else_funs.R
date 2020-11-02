@@ -22,10 +22,10 @@ translate_ifelse <- function(equation, vendor) {
     if(n_ifs > 1) stop("Only one IF-ELSE statement per variable is permitted")
 
     if(there_is_if_statement) {
-      pattern      <- stringr::regex("IF\\((.+)\\).*THEN(.*)ELSE(.*)",
+      pattern      <- stringr::regex("IF(.+)THEN(.*)ELSE(.*)",
                                      dotall = TRUE)
       string_match <- stringr::str_match(equation, pattern)
-      condition    <- string_match[[2]]
+      condition    <- if_else_condition(equation)
       if_true      <- string_match[[3]]
       if_false     <- string_match[[4]]
       body_ifelse  <- paste(condition, if_true, if_false, sep = ", ")
@@ -45,6 +45,21 @@ translate_ifelse <- function(equation, vendor) {
   }
 
   equation
+}
+
+if_else_condition <- function(equation) {
+
+  # pattern with parentheses
+  p1 <- stringr::regex("IF\\((.+)\\).*THEN.*", dotall = TRUE)
+
+  if(stringr::str_detect(equation, p1)) {
+    string_match <- stringr::str_match(equation, p1)
+    return(string_match[[2]])
+  }
+
+  p2 <- stringr::regex("IF(.+)THEN.*", dotall = TRUE)
+  string_match <- stringr::str_match(equation, p2)
+  string_match[[2]]
 }
 
 translate_step <- function(equation) {

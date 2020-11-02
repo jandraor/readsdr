@@ -205,6 +205,12 @@ test_that("sanitise_aux_equation() ignores the correct equal operator", {
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_aux_equation() translates joint IF & NOT statements from Stella ", {
+  actual_val <- sanitise_aux_equation('IF(NOT (TIME = 3)) THEN 0 ELSE 1', "isee")
+  expected_val <- 'ifelse(!(time==3),0,1)'
+  expect_equal(actual_val, expected_val)
+})
+
 #===============================================================================
 test_that("eval_constant_expr() returns the value of a constant expression", {
   test_equation <- "2 + 2"
