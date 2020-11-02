@@ -8,3 +8,4 @@
 * Add sd_constants() and sd_stocks() to summarise model's information in data frames. 
 * Add stan_ode_function()
 * Add stan_data()
+* Add support to unidimensional vectors in Stella.
