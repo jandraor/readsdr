@@ -211,6 +211,18 @@ test_that("sanitise_aux_equation() translates joint IF & NOT statements from Ste
   expect_equal(actual_val, expected_val)
 })
 
+test_that("sanitise_aux_equation() translates ABS from Vensim", {
+  actual_val   <- sanitise_aux_equation('ABS(a,b)', "Vensim")
+  expected_val <- 'abs(a,b)'
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("sanitise_aux_equation() translates ABS from Stella", {
+  actual_val   <- sanitise_aux_equation('ABS(a,b)', "isee")
+  expected_val <- 'abs(a,b)'
+  expect_equal(actual_val, expected_val)
+})
+
 #===============================================================================
 test_that("eval_constant_expr() returns the value of a constant expression", {
   test_equation <- "2 + 2"
