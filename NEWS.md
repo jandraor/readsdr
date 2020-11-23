@@ -9,4 +9,4 @@
 * Add stan_ode_function()
 * Add stan_data()
 * Add support to unidimensional vectors in Stella.
-* Translate ABS functions.
+* Support the translation of the following math functions: ABS & SQRT.
