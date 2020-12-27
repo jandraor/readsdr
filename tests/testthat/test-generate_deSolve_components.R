@@ -131,7 +131,7 @@ test_that("generate_model_func() returns the expected fun", {
   actual_obj <- generate_model_func(structure_m1$variables, structure_m1$levels,
                                     structure_m1$constants, FALSE)
 
-  actual_val <- all.equal(actual_obj, model_func)
+  actual_val <- all.equal(actual_obj, model_func, check.environment = FALSE)
 
   expect_equal(actual_val, TRUE)
 })
@@ -154,7 +154,7 @@ test_that("generate_model_func() works for models with graphical functions", {
   actual_obj <- generate_model_func(structure_m2$variables, structure_m2$levels,
                                     structure_m2$constants, TRUE)
 
-  actual_val <- all.equal(actual_obj, model_func)
+  actual_val <- all.equal(actual_obj, model_func, check.environment = FALSE)
 
   expect_equal(actual_val, TRUE)
 })

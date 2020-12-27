@@ -183,7 +183,7 @@ test_that("create_vars_consts_obj_xmile() creates the var object for a variable
               ),
               constants = list())
 
-            expect_equal(actual_obj, expected_obj)
+            expect_equal(actual_obj, expected_obj, check.environment = FALSE)
           })
 
 test_that("create_vars_consts_obj_xmile() creates the var object for a variable

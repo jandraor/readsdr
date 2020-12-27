@@ -20,7 +20,7 @@ specialised System Dynamics software with the powerful numerical tools
 offered by R libraries. The package accomplishes this goal by parsing
 .xmile files ([Vensim](https://vensim.com/) and
 [Stella](https://www.iseesystems.com/) models) into R objects to
-construct [networks](http://igraph.org) (graph theory), ODE functions
+construct [networks](https://igraph.org) (graph theory), ODE functions
 for [deSolve](http://desolve.r-forge.r-project.org/) and
 [Stan](https://mc-stan.org/).
 
@@ -56,7 +56,7 @@ summary(mdl)
 For reading Vensim models, they must be exported as .xmile.
 
 For information on how to use this package, see the
-[vignette](https://cran.r-project.org/web/packages/readsdr/vignettes/Introduction_to_readsdr.html)
+[vignette](https://CRAN.R-project.org/package=readsdr/vignettes/Introduction_to_readsdr.html)
 or type `vignette("Introduction_to_readsdr")` in R.
 
 ## Supported builtins
@@ -106,4 +106,4 @@ Thanks to:
 ## References
 
 [Duggan, J. (2016). *System Dynamics Modeling with R*.
-Springer.](http://www.springer.com/us/book/9783319340418)
+Springer.](https://www.springer.com/us/book/9783319340418)

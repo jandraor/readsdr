@@ -11,7 +11,8 @@ test_that("translate_Vensim_graph_func() returns the expected object", {
       yleft  = 100,
       yright = 10))
 
-  comparison_result <- all.equal(actual_obj, expected_obj)
+  comparison_result <- all.equal(actual_obj, expected_obj,
+                                 check.environment = FALSE)
 
   expect_equal(comparison_result, TRUE)
 })
