@@ -21,7 +21,7 @@ extract_structure_from_XMILE <- function(filepath) {
 
   auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
 
-  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor)
+  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj)
   variables       <- arrange_variables(vars_and_consts$variables)
   constants       <- vars_and_consts$constants
 

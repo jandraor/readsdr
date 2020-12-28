@@ -374,6 +374,39 @@ test_that("create_vars_consts_obj_xmile() translates SMTHN builtin for N > 1", {
   expect_equal(actual_obj, expected_obj)
 })
 
+test_that("create_vars_consts_obj_xmile() handles apply all for constant vector", {
+  test_var_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+			  <aux name="growth rate">
+				  <dimensions>
+					  <dim name="Region"/>
+				  </dimensions>
+				  <eqn>0.1</eqn>
+			  </aux>
+      </variables>
+    </doc1>
+  </root>')
+
+  auxs_xml <- xml2::xml_find_all(test_var_xml, ".//d1:flow|.//d1:aux")
+
+  dims_obj <- list(Region = c("A", "B"))
+
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee", dims_obj)
+
+  expected_obj <- list(
+    variables = NULL,
+    constants = list(
+      list(name  = "growth_rate_A",
+           value = 0.1),
+      list(name  = "growth_rate_B",
+           value = 0.1)
+    ))
+
+  expect_equal(actual_obj, expected_obj)
+})
+
 test_that("xml_to_elem_list() handles a arrayed variable", {
   test_var_xml <- xml2::read_xml('
   <root>

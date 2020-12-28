@@ -1,4 +1,4 @@
-create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
+create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
 
   #-----------------------------------------------------------------------------
   # Exception for Vensim PRO that adds the variable 'Time'
@@ -19,7 +19,8 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
     return(list(variables = vars, constants = consts))
   }
 
-  elem_list      <- lapply(auxs_xml, xml_to_elem_list, vendor)
+  elem_list      <- lapply(auxs_xml, xml_to_elem_list, vendor = vendor,
+                           dims_obj = dims_obj)
 
   vars           <- lapply(elem_list, function(obj) obj$vars)
   vars           <- remove_NULL(vars)
@@ -44,7 +45,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor) {
   vars_consts_obj
 }
 
-xml_to_elem_list <- function(aux_xml, vendor) {
+xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
 
   vars           <- list()
   consts         <- list()
@@ -53,7 +54,8 @@ xml_to_elem_list <- function(aux_xml, vendor) {
   n_dims <- 0
 
   if(vendor == "isee") {
-    dimensions <- xml2::xml_find_all(aux_xml, ".//d1:dimensions")
+    dim_xml     <- xml2::xml_find_all(aux_xml, ".//d1:dimensions")
+    dimensions  <- xml2::xml_find_all(aux_xml, ".//d1:dim")
     n_dims     <- length(dimensions)
   }
 
@@ -72,8 +74,18 @@ xml_to_elem_list <- function(aux_xml, vendor) {
   var_names     <- check_elem_name(var_names)
 
   if(is_arrayed) {
-    elements_xml <- xml2::xml_find_all(aux_xml, ".//d1:element")
-    subs         <- xml2::xml_attr(elements_xml, "subscript")
+    dim_name     <- xml2::xml_attr(dimensions[[1]], "name")
+
+    cld_xml      <- xml2::xml_children(aux_xml)
+    child_names  <- xml2::xml_name(cld_xml)
+
+    if("eqn" %in% child_names) subs <- dims_obj[[dim_name]]
+
+    if(!("eqn" %in% child_names)) {
+      elements_xml <- xml2::xml_find_all(aux_xml, ".//d1:element")
+      subs         <- xml2::xml_attr(elements_xml, "subscript")
+    }
+
     var_names    <- paste(var_names, subs, sep = "_")
   }
 
