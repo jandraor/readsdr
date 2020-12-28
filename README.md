@@ -69,6 +69,11 @@ or type `vignette("Introduction_to_readsdr")` in R.
       - `Pulse` <sup>1</sup>
       - `Step` <sup>1</sup>
       - Endogenous table functions
+      - Smoothing functions: `SMTH1`, `SMTH3`, `SMTHN`
+      - Limited support to *uni-dimensional* arrays. *Apply all*
+        translation is restricted to numeric values.
+      - Math functions: `ABS`, `SQRT`
+      - Stats functions: `NORMAL`
   - **Vensim**
       - Comparison operators (`=`, `<>`)
       - Logical operators (`:AND:`, `:OR:`, `:NOT:`)
@@ -78,6 +83,8 @@ or type `vignette("Introduction_to_readsdr")` in R.
       - `Pulse Train` <sup>1</sup>
       - `Step` <sup>1</sup>
       - Endogenous table functions
+      - Smoothing functions: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI`
+      - Math functions: `ABS`, `SQRT`
 
 <sup>1</sup> Restricted to Euler integration.
 
