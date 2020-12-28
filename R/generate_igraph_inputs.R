@@ -31,6 +31,9 @@ generate_nodes_df <- function(stocks, variables, constants) {
     if("time" %in% extracted_vars) stop("A variable depends on time",
                                          call. = FALSE)
 
+    if("rnorm" %in% extracted_vars) stop("Translation of rnorm is not supported for graphs",
+                                        call. = FALSE)
+
     detected_consts <- extracted_vars[extracted_vars %in% const_names]
     n_det_consts    <- length(detected_consts)
 
