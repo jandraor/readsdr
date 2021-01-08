@@ -18,10 +18,10 @@ status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.or
 The goal of readsdr is to bridge the design capabilities from
 specialised System Dynamics software with the powerful numerical tools
 offered by R libraries. The package accomplishes this goal by parsing
-.xmile files ([Vensim](https://vensim.com/) and
-[Stella](https://www.iseesystems.com/) models) into R objects to
-construct [networks](https://igraph.org) (graph theory), ODE functions
-for [deSolve](http://desolve.r-forge.r-project.org/) and
+.xmile files (Vensim and [Stella](https://www.iseesystems.com/) models)
+into R objects to construct [networks](https://igraph.org) (graph
+theory), ODE functions for
+[deSolve](http://desolve.r-forge.r-project.org/) and
 [Stan](https://mc-stan.org/).
 
 ## Installation

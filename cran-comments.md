@@ -13,3 +13,7 @@
 ## Downstream dependencies
 
 There are currently no downstream dependencies for this package.
+
+## Changes made following submission 5th Jan 2021
+
+* Fix problematic link

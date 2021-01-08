@@ -75,11 +75,11 @@ effective contacts per infected individual; $c$ the contacts per person per
 unit time; and $i$ the infectivity. 
 
 There exists several ways to implement this model. On one side of the spectrum,
-we find specialised software such as [Vensim](https://www.vensim.com/) and 
-[Stella](https://www.iseesystems.com/store/products/stella-architect.aspx) that 
-offer friendly graphical user interfaces to seamlessly design complex models, 
-emphasising on a systems perspective. _Figure 1_ presents the implementation of
-the SIR model in Stella.
+we find specialised software such as Vensim and
+[Stella](https://www.iseesystems.com/store/products/stella-architect.aspx) 
+that offer friendly graphical user interfaces to seamlessly design complex 
+models, emphasising on a systems perspective. _Figure 1_ presents the 
+implementation of the SIR model in Stella.
 
 
 ```{r, echo=FALSE, fig.cap="Figure 1. SIR", out.width = '80%'}
