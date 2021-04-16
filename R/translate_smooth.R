@@ -202,7 +202,7 @@ stc_vars_SN <- function(name, goal, total_delay, delay_order, init) {
   total_delay2  <- suppressWarnings(as.numeric(total_delay))
   delay         <- total_delay2 / delay_order
 
-  if(is.na(total_delay2)) delay <- paste0(total_delay, "/", delay_order)
+  if(is.na(total_delay2)) delay <- stringr::str_glue("({total_delay}/{delay_order})")
 
   init2 <- suppressWarnings(as.numeric(init))
 

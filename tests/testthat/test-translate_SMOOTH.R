@@ -362,11 +362,11 @@ test_that("stc_vars_SN() handles total_delay as a character input", {
     variable_list = list(
       list(
         name     = "adjust_expected_demand",
-        equation = "(expected_demand_2-expected_demand)/param_delay/2"),
+        equation = "(expected_demand_2-expected_demand)/(param_delay/2)"),
 
       list(
         name     = "adjust_expected_demand_2",
-        equation = "(demand-expected_demand_2)/param_delay/2")
+        equation = "(demand-expected_demand_2)/(param_delay/2)")
     ),
     stock_list = list(
       list(
