@@ -1,5 +1,8 @@
 # Development version
 
+* Add discrete_net_change()
+* Fix bug (incorrect division due to lacking parentheses) in the translation of SMOOTH
+
 # 0.2.0
 
 * Add support to translation of SMOOTH functions from Vensim & Stella.

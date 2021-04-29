@@ -2,6 +2,7 @@
 
 export("%>%")
 export(create_stan_function)
+export(discrete_net_change)
 export(extract_timeseries_stock)
 export(extract_timeseries_var)
 export(read_xmile)
