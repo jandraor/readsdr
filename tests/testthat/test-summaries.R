@@ -24,4 +24,10 @@ test_that("sd_stocks() returns the expected data frame", {
   expect_equal(sd_stocks(mdl),
                data.frame(name       = c("Population", "Deaths"),
                           init_value = c(100, 0)))
+
+  filepath    <- system.file("models/", "SIR.stmx", package = "readsdr")
+  mdl         <- read_xmile(filepath)
+  actual_df   <- sd_stocks(mdl)
+  expected_df <- data.frame(name       = "Susceptible", "Infected", "Recovered",
+                            init_value = c(990, 10, 0))
 })
