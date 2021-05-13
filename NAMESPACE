@@ -2,10 +2,13 @@
 
 export("%>%")
 export(create_stan_function)
+export(expit)
 export(extract_timeseries_stock)
 export(extract_timeseries_var)
+export(logit)
 export(read_xmile)
 export(sd_constants)
+export(sd_loglik_fun)
 export(sd_net_change)
 export(sd_pulse_s)
 export(sd_pulse_train)

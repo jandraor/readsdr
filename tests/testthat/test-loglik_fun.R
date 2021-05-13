@@ -1,0 +1,181 @@
+test_that("transform_pars() returns the expected text when there are no trans", {
+
+  expected_text <- paste(
+    "pars[[1]] <- pars[[1]]",
+    "pars[[2]] <- pars[[2]]", sep = "\n")
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"))
+
+  actual_text <- transform_pars(pars_df)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("transform_pars() returns the expected text for log trans", {
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"),
+                        par_trans = c("", "log"))
+
+  expected_text <- paste(
+    "pars[[1]] <- pars[[1]]",
+    "pars[[2]] <- exp(pars[[2]])", sep = "\n")
+
+  actual_text <- transform_pars(pars_df)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("transform_pars() returns the expected text for logit trans", {
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"),
+                        par_trans = c("", "logit"))
+
+  expected_text <- paste(
+    "pars[[1]] <- pars[[1]]",
+    "pars[[2]] <- expit(pars[[2]])", sep = "\n")
+
+  actual_text <- transform_pars(pars_df)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("transform_pars() returns the expected text for mixed trans", {
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"),
+                        par_trans = c("logit", "log"))
+
+  expected_text <- paste(
+    "pars[[1]] <- expit(pars[[1]])",
+    "pars[[2]] <- exp(pars[[2]])", sep = "\n")
+
+  actual_text <- transform_pars(pars_df)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("assign_pars_text() returns the expected text", {
+
+  expected_text <- paste('consts["alpha"] <- pars[[1]]',
+                         'init_stocks["S"] <- pars[[2]]', sep = "\n")
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"))
+
+  actual_text <- assign_pars_text(pars_df)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("assign_pars_text() handles stocks that share common init values", {
+  expected_text <- paste('consts["alpha"] <- pars[[1]]',
+                         'init_stocks["S"] <- pars[[2]]',
+                         'init_stocks["S2"] <- pars[[2]]', sep = "\n")
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"))
+
+  extra_stocks <- list(list(name = "S2", init = "S"))
+
+  actual_text <- assign_pars_text(pars_df, extra_stocks)
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("get_model_run_text returns the expected text", {
+  sim_controls <- list(start        = 0,
+                       stop         = 10,
+                       step         = 0.25,
+                       integ_method = "rk4")
+
+  actual_text <- get_model_run_text(sim_controls)
+
+  expected_text <- paste("simtime <- seq(0, 10, 0.25)",
+                         paste("o <- deSolve::ode(",
+                               "  y      = init_stocks,",
+                               "  times  = simtime,",
+                               "  func   = deSolve_components$func,",
+                               "  parms  = consts,",
+                               '  method = "rk4")',
+                               "o_df <- data.frame(o)",
+                               sep = "\n"),
+                         sep = "\n")
+
+  expect_equal(actual_text, expected_text)
+})
+
+test_that("get_meas_model_text() returns the expected text", {
+  fit_options <- list(stock_name = "S", stock_fit_type = "actual",
+                      dist = "dpois", dist_offset = "1e-5")
+
+  actual_text <- get_meas_model_text(fit_options)
+
+  expected_text <- paste(
+    "sim_data <- dplyr::filter(o_df, time - trunc(time) == 0)",
+    "sum(dpois(data, sim_data[, 'S'] + 1e-5, log = TRUE))",
+    sep = "\n")
+
+  expect_equal(actual_text, expected_text)
+
+})
+
+test_that("get_meas_model_text() returns the expected text for the net change of a stock", {
+
+  fit_options <- list(stock_name = "S", stock_fit_type = "net_change",
+                      dist = "dpois", dist_offset = "1e-5")
+
+  actual_text <- get_meas_model_text(fit_options)
+
+  expected_text <- paste(
+    'sim_data <- sd_net_change(o_df, "S")',
+    "sum(dpois(data, sim_data[, 'value'] + 1e-5, log = TRUE))",
+    sep = "\n")
+
+  expect_equal(actual_text, expected_text)
+
+})
+
+test_that("sd_loglik_fun() returns the expected function", {
+
+  pars_df <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
+
+  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
+  mdl                <- read_xmile(filepath)
+  deSolve_components <- mdl$deSolve_components
+
+  sim_controls       <- list(start = 0, stop = 10, step = 0.25,
+                             integ_method ="rk4")
+
+  fit_options <- list(stock_name = "Infected", stock_fit_type = "net_change",
+                      dist = "dpois", dist_offset = "1e-5",
+                      data = 1:10)
+
+  actual_fun <- sd_loglik_fun(pars_df, deSolve_components,
+                              sim_controls, fit_options)
+
+  test_gen <- function(deSolve_components, data) {
+    init_stocks <- deSolve_components$stocks
+    consts      <- deSolve_components$consts
+
+    function(pars)
+    {
+    pars[[1]] <- exp(pars[[1]])
+    consts["beta_var"] <- pars[[1]]
+    simtime <- seq(0, 10, 0.25)
+    o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
+    o_df <- data.frame(o)
+    sim_data <- sd_net_change(o_df, "Infected")
+    sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+    }
+  }
+
+  expected_fun <- test_gen(deSolve_components, fit_options$data)
+
+  comparison_result <- all.equal(actual_fun, expected_fun,
+                                 check.environment = FALSE)
+
+  expect_equal(comparison_result, TRUE)
+})
