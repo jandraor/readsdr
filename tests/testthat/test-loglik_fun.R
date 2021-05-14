@@ -85,6 +85,23 @@ test_that("assign_pars_text() handles stocks that share common init values", {
   expect_equal(actual_text, expected_text)
 })
 
+test_that("assign_pars_text() handles stocks that share common init values", {
+  expected_text <- paste('consts["alpha"] <- pars[[1]]',
+                         'init_stocks["S"] <- pars[[2]]',
+                         'init_stocks["S2"] <- pars[[2]]',
+                         'init_stocks["S3"] <- 1000 - pars[[2]]', sep = "\n")
+
+  pars_df <- data.frame(name      = c("alpha", "S"),
+                        type      = c("constant", "stock"))
+
+  extra_stocks <- list(list(name = "S2", init = "S"),
+                       list(name = "S3", init = "1000 - S"))
+
+  actual_text <- assign_pars_text(pars_df, extra_stocks)
+
+  expect_equal(actual_text, expected_text)
+})
+
 test_that("get_model_run_text returns the expected text", {
   sim_controls <- list(start        = 0,
                        stop         = 10,

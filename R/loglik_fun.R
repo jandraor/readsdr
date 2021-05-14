@@ -103,6 +103,7 @@ assign_pars_text <- function(pars_df, extra_stocks = NULL) {
   n_stocks  <- nrow(stocks_df)
 
   for(i in seq_len(n_extra)) {
+
     stock_obj <- extra_stocks[[i]]
     sn        <- stock_obj$name
 
@@ -110,9 +111,9 @@ assign_pars_text <- function(pars_df, extra_stocks = NULL) {
 
     rhs <- stock_obj$init
 
-    for(i in seq_len(n_stocks)) {
-      pattern     <- paste0("\\b", stocks_df[[i, "name"]], "\\b")
-      idx         <- stocks_df[[i, "pos"]]
+    for(j in seq_len(n_stocks)) {
+      pattern     <- paste0("\\b", stocks_df[[j, "name"]], "\\b")
+      idx         <- stocks_df[[j, "pos"]]
       replacement <- stringr::str_glue("pars[[{idx}]]")
       rhs         <- stringr::str_replace_all(rhs, pattern, replacement)
     }
