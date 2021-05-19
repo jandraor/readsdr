@@ -1,4 +1,4 @@
-#' Generate log-likelihood function for an SD model
+#' Generate a log-likelihood function for an SD model
 #'
 #' @param pars_df A data frame
 #' @param deSolve_components A list
@@ -6,18 +6,23 @@
 #' @param fit_options A list
 #' @param extra_stocks An optional list
 #' @param extra_constraints An optional list
+#' @param neg_log A boolean that indicates whether the log-likelihood function
+#'        returns a positive or negative value. If \code{TRUE}, the function
+#'        returns a positive value (for minimisation optimisers). If
+#'        \code{FALSE}, the function returns the original log-likelihood.
 #'
 #' @return A function
 #' @export
 #'
 #' @examples
 sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options,
-                          extra_stocks = NULL, extra_constraints = NULL) {
+                          extra_stocks = NULL, extra_constraints = NULL,
+                          neg_log = FALSE) {
 
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
   model_exe_text   <- get_model_run_text(sim_controls)
-  meas_model_text  <- get_meas_model_text(fit_options)
+  meas_model_text  <- get_meas_model_text(fit_options, neg_log)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
@@ -26,7 +31,7 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
 
   if(!is.null(extra_constraints)) {
     extra_constraints_text <- get_constraint_text(extra_constraints, pars_df)
-    body_list              <- append(body_list, extra_constraints_text, 2)
+    body_list              <- append(body_list, extra_constraints_text, 1)
   }
 
   body_text <- paste(body_list, collapse = "\n")
@@ -156,7 +161,7 @@ get_model_run_text <- function(sim_controls) {
         sep = "\n")
 }
 
-get_meas_model_text <- function(fit_options) {
+get_meas_model_text <- function(fit_options, neg_log) {
 
   stock_name <- fit_options$stock_name
   fit_type   <- fit_options$stock_fit_type
@@ -179,9 +184,13 @@ get_meas_model_text <- function(fit_options) {
   }
 
   log_lik_line <- stringr::str_glue(
-    "sum({distr}(data, {sim_data_text}, log = TRUE))")
+    "loglik   <- sum({distr}(data, {sim_data_text}, log = TRUE))")
 
-  paste(sim_data_line, log_lik_line, sep = "\n")
+  return_line <- "loglik"
+
+  if(neg_log) return_line <- paste0("-", return_line)
+
+  paste(sim_data_line, log_lik_line, return_line, sep = "\n")
 }
 
 get_constraint_text <- function(extra_constraints, pars_df) {

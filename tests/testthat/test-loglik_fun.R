@@ -128,15 +128,31 @@ test_that("get_meas_model_text() returns the expected text", {
   fit_options <- list(stock_name = "S", stock_fit_type = "actual",
                       dist = "dpois", dist_offset = "1e-5")
 
-  actual_text <- get_meas_model_text(fit_options)
+  actual_text <- get_meas_model_text(fit_options, FALSE)
 
   expected_text <- paste(
     "sim_data <- dplyr::filter(o_df, time - trunc(time) == 0)",
-    "sum(dpois(data, sim_data[, 'S'] + 1e-5, log = TRUE))",
+    "loglik   <- sum(dpois(data, sim_data[, 'S'] + 1e-5, log = TRUE))",
+    "loglik",
     sep = "\n")
 
   expect_equal(actual_text, expected_text)
 
+})
+
+test_that("get_meas_model_text() returns a positive loglik", {
+  fit_options <- list(stock_name = "S", stock_fit_type = "actual",
+                      dist = "dpois", dist_offset = "1e-5")
+
+  actual_text <- get_meas_model_text(fit_options, TRUE)
+
+  expected_text <- paste(
+    "sim_data <- dplyr::filter(o_df, time - trunc(time) == 0)",
+    "loglik   <- sum(dpois(data, sim_data[, 'S'] + 1e-5, log = TRUE))",
+    "-loglik",
+    sep = "\n")
+
+  expect_equal(actual_text, expected_text)
 })
 
 test_that("get_meas_model_text() returns the expected text for the net change of a stock", {
@@ -144,12 +160,12 @@ test_that("get_meas_model_text() returns the expected text for the net change of
   fit_options <- list(stock_name = "S", stock_fit_type = "net_change",
                       dist = "dpois", dist_offset = "1e-5")
 
-  actual_text <- get_meas_model_text(fit_options)
+  actual_text <- get_meas_model_text(fit_options, FALSE)
 
   expected_text <- paste(
     'sim_data <- sd_net_change(o_df, "S")',
-    "sum(dpois(data, sim_data[, 'value'] + 1e-5, log = TRUE))",
-    sep = "\n")
+    "loglik   <- sum(dpois(data, sim_data[, 'value'] + 1e-5, log = TRUE))",
+    "loglik", sep = "\n")
 
   expect_equal(actual_text, expected_text)
 
@@ -198,7 +214,8 @@ test_that("sd_loglik_fun() returns the expected function", {
     o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
     o_df <- data.frame(o)
     sim_data <- sd_net_change(o_df, "Infected")
-    sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+    loglik   <- sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+    loglik
     }
   }
 
@@ -244,15 +261,59 @@ test_that("sd_loglik_fun() returns the expected function works with extra constr
       pars[[1]] <- exp(pars[[1]])
       pars[[2]] <- exp(pars[[2]])
       pars[[3]] <- exp(pars[[3]])
+      if (pars[[2]] + pars[[3]] < 1000) return(-Inf)
       consts["beta_var"] <- pars[[1]]
       init_stocks["I"] <- pars[[2]]
       init_stocks["R"] <- pars[[3]]
-      if (pars[[2]] + pars[[3]] < 1000) return(-Inf)
       simtime <- seq(0, 10, 0.25)
       o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
       o_df <- data.frame(o)
       sim_data <- sd_net_change(o_df, "Infected")
-      sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+      loglik   <- sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+      loglik
+    }
+  }
+
+  expected_fun <- test_gen(deSolve_components, fit_options$data)
+
+  comparison_result <- all.equal(actual_fun, expected_fun,
+                                 check.environment = FALSE)
+
+  expect_equal(comparison_result, TRUE)
+})
+
+test_that("sd_loglik_fun() returns the reflected function", {
+
+  pars_df <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
+
+  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
+  mdl                <- read_xmile(filepath)
+  deSolve_components <- mdl$deSolve_components
+
+  sim_controls       <- list(start = 0, stop = 10, step = 0.25,
+                             integ_method ="rk4")
+
+  fit_options <- list(stock_name = "Infected", stock_fit_type = "net_change",
+                      dist = "dpois", dist_offset = "1e-5",
+                      data = 1:10)
+
+  actual_fun <- sd_loglik_fun(pars_df, deSolve_components,
+                              sim_controls, fit_options, neg_log = TRUE)
+
+  test_gen <- function(deSolve_components, data) {
+    init_stocks <- deSolve_components$stocks
+    consts      <- deSolve_components$consts
+
+    function(pars)
+    {
+      pars[[1]] <- exp(pars[[1]])
+      consts["beta_var"] <- pars[[1]]
+      simtime <- seq(0, 10, 0.25)
+      o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
+      o_df <- data.frame(o)
+      sim_data <- sd_net_change(o_df, "Infected")
+      loglik   <- sum(dpois(data, sim_data[, "value"] + 1e-05, log = TRUE))
+      -loglik
     }
   }
 
