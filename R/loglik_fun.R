@@ -5,25 +5,33 @@
 #' @param sim_controls A list
 #' @param fit_options A list
 #' @param extra_stocks An optional list
+#' @param extra_constraints An optional list
 #'
 #' @return A function
 #' @export
 #'
 #' @examples
 sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options,
-                          extra_stocks = NULL) {
+                          extra_stocks = NULL, extra_constraints = NULL) {
 
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
   model_exe_text   <- get_model_run_text(sim_controls)
   meas_model_text  <- get_meas_model_text(fit_options)
 
-  body_func <- paste("{",
-                     pars_trans_text,
-                     pars_assign_text,
-                     model_exe_text,
-                     meas_model_text,
-                     "}", sep = "\n")
+  body_list <- list(pars_trans_text,
+                    pars_assign_text,
+                    model_exe_text,
+                    meas_model_text)
+
+  if(!is.null(extra_constraints)) {
+    extra_constraints_text <- get_constraint_text(extra_constraints, pars_df)
+    body_list              <- append(body_list, extra_constraints_text, 2)
+  }
+
+  body_text <- paste(body_list, collapse = "\n")
+
+  body_func <- paste("{", body_text, "}", sep = "\n")
 
   model_func <- rlang::new_function(
     args = rlang::exprs(pars = ),
@@ -174,4 +182,31 @@ get_meas_model_text <- function(fit_options) {
     "sum({distr}(data, {sim_data_text}, log = TRUE))")
 
   paste(sim_data_line, log_lik_line, sep = "\n")
+}
+
+get_constraint_text <- function(extra_constraints, pars_df) {
+  pars_df2  <- dplyr::mutate(pars_df,
+                             pos = dplyr::row_number())
+
+  sapply(extra_constraints, function(constraint) {
+
+    condition <- identify_pars(constraint, pars_df2)
+    stringr::str_glue("if({condition}) return(-Inf)")
+  }) -> constraints_vector
+
+  paste(constraints_vector, collapse = "\n")
+}
+
+identify_pars <- function(equation, pars_df) {
+
+  n_rows <- nrow(pars_df)
+
+  for(i in seq_len(n_rows)) {
+    pattern     <- paste0("\\b", pars_df[[i, "name"]], "\\b")
+    idx         <- pars_df[[i, "pos"]]
+    replacement <- stringr::str_glue("pars[[{idx}]]")
+    equation    <- stringr::str_replace_all(equation, pattern, replacement)
+  }
+
+  equation
 }
