@@ -86,9 +86,7 @@ test_that("assign_pars_text() handles stocks that share common init values", {
   actual_text <- assign_pars_text(pars_df, extra_stocks)
 
   expect_equal(actual_text, expected_text)
-})
 
-test_that("assign_pars_text() handles stocks that share common init values", {
   expected_text <- paste('consts["alpha"] <- pars[[1]]',
                          'init_stocks["S"] <- pars[[2]]',
                          'init_stocks["S2"] <- pars[[2]]',
@@ -105,6 +103,8 @@ test_that("assign_pars_text() handles stocks that share common init values", {
 
   expect_equal(actual_text, expected_text)
 })
+
+
 
 test_that("assign_pars_text() ignores measurement model's pars", {
   pars_df <- data.frame(name      = c("beta_var", "sd"),
@@ -452,4 +452,20 @@ test_that("sd_loglik_fun() returns the loglik function with an unknown in the me
                                  check.environment = FALSE)
 
   expect_equal(comparison_result, TRUE)
+})
+
+# arrange_pars() ---------------------------------------------------------------
+test_that("arrange_pars() return the expected dataframe", {
+  pars_df <- data.frame(name      = c("I", "R", "par_beta", "rho"),
+                        type      = c("stock", "stock", "constant", "constant"),
+                        par_trans = c("log", "log", "log", "logit"))
+
+  actual_df <- arrange_pars(pars_df)
+
+  expected_df <- data.frame(name      = c("par_beta", "rho", "I", "R"),
+                            type      = c("constant", "constant", "stock", "stock"),
+                            par_trans = c("log", "logit", "log", "log"),
+                            pos       = 1:4)
+
+  expect_equal(actual_df, expected_df)
 })

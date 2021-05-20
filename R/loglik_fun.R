@@ -19,16 +19,7 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
                           extra_stocks = NULL, extra_constraints = NULL,
                           neg_log = FALSE) {
 
-  pars_df <- dplyr::mutate(pars_df,
-                           type_num = dplyr::case_when(
-                             type == "constant" ~ 1,
-                             type == "stock" ~ 2,
-                             type == "par_measure" ~ 3,
-                             TRUE ~ NA_real_),
-                           pos = dplyr::row_number())
-
-  pars_df <- dplyr::arrange(pars_df, type_num)
-  pars_df <- dplyr::select(pars_df, - type_num)
+  pars_df <- arrange_pars(pars_df)
 
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
@@ -260,4 +251,18 @@ identify_pars <- function(equation, pars_df) {
   }
 
   equation
+}
+
+arrange_pars <- function(pars_df) {
+  pars_df <- dplyr::mutate(pars_df,
+                           type_num = dplyr::case_when(
+                             type == "constant" ~ 1,
+                             type == "stock" ~ 2,
+                             type == "par_measure" ~ 3,
+                             TRUE ~ NA_real_))
+
+  pars_df <- dplyr::arrange(pars_df, type_num)
+  pars_df <- dplyr::select(pars_df, - type_num)
+
+  dplyr::mutate(pars_df, pos = dplyr::row_number())
 }
