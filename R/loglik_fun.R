@@ -19,10 +19,35 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
                           extra_stocks = NULL, extra_constraints = NULL,
                           neg_log = FALSE) {
 
+  pars_df <- dplyr::mutate(pars_df,
+                           type_num = dplyr::case_when(
+                             type == "constant" ~ 1,
+                             type == "stock" ~ 2,
+                             type == "par_measure" ~ 3,
+                             TRUE ~ NA_real_),
+                           pos = dplyr::row_number())
+
+  pars_df <- dplyr::arrange(pars_df, type_num)
+  pars_df <- dplyr::select(pars_df, - type_num)
+
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
   model_exe_text   <- get_model_run_text(sim_controls)
-  meas_model_text  <- get_meas_model_text(fit_options, neg_log)
+
+  par_measure_df <- dplyr::filter(pars_df, type == "par_measure")
+
+  if(nrow(par_measure_df) > 1) {
+    stop("Only one unknown in the measurement model is supported", call. = FALSE)
+  }
+
+  pars_list <- list(fit_options = fit_options,
+                    neg_log = neg_log)
+
+  if(nrow(par_measure_df) == 1L) {
+    pars_list$unknown_par <- unlist(par_measure_df)
+  }
+
+  meas_model_text  <- do.call(get_meas_model_text, pars_list)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
@@ -84,6 +109,8 @@ transform_pars <- function(pars_df) {
 
 assign_pars_text <- function(pars_df, extra_stocks = NULL) {
 
+  pars_df <- dplyr::filter(pars_df, type != "par_measure")
+
   n_rows  <- nrow(pars_df)
   n_extra <- 0
 
@@ -111,8 +138,7 @@ assign_pars_text <- function(pars_df, extra_stocks = NULL) {
     assign_lines[[i]] <- assign_line
   }
 
-  pars_df2  <- dplyr::mutate(pars_df, pos = dplyr::row_number())
-  stocks_df <- dplyr::filter(pars_df2, type == "stock")
+  stocks_df <- dplyr::filter(pars_df, type == "stock")
   n_stocks  <- nrow(stocks_df)
 
   for(i in seq_len(n_extra)) {
@@ -161,11 +187,10 @@ get_model_run_text <- function(sim_controls) {
         sep = "\n")
 }
 
-get_meas_model_text <- function(fit_options, neg_log) {
+get_meas_model_text <- function(fit_options, neg_log, unknown_par = NULL) {
 
   stock_name <- fit_options$stock_name
   fit_type   <- fit_options$stock_fit_type
-  distr      <- fit_options$dist
 
   if(fit_type == "actual") {
     sim_data_line <- "sim_data <- dplyr::filter(o_df, time - trunc(time) == 0)"
@@ -178,13 +203,30 @@ get_meas_model_text <- function(fit_options, neg_log) {
   }
 
 
-  if(!is.null(fit_options$dist_offset)) {
-    sim_data_text <- paste(sim_data_text, fit_options$dist_offset,
+  if(!is.null(fit_options$dist$dist_offset)) {
+    sim_data_text <- paste(sim_data_text, fit_options$dist$dist_offset,
                            sep = " + ")
   }
 
+  distr        <- fit_options$dist$name
+  par_sim_data <- fit_options$dist$sim_data
+
+  par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
+
+  if(!is.null(unknown_par)) {
+    par_name    <- unknown_par["name"]
+    unknown_par <- stringr::str_glue("{par_name} = pars[[{unknown_par['pos']}]]")
+    par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
+  }
+
+  if(!is.null(fit_options$dist$known_par)) {
+    par_name  <- names(fit_options$dist$known_par)
+    known_par <- stringr::str_glue("{par_name} = {fit_options$dist$known_par}")
+    par_assignment <- paste(par_assignment, known_par, sep = ", ")
+  }
+
   log_lik_line <- stringr::str_glue(
-    "loglik   <- sum({distr}(data, {sim_data_text}, log = TRUE))")
+    "loglik   <- sum({distr}(data, {par_assignment}, log = TRUE))")
 
   return_line <- "loglik"
 
