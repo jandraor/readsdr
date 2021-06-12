@@ -57,7 +57,7 @@ test_that("transform_pars() returns the expected text for mixed trans", {
   expect_equal(actual_text, expected_text)
 })
 
-# assign_pars_text -------------------------------------------------------------
+# assign_pars_text ()-------------------------------------------------------------
 test_that("assign_pars_text() returns the expected text", {
 
   expected_text <- paste('consts["alpha"] <- pars[[1]]',
@@ -228,13 +228,16 @@ test_that("get_meas_model_text() returns the expected text for the net change of
 
   fit_options <- list(stock_name = "S", stock_fit_type = "net_change",
                       dist = list(name     = "dnorm",
-                                  sim_data = "mean"))
+                                  sim_data = "mean",
+                                  unknown  = list(name      = "sd",
+                                                  par_trans = "log")))
 
   unknown_par <- c(name = "sd", type = "par_measure", par_trans = "log",
                       pos  = "2")
 
-  actual_text <- get_meas_model_text(fit_options, FALSE,
-                                     unknown_par = unknown_par)
+  actual_text <- get_meas_model_text(fit_options = fit_options,
+                                     neg_log     = FALSE,
+                                     n_unk_proc  = 1)
 
   expected_text <- paste(
     'sim_data <- sd_net_change(o_df, "S")',
@@ -243,6 +246,34 @@ test_that("get_meas_model_text() returns the expected text for the net change of
 
   expect_equal(actual_text, expected_text)
 
+})
+
+test_that("get_meas_model_text() handles multiple measurements", {
+  fit_options <- list(list(stock_name = "Infected",
+                           stock_fit_type = "net_change",
+                           dist = list(name     = "dpois",
+                                       sim_data = "lambda",
+                                       dist_offset = "1e-5"),
+                           data = 1:10),
+                      list(stock_name = "Recovered",
+                           stock_fit_type = "net_change",
+                           dist = list(name     = "dpois",
+                                       sim_data = "lambda",
+                                       dist_offset = "1e-5"),
+                           data = 1:10))
+  neg_log    <- FALSE
+  n_unk_proc <- 1
+
+  actual_text <- get_meas_model_text(fit_options, neg_log, n_unk_proc)
+
+  expected_text <-      paste(
+    'sim_data_1 <- sd_net_change(o_df, "Infected")',
+    'sim_data_2 <- sd_net_change(o_df, "Recovered")',
+    'loglik   <- sum(dpois(data_1, lambda = sim_data_1[, "value"] + 1e-05, log = TRUE)) +',
+    ' sum(dpois(data_2, lambda = sim_data_2[, "value"] + 1e-05, log = TRUE))',
+    'loglik', sep = "\n")
+
+  expect_equal(actual_text, expected_text)
 })
 
 # get_constraint_text() --------------------------------------------------------
@@ -259,6 +290,8 @@ test_that("get_constraint_text() returns the expected text", {
   expect_equal(actual_text, expected_text)
 
 })
+
+# sd_loglik_fun() --------------------------------------------------------------
 
 test_that("sd_loglik_fun() returns the expected function", {
 
@@ -409,9 +442,9 @@ test_that("sd_loglik_fun() returns the reflected loglik function", {
 
 test_that("sd_loglik_fun() returns the loglik function with an unknown in the measurement model", {
 
-  pars_df <- data.frame(name      = c("beta_var", "sd"),
-                        type      = c("constant", "par_measure"),
-                        par_trans = c("log", "log"))
+  pars_df <- data.frame(name      = "beta_var",
+                        type      = "constant",
+                        par_trans = "log")
 
   filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
   mdl                <- read_xmile(filepath)
@@ -420,10 +453,14 @@ test_that("sd_loglik_fun() returns the loglik function with an unknown in the me
   sim_controls       <- list(start = 0, stop = 10, step = 0.25,
                              integ_method ="rk4")
 
-  fit_options <- list(stock_name = "Infected", stock_fit_type = "net_change",
+  fit_options <- list(stock_name     = "Infected",
+                      stock_fit_type = "net_change",
                       dist = list(name     = "dnorm",
-                                  sim_data = "mean"),
+                                  sim_data = "mean",
+                                  unknown  = list(name = "sd",
+                                                  par_trans = "log")),
                       data = 1:10)
+
 
   actual_fun <- sd_loglik_fun(pars_df, deSolve_components,
                               sim_controls, fit_options)
@@ -454,18 +491,95 @@ test_that("sd_loglik_fun() returns the loglik function with an unknown in the me
   expect_equal(comparison_result, TRUE)
 })
 
+# Multiple meas------------------------------------------------------------------
+test_that("sd_loglik_fun() handles multiple measurements", {
+  pars_df <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
+
+  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
+  mdl                <- read_xmile(filepath)
+  deSolve_components <- mdl$deSolve_components
+
+  sim_controls       <- list(start = 0, stop = 10, step = 0.25,
+                             integ_method ="rk4")
+
+  fit_options <- list(list(stock_name = "Infected",
+                      stock_fit_type = "net_change",
+                      dist = list(name     = "dpois",
+                                  sim_data = "lambda",
+                                  dist_offset = "1e-5"),
+                      data = 1:10),
+                      list(stock_name = "Recovered",
+                           stock_fit_type = "net_change",
+                           dist = list(name     = "dpois",
+                                       sim_data = "lambda",
+                                       dist_offset = "1e-5"),
+                           data = 1:10))
+
+  actual_fun <- sd_loglik_fun(pars_df, deSolve_components,
+                              sim_controls, fit_options)
+
+  test_gen <- function(deSolve_components, data) {
+    init_stocks <- deSolve_components$stocks
+    consts      <- deSolve_components$consts
+
+    function(pars)
+    {
+      pars[[1]] <- exp(pars[[1]])
+      consts["beta_var"] <- pars[[1]]
+      simtime <- seq(0, 10, 0.25)
+      o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
+      o_df <- data.frame(o)
+      sim_data_1 <- sd_net_change(o_df, "Infected")
+      sim_data_2 <- sd_net_change(o_df, "Recovered")
+      loglik   <- sum(dpois(data_1, lambda = sim_data_1[, "value"] + 1e-05, log = TRUE)) +
+        sum(dpois(data_2, lambda = sim_data_2[, "value"] + 1e-05, log = TRUE))
+      loglik
+    }
+  }
+
+  expected_fun <- test_gen(deSolve_components, fit_options$data)
+
+  comparison_result <- all.equal(actual_fun, expected_fun,
+                                 check.environment = FALSE)
+
+  expect_equal(comparison_result, TRUE)
+})
+
 # arrange_pars() ---------------------------------------------------------------
 test_that("arrange_pars() return the expected dataframe", {
   pars_df <- data.frame(name      = c("I", "R", "par_beta", "rho"),
                         type      = c("stock", "stock", "constant", "constant"),
                         par_trans = c("log", "log", "log", "logit"))
 
-  actual_df <- arrange_pars(pars_df)
+  actual_df <- arrange_pars(pars_df, list())
 
   expected_df <- data.frame(name      = c("par_beta", "rho", "I", "R"),
                             type      = c("constant", "constant", "stock", "stock"),
                             par_trans = c("log", "logit", "log", "log"),
                             pos       = 1:4)
+
+  expect_equal(actual_df, expected_df)
+})
+
+test_that("arrange_pars() works in the presence of an unknown par in the measurement model",{
+  pars_df <- data.frame(name      = c("I", "R", "par_beta", "rho"),
+                        type      = c("stock", "stock", "constant", "constant"),
+                        par_trans = c("log", "log", "log", "logit"))
+
+  fit_options <- list(stock_name     = "Infected",
+                      stock_fit_type = "net_change",
+                      dist = list(name     = "dnorm",
+                                  sim_data = "mean",
+                                  unknown  = list(name = "sd",
+                                                  par_trans = "log")),
+                      data = 1:10)
+
+  actual_df <- arrange_pars(pars_df, fit_options)
+
+  expected_df <- data.frame(name      = c("par_beta", "rho", "I", "R", "sd"),
+                            type      = c("constant", "constant", "stock", "stock", "par_measure"),
+                            par_trans = c("log", "logit", "log", "log", "log"),
+                            pos       = 1:5)
 
   expect_equal(actual_df, expected_df)
 })

@@ -1,7 +1,7 @@
 # Development version
 
-* Add discrete_net_change()
-* Fix bug (incorrect division due to lacking parentheses) in the translation of SMOOTH
+* Add sd_net_change()
+* Fix bug (incorrect division due to missing parentheses) in the translation of SMOOTH
 
 # 0.2.0
 

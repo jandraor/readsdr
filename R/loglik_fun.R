@@ -19,7 +19,9 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
                           extra_stocks = NULL, extra_constraints = NULL,
                           neg_log = FALSE) {
 
-  pars_df <- arrange_pars(pars_df)
+  n_unk_proc <- nrow(pars_df)
+
+  pars_df <- arrange_pars(pars_df, fit_options)
 
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
@@ -31,14 +33,8 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
     stop("Only one unknown in the measurement model is supported", call. = FALSE)
   }
 
-  pars_list <- list(fit_options = fit_options,
-                    neg_log = neg_log)
 
-  if(nrow(par_measure_df) == 1L) {
-    pars_list$unknown_par <- unlist(par_measure_df)
-  }
-
-  meas_model_text  <- do.call(get_meas_model_text, pars_list)
+  meas_model_text  <- get_meas_model_text(fit_options, neg_log, n_unk_proc)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
@@ -178,7 +174,7 @@ get_model_run_text <- function(sim_controls) {
         sep = "\n")
 }
 
-get_meas_model_text <- function(fit_options, neg_log, unknown_par = NULL) {
+get_meas_model_text <- function(fit_options, neg_log, n_unk_proc) {
 
   stock_name <- fit_options$stock_name
   fit_type   <- fit_options$stock_fit_type
@@ -204,9 +200,11 @@ get_meas_model_text <- function(fit_options, neg_log, unknown_par = NULL) {
 
   par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
 
-  if(!is.null(unknown_par)) {
-    par_name    <- unknown_par["name"]
-    unknown_par <- stringr::str_glue("{par_name} = pars[[{unknown_par['pos']}]]")
+  if(!is.null(fit_options$dist$unknown)) {
+    unknown_obj <- fit_options$dist$unknown
+    pos         <- n_unk_proc + 1
+    par_name    <- unknown_obj$name
+    unknown_par <- stringr::str_glue("{par_name} = pars[[{pos}]]")
     par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
   }
 
@@ -253,7 +251,25 @@ identify_pars <- function(equation, pars_df) {
   equation
 }
 
-arrange_pars <- function(pars_df) {
+arrange_pars <- function(pars_df, fit_options) {
+
+  if(!is.null(fit_options$dist$unknown)) {
+    unknown_obj <- fit_options$dist$unknown
+    par_name    <- unknown_obj$name
+    par_trans   <- ""
+
+    if(!is.null(unknown_obj$par_trans)) {
+      par_trans <- unknown_obj$par_trans
+    }
+
+    meas_row <- data.frame(name      = par_name,
+                           type      = "par_measure",
+                           par_trans = par_trans)
+
+    pars_df <- rbind(pars_df, meas_row)
+
+  }
+
   pars_df <- dplyr::mutate(pars_df,
                            type_num = dplyr::case_when(
                              type == "constant" ~ 1,
