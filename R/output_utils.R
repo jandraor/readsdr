@@ -10,10 +10,9 @@
 #' @examples
 #' test_output <- data.frame(time = seq(0, 2, by = 0.25),
 #'                           C    = c(0, rep(5,4), rep(20, 4)))
-#' discrete_net_change(test_output, "C")
+#' sd_net_change(test_output, "C")
 
 sd_net_change <- function(sim_df, cumulative_var) {
-  message("This function is still under development")
 
   temp_df       <- sim_df[, c("time", cumulative_var)]
   temp_df       <- dplyr::filter(temp_df, time - trunc(time) == 0)

@@ -21,5 +21,5 @@ Estimate the net change of a stock in discrete times
 \examples{
 test_output <- data.frame(time = seq(0, 2, by = 0.25),
                           C    = c(0, rep(5,4), rep(20, 4)))
-discrete_net_change(test_output, "C")
+sd_net_change(test_output, "C")
 }
