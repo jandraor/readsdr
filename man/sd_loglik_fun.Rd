@@ -2,14 +2,16 @@
 % Please edit documentation in R/loglik_fun.R
 \name{sd_loglik_fun}
 \alias{sd_loglik_fun}
-\title{Generate log-likelihood function for an SD model}
+\title{Generate a log-likelihood function for an SD model}
 \usage{
 sd_loglik_fun(
   pars_df,
   deSolve_components,
   sim_controls,
-  fit_options,
-  extra_stocks = NULL
+  meas_model_list,
+  extra_stocks = NULL,
+  extra_constraints = NULL,
+  neg_log = FALSE
 )
 }
 \arguments{
@@ -19,13 +21,35 @@ sd_loglik_fun(
 
 \item{sim_controls}{A list}
 
-\item{fit_options}{A list}
+\item{meas_model_list}{A list of lists. Each second-level list corresponds to
+a measurement model. Here is an example: \cr
+\code{list(stock_name = "Infected", stock_fit_type = "net_change", \cr
+           dist = list(name     = "dpois", sim_data = "lambda"), \cr
+           data = 1:10)}}
 
 \item{extra_stocks}{An optional list}
+
+\item{extra_constraints}{An optional list}
+
+\item{neg_log}{A boolean that indicates whether the log-likelihood function
+returns a positive or negative value. If \code{TRUE}, the function
+returns a positive value (for minimisation optimisers). If
+\code{FALSE}, the function returns the original log-likelihood.}
 }
 \value{
 A function
 }
 \description{
-Generate log-likelihood function for an SD model
+Generate a log-likelihood function for an SD model
+}
+\examples{
+  pars_df            <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
+  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
+  mdl                <- read_xmile(filepath)
+  deSolve_components <- mdl$deSolve_components
+  sim_controls       <- list(start = 0, stop = 10, step = 0.25, integ_method ="rk4")
+  mm1 <- list(stock_name = "Infected", stock_fit_type = "net_change",
+              dist       = list(name     = "dpois", sim_data = "lambda", dist_offset = "1e-5"),
+              data       = 1:10)
+  sd_loglik_fun(pars_df, deSolve_components, sim_controls, list(mm1))
 }

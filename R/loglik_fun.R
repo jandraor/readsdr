@@ -3,7 +3,11 @@
 #' @param pars_df A data frame
 #' @param deSolve_components A list
 #' @param sim_controls A list
-#' @param fit_options A list
+#' @param meas_model_list A list of lists. Each second-level list corresponds to
+#'  a measurement model. Here is an example: \cr
+#'  \code{list(stock_name = "Infected", stock_fit_type = "net_change", \cr
+#'             dist = list(name     = "dpois", sim_data = "lambda"), \cr
+#'             data = 1:10)}
 #' @param extra_stocks An optional list
 #' @param extra_constraints An optional list
 #' @param neg_log A boolean that indicates whether the log-likelihood function
@@ -15,13 +19,24 @@
 #' @export
 #'
 #' @examples
-sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options,
-                          extra_stocks = NULL, extra_constraints = NULL,
+#'   pars_df            <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
+#'   filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
+#'   mdl                <- read_xmile(filepath)
+#'   deSolve_components <- mdl$deSolve_components
+#'   sim_controls       <- list(start = 0, stop = 10, step = 0.25, integ_method ="rk4")
+#'   mm1 <- list(stock_name = "Infected", stock_fit_type = "net_change",
+#'               dist       = list(name     = "dpois", sim_data = "lambda", dist_offset = "1e-5"),
+#'               data       = 1:10)
+#'   sd_loglik_fun(pars_df, deSolve_components, sim_controls, list(mm1))
+
+sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls,
+                          meas_model_list, extra_stocks = NULL,
+                          extra_constraints = NULL,
                           neg_log = FALSE) {
 
   n_unk_proc <- nrow(pars_df)
 
-  pars_df <- arrange_pars(pars_df, fit_options)
+  pars_df <- arrange_pars(pars_df, meas_model_list)
 
   pars_trans_text  <- transform_pars(pars_df)
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
@@ -29,12 +44,7 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
 
   par_measure_df <- dplyr::filter(pars_df, type == "par_measure")
 
-  if(nrow(par_measure_df) > 1) {
-    stop("Only one unknown in the measurement model is supported", call. = FALSE)
-  }
-
-
-  meas_model_text  <- get_meas_model_text(fit_options, neg_log, n_unk_proc)
+  meas_model_text  <- get_meas_model_text(meas_model_list, neg_log, n_unk_proc)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
@@ -55,13 +65,18 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls, fit_options
     body = rlang::parse_expr(body_func)
   )
 
-  data       <- fit_options$data
-
   rlang::fn_env(model_func)$consts      <- deSolve_components$consts
   rlang::fn_env(model_func)$init_stocks <- deSolve_components$stocks
-  rlang::fn_env(model_func)$data        <- fit_options$data
 
-  model_func
+  for(i in length(meas_model_list)) {
+
+    meas_model <- meas_model_list[[i]]
+    data_id <- paste0("data_", i)
+    rlang::fn_env(model_func)[[data_id]] <- meas_model$data
+
+  }
+
+  list(fun = model_func, par_names = pars_df$name)
 }
 
 
@@ -174,54 +189,75 @@ get_model_run_text <- function(sim_controls) {
         sep = "\n")
 }
 
-get_meas_model_text <- function(fit_options, neg_log, n_unk_proc) {
+get_meas_model_text <- function(fit_options, neg_log, n_unk_proc = NA) {
 
-  stock_name <- fit_options$stock_name
-  fit_type   <- fit_options$stock_fit_type
+  pos  <- n_unk_proc
+  n_mm <- length(fit_options) # number of measurement models
 
-  if(fit_type == "actual") {
-    sim_data_line <- "sim_data <- dplyr::filter(o_df, time - trunc(time) == 0)"
-    sim_data_text <- stringr::str_glue("sim_data[, '{stock_name}']")
+  text_output <- vector(mode = "character", length = n_mm)
+
+  for(i in seq_len(n_mm)) {
+
+    meas_mdl   <- fit_options[[i]]
+    stock_name <- meas_mdl$stock_name
+    fit_type   <- meas_mdl$stock_fit_type
+
+    if(fit_type == "actual") {
+      lhs <- paste0("sim_data_", i)
+      rhs <- "dplyr::filter(o_df, time - trunc(time) == 0)"
+      sim_data_line <- stringr::str_glue("{lhs} <- {rhs}")
+      sim_data_text <- stringr::str_glue("sim_data_{i}[, '{stock_name}']")
+    }
+
+    if(fit_type == "net_change") {
+      sim_data_line <- stringr::str_glue('sim_data_{i} <- sd_net_change(o_df, "{stock_name}")')
+      sim_data_text <- stringr::str_glue("sim_data_{i}[, 'value']")
+    }
+
+    if(!is.null(meas_mdl$dist$dist_offset)) {
+      sim_data_text <- paste(sim_data_text, meas_mdl$dist$dist_offset,
+                             sep = " + ")
+    }
+
+    distr        <- meas_mdl$dist$name
+    par_sim_data <- meas_mdl$dist$sim_data
+
+    par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
+
+    if(!is.null(meas_mdl$dist$unknown)) {
+      unknown_obj <- meas_mdl$dist$unknown
+      pos         <- pos + 1
+      par_name    <- unknown_obj$name
+      unknown_par <- stringr::str_glue("{par_name} = pars[[{pos}]]")
+      par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
+    }
+
+    if(!is.null(meas_mdl$dist$known_par)) {
+      par_name  <- names(meas_mdl$dist$known_par)
+      known_par <- stringr::str_glue("{par_name} = {meas_mdl$dist$known_par}")
+      par_assignment <- paste(par_assignment, known_par, sep = ", ")
+    }
+
+    log_lik_line <- stringr::str_glue(
+      "loglik_{i}   <- sum({distr}(data_{i}, {par_assignment}, log = TRUE))")
+
+
+
+    text_output[[i]] <- paste(sim_data_line, log_lik_line, sep = "\n")
   }
 
-  if(fit_type == "net_change") {
-    sim_data_line <- stringr::str_glue('sim_data <- sd_net_change(o_df, "{stock_name}")')
-    sim_data_text <- "sim_data[, 'value']"
-  }
+  loglik_defs <- paste(text_output, collapse = "\n")
 
+  lhs <- "loglik"
+  rhs <- paste0("loglik_", seq_len(n_mm)) %>% paste(collapse = " + ")
 
-  if(!is.null(fit_options$dist$dist_offset)) {
-    sim_data_text <- paste(sim_data_text, fit_options$dist$dist_offset,
-                           sep = " + ")
-  }
-
-  distr        <- fit_options$dist$name
-  par_sim_data <- fit_options$dist$sim_data
-
-  par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
-
-  if(!is.null(fit_options$dist$unknown)) {
-    unknown_obj <- fit_options$dist$unknown
-    pos         <- n_unk_proc + 1
-    par_name    <- unknown_obj$name
-    unknown_par <- stringr::str_glue("{par_name} = pars[[{pos}]]")
-    par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
-  }
-
-  if(!is.null(fit_options$dist$known_par)) {
-    par_name  <- names(fit_options$dist$known_par)
-    known_par <- stringr::str_glue("{par_name} = {fit_options$dist$known_par}")
-    par_assignment <- paste(par_assignment, known_par, sep = ", ")
-  }
-
-  log_lik_line <- stringr::str_glue(
-    "loglik   <- sum({distr}(data, {par_assignment}, log = TRUE))")
+  loglik_sum_line <- stringr::str_glue("{lhs}     <- {rhs}")
 
   return_line <- "loglik"
 
   if(neg_log) return_line <- paste0("-", return_line)
 
-  paste(sim_data_line, log_lik_line, return_line, sep = "\n")
+  paste(loglik_defs, loglik_sum_line, return_line, sep = "\n")
 }
 
 get_constraint_text <- function(extra_constraints, pars_df) {
@@ -251,23 +287,33 @@ identify_pars <- function(equation, pars_df) {
   equation
 }
 
-arrange_pars <- function(pars_df, fit_options) {
+arrange_pars <- function(pars_df, meas_model_list) {
 
-  if(!is.null(fit_options$dist$unknown)) {
-    unknown_obj <- fit_options$dist$unknown
-    par_name    <- unknown_obj$name
-    par_trans   <- ""
+  n_mm <- length(meas_model_list) # number of measurement models
 
-    if(!is.null(unknown_obj$par_trans)) {
-      par_trans <- unknown_obj$par_trans
+  lapply(meas_model_list, function(meas_mdl) {
+
+    if(!is.null(meas_mdl$dist$unknown)) {
+      unknown_obj <- meas_mdl$dist$unknown
+      par_name    <- unknown_obj$name
+      par_trans   <- ""
+
+      if(!is.null(unknown_obj$par_trans)) {
+        par_trans <- unknown_obj$par_trans
+      }
+
+      meas_row <- data.frame(name      = par_name,
+                             type      = "par_measure",
+                             par_trans = par_trans)
+
     }
+  }) -> meas_pars
 
-    meas_row <- data.frame(name      = par_name,
-                           type      = "par_measure",
-                           par_trans = par_trans)
+  meas_pars <- remove_NULL(meas_pars)
 
-    pars_df <- rbind(pars_df, meas_row)
-
+  if(length(meas_pars) > 0) {
+    meas_pars_df <- dplyr::bind_rows(meas_pars)
+    pars_df      <- rbind(pars_df, meas_pars_df)
   }
 
   pars_df <- dplyr::mutate(pars_df,
