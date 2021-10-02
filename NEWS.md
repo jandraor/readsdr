@@ -1,5 +1,6 @@
 # Development version
 
+* Add sd_what_if_from_time_t()
 * Add sd_loglik_fun()
 * Add sd_net_change()
 * Fix bug (incorrect division due to missing parentheses) in the translation of SMOOTH
