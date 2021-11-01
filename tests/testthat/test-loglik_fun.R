@@ -583,7 +583,7 @@ test_that("arrange_pars() return the expected dataframe", {
                             par_trans = c("log", "logit", "log", "log"),
                             pos       = 1:4)
 
-  expect_equal(actual_df, expected_df)
+  expect_equal(actual_df, expected_df, check.attributes = FALSE)
 })
 
 test_that("arrange_pars() works in the presence of an unknown par in the measurement model",{
@@ -606,7 +606,7 @@ test_that("arrange_pars() works in the presence of an unknown par in the measure
                             par_trans = c("log", "logit", "log", "log", "log"),
                             pos       = 1:5)
 
-  expect_equal(actual_df, expected_df)
+  expect_equal(actual_df, expected_df, check.attributes = FALSE)
 })
 
 test_that("arrange_pars() works in the presence of an unknown par in two measurement models", {
@@ -638,5 +638,5 @@ test_that("arrange_pars() works in the presence of an unknown par in two measure
                             par_trans = c("log", "logit", "log", "log", "log", "log"),
                             pos       = 1:6)
 
-  expect_equal(actual_df, expected_df)
+  expect_equal(actual_df, expected_df, check.attributes = FALSE)
 })

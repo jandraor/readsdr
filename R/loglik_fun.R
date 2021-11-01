@@ -5,8 +5,8 @@
 #' @param sim_controls A list
 #' @param meas_model_list A list of lists. Each second-level list corresponds to
 #'  a measurement model. Here is an example: \cr
-#'  \code{list(stock_name = "Infected", stock_fit_type = "net_change", \cr
-#'             dist = list(name     = "dpois", sim_data = "lambda"), \cr
+#'  \code{list(stock_name = "Infected", stock_fit_type = "net_change",
+#'             dist = list(name     = "dpois", sim_data = "lambda"),
 #'             data = 1:10)}
 #' @param extra_stocks An optional list
 #' @param extra_constraints An optional list
@@ -42,7 +42,7 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls,
   pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
   model_exe_text   <- get_model_run_text(sim_controls)
 
-  par_measure_df <- dplyr::filter(pars_df, type == "par_measure")
+  par_measure_df   <- pars_df[pars_df$type == "par_measure", ]
 
   meas_model_text  <- get_meas_model_text(meas_model_list, neg_log, n_unk_proc)
 
@@ -111,7 +111,7 @@ transform_pars <- function(pars_df) {
 
 assign_pars_text <- function(pars_df, extra_stocks = NULL) {
 
-  pars_df <- dplyr::filter(pars_df, type != "par_measure")
+  pars_df <- pars_df[pars_df$type != "par_measure", ]
 
   n_rows  <- nrow(pars_df)
   n_extra <- 0
@@ -140,7 +140,7 @@ assign_pars_text <- function(pars_df, extra_stocks = NULL) {
     assign_lines[[i]] <- assign_line
   }
 
-  stocks_df <- dplyr::filter(pars_df, type == "stock")
+  stocks_df <- pars_df[pars_df$type == "stock", ]
   n_stocks  <- nrow(stocks_df)
 
   for(i in seq_len(n_extra)) {
@@ -323,8 +323,8 @@ arrange_pars <- function(pars_df, meas_model_list) {
                              type == "par_measure" ~ 3,
                              TRUE ~ NA_real_))
 
-  pars_df <- dplyr::arrange(pars_df, type_num)
-  pars_df <- dplyr::select(pars_df, - type_num)
+  pars_df <- pars_df[order(pars_df$type_num), ]
+  pars_df <- dplyr::select(pars_df, -"type_num")
 
   dplyr::mutate(pars_df, pos = dplyr::row_number())
 }

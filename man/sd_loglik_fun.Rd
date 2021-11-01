@@ -23,8 +23,8 @@ sd_loglik_fun(
 
 \item{meas_model_list}{A list of lists. Each second-level list corresponds to
 a measurement model. Here is an example: \cr
-\code{list(stock_name = "Infected", stock_fit_type = "net_change", \cr
-           dist = list(name     = "dpois", sim_data = "lambda"), \cr
+\code{list(stock_name = "Infected", stock_fit_type = "net_change",
+           dist = list(name     = "dpois", sim_data = "lambda"),
            data = 1:10)}}
 
 \item{extra_stocks}{An optional list}

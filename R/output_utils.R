@@ -15,7 +15,7 @@
 sd_net_change <- function(sim_df, cumulative_var) {
 
   temp_df       <- sim_df[, c("time", cumulative_var)]
-  temp_df       <- dplyr::filter(temp_df, time - trunc(time) == 0)
+  temp_df       <- temp_df[temp_df$time - trunc(temp_df$time) == 0, ]
   cml_vals      <- temp_df[ , cumulative_var]
   temp_df$value <- cml_vals  - dplyr::lag(cml_vals )
   temp_df       <- dplyr::slice(temp_df, -1)
