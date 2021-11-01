@@ -2,9 +2,8 @@
 #'
 #' @param time Time at which the parameter values change
 #' @param par_list A list that indicates which parameters change from time t.
-#'   For instance, if you wanted to change the value of parameter a to 3, you
-#'   would provide the list \code{list(a = 3)}
-#'
+#'   For instance, if you wanted to change the value of parameter \code{c} to 4,
+#'   you would provide the \code{list(c = 4)}
 #'
 #' @inheritParams sd_simulate
 #'
