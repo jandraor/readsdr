@@ -7,10 +7,9 @@
 
 [![Codecov test
 coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
-[![R build
-status](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.org/package=readsdr)
+[![R-CMD-check](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
 <!-- badges: end -->
 
 ## Overview
@@ -61,52 +60,52 @@ or type `vignette("Introduction_to_readsdr")` in R.
 
 ## Supported builtins
 
-  - **Stella**
-      - Comparison operators (`=`, `<>`)
-      - Logical operators (`AND`, `OR`, `NOT`)
-      - `If Else Then`
-      - Inequality operators (`<`, `>`)
-      - `Pulse` <sup>1</sup>
-      - `Step` <sup>1</sup>
-      - Endogenous table functions
-      - Smoothing functions: `SMTH1`, `SMTH3`, `SMTHN`
-      - Limited support to *uni-dimensional* arrays. *Apply all*
+-   **Stella**
+    -   Comparison operators (`=`, `<>`)
+    -   Logical operators (`AND`, `OR`, `NOT`)
+    -   `If Else Then`
+    -   Inequality operators (`<`, `>`)
+    -   `Pulse` <sup>1</sup>
+    -   `Step` <sup>1</sup>
+    -   Endogenous table functions
+    -   Smoothing functions: `SMTH1`, `SMTH3`, `SMTHN`
+    -   Limited support to *uni-dimensional* arrays. *Apply all*
         translation is restricted to numeric values.
-      - Math functions: `ABS`, `SQRT`
-      - Stats functions: `NORMAL`
-  - **Vensim**
-      - Comparison operators (`=`, `<>`)
-      - Logical operators (`:AND:`, `:OR:`, `:NOT:`)
-      - `IF_THEN_ELSE`
-      - Inequality operators (`<`, `>`)
-      - `Pulse` <sup>1</sup>
-      - `Pulse Train` <sup>1</sup>
-      - `Step` <sup>1</sup>
-      - Endogenous table functions
-      - Smoothing functions: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI`
-      - Math functions: `ABS`, `SQRT`
+    -   Math functions: `ABS`, `SQRT`
+    -   Stats functions: `NORMAL`
+-   **Vensim**
+    -   Comparison operators (`=`, `<>`)
+    -   Logical operators (`:AND:`, `:OR:`, `:NOT:`)
+    -   `IF_THEN_ELSE`
+    -   Inequality operators (`<`, `>`)
+    -   `Pulse` <sup>1</sup>
+    -   `Pulse Train` <sup>1</sup>
+    -   `Step` <sup>1</sup>
+    -   Endogenous table functions
+    -   Smoothing functions: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI`
+    -   Math functions: `ABS`, `SQRT`
 
 <sup>1</sup> Restricted to Euler integration.
 
 ## Notes
 
-  - *uniflow* and *non-negative* stock features from *Stella* are
+-   *uniflow* and *non-negative* stock features from *Stella* are
     **not** supported.
 
-  - No built-in is supported for translations to *Stan* code.
+-   No built-in is supported for translations to *Stan* code.
 
-  - Modules from *Stella* are **not** supported.
+-   Modules from *Stella* are **not** supported.
 
 ## Acknowledgments
 
 Thanks to:
 
-  - [Rogelio Oliva](http://people.tamu.edu/~roliva/) for advocating the
+-   [Rogelio Oliva](http://people.tamu.edu/~roliva/) for advocating the
     need to create an open-source tool for the System Dynamics community
     and push forward this endeavour.
-  - Sergey Naumov for his ideas to implement several functions in this
+-   Sergey Naumov for his ideas to implement several functions in this
     package.
-  - [Jim
+-   [Jim
     Duggan](http://www.nuigalway.ie/our-research/people/engineering-and-informatics/jamesduggan/)
     from whom I borrowed ideas to implement this package.
 
