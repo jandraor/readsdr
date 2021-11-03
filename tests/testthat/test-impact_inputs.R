@@ -20,18 +20,25 @@ test_that("sd_impact_inputs() returns the expected list", {
     to      = c("Susceptible", "Susceptible", "Infected", "Infected", "Infected", "Recovered"),
     through = c("IR", "IR", "IR", "IR", "RR", "RR"))
 
-  expected <- list(flows    = expected_flows,
-                   pathways = expected_pathways)
+  expected_velocities <- data.frame(
+    stock    = c("Susceptible", "Infected", "Recovered"),
+    equation = c("-(Susceptible*Infected*((c*i)/population))",
+      "(Susceptible*Infected*((c*i)/population))-(Infected/recoveryDelay)",
+      "(Infected/recoveryDelay)"))
+
+  expected <- list(flows      = expected_flows,
+                   pathways   = expected_pathways,
+                   velocities = expected_velocities)
 
   expect_equal(actual, expected)
 })
 
-test_that("sd_velocity_equations() return the expected data frame", {
+test_that("velocity_equations() return the expected data frame", {
 
   filepath  <- system.file("models/", "SIR.stmx", package = "readsdr")
   mdl       <- read_xmile(filepath)
   desc_list <- mdl$description
-  actual    <- sd_velocity_equations(desc_list)
+  actual    <- velocity_equations(desc_list)
   expect_s3_class(actual, "data.frame")
 
   actual_colnames   <- colnames(actual)

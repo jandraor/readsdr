@@ -3,11 +3,13 @@
 #'
 #' @param desc_list Element 'description' from the list returned by \code{read_xmile()}
 #'
-#' @return A list of two elements. The first element, \code{flows}, is a data
+#' @return A list of three elements. The first element, \code{flows}, is a data
 #'   frame that lists all the stock-flow links in the model. Further, this data
 #'   frame describes the equation that governs the link and whether the link is
 #'   an inflow (+) or an outflow (-). The second element, \code{pathways}, is a
-#'   data frame that lists all the pathways among stocks.
+#'   data frame that lists all the pathways among stocks. The third element,
+#'   \code{velocities}, is a data frame in which each row corresponds to a
+#'   stock. Each row consists of two columns (name  & equation).
 #' @export
 #'
 #' @examples
@@ -17,26 +19,17 @@
 #'   sd_impact_inputs(desc_list)
 sd_impact_inputs <- function(desc_list) {
 
-  flows_df    <- flow_equations(desc_list)
-  pathways_df <- pathways(flows_df)
+  flows_df      <- flow_equations(desc_list)
+  pathways_df   <- pathways(flows_df)
+  velocities_df <- velocity_equations(desc_list)
 
-  list(flows    = flows_df,
-       pathways = pathways_df)
+  list(flows      = flows_df,
+       pathways   = pathways_df,
+       velocities = velocities_df)
 }
 
 #' Construct velocity equations in terms of stocks and constants
-#'
-#' @inheritParams sd_impact_inputs
-#'
-#' @return A data frame of two columns.
-#' @export
-#'
-#' @examples
-#'  filepath  <- system.file("models/", "SIR.stmx", package = "readsdr")
-#'  mdl       <- read_xmile(filepath)
-#'  desc_list <- mdl$description
-#'  sd_velocity_equations(desc_list)
-sd_velocity_equations <- function(desc_list) {
+velocity_equations <- function(desc_list) {
 
   levels      <- desc_list$levels
   stock_names <- purrr::map_chr(levels, "name")

@@ -1,7 +1,6 @@
 # Development version
 
 * Add sd_impact_inputs()
-* Add sd_velocity_equations()
 * Add sd_loglik_fun()
 * Add sd_net_change()
 * Fix bug (incorrect division due to missing parentheses) in the translation of SMOOTH

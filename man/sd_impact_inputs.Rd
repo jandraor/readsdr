@@ -10,11 +10,13 @@ sd_impact_inputs(desc_list)
 \item{desc_list}{Element 'description' from the list returned by \code{read_xmile()}}
 }
 \value{
-A list of two elements. The first element, \code{flows}, is a data
+A list of three elements. The first element, \code{flows}, is a data
   frame that lists all the stock-flow links in the model. Further, this data
   frame describes the equation that governs the link and whether the link is
   an inflow (+) or an outflow (-). The second element, \code{pathways}, is a
-  data frame that lists all the pathways among stocks.
+  data frame that lists all the pathways among stocks. The third element,
+  \code{velocities}, is a data frame in which each row corresponds to a
+  stock. Each row consists of two columns (name  & equation).
 }
 \description{
 Construct inputs for performing structural analysis via the impact method
