@@ -32,6 +32,7 @@ Imports:
     magrittr,
     stats,
     deSolve,
-    parallel
+    parallel,
+    utils
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr

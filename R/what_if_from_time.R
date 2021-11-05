@@ -7,7 +7,7 @@
 #'
 #' @inheritParams sd_simulate
 #'
-#' @return
+#' @return A data frame
 #' @export
 #'
 #' @examples
@@ -35,7 +35,7 @@ sd_what_if_from_time <- function(time, par_list, ds_inputs,
   first_run  <- sd_simulate(ds_inputs, stop_time = mid_time,
                             integ_method = integ_method)
 
-  last_row             <- tail(first_run, 1)
+  last_row             <- utils::tail(first_run, 1)
   stk_names            <- names(ds_inputs$stocks)
   new_stocks           <- last_row[, stk_names] %>% unlist()
   ds_inputs$stocks <- new_stocks
@@ -46,6 +46,6 @@ sd_what_if_from_time <- function(time, par_list, ds_inputs,
   second_run <- sd_simulate(ds_inputs, start_time = mid_time,
                             integ_method = integ_method)
 
-  rbind(head(first_run, -1), second_run)
+  rbind(utils::head(first_run, -1), second_run)
 
 }

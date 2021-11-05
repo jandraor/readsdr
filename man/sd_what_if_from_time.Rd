@@ -32,7 +32,7 @@ you would provide the \code{list(c = 4)}}
 \item{integ_method}{A string. Either "euler" or "rk4"}
 }
 \value{
-
+A data frame
 }
 \description{
 What if from time t we change the value of some parameters

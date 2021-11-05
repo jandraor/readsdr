@@ -28,7 +28,7 @@ sd_impact_inputs <- function(desc_list) {
        velocities = velocities_df)
 }
 
-#' Construct velocity equations in terms of stocks and constants
+# Construct velocity equations in terms of stocks and constants
 velocity_equations <- function(desc_list) {
 
   levels      <- desc_list$levels
