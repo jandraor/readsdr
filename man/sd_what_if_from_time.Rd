@@ -6,6 +6,7 @@
 \usage{
 sd_what_if_from_time(
   time,
+  up_to_time = Inf,
   par_list,
   ds_inputs,
   start_time = NULL,
@@ -16,6 +17,8 @@ sd_what_if_from_time(
 }
 \arguments{
 \item{time}{Time at which the parameter values change}
+
+\item{up_to_time}{Time from which the original values are restored.}
 
 \item{par_list}{A list that indicates which parameters change from time t.
 For instance, if you wanted to change the value of parameter \code{c} to 4,
