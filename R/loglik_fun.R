@@ -1,6 +1,12 @@
 #' Generate a log-likelihood function for an SD model
 #'
-#' @param pars_df A data frame
+#' @param pars_df A data frame of three columns (\code{name}, \code{type},
+#' \code{par_trans}). Each row in this data frame corresponds to an unknown
+#' parameter. The column \code{name} must correspond to exactly the parameter's
+#' name in the SD model. The entries in column \code{type} can be either
+#' \code{"constant"} or \code{"stock"}. Lastly, column \code{par_trans} supports
+#' the following transformations: \code{"log"} for strictly positive values
+#' & \code{"logit"} for unknowns in the interval (0,1).
 #' @param deSolve_components A list
 #' @param sim_controls A list
 #' @param meas_model_list A list of lists. Each second-level list corresponds to
@@ -15,7 +21,9 @@
 #'        returns a positive value (for minimisation optimisers). If
 #'        \code{FALSE}, the function returns the original log-likelihood.
 #'
-#' @return A function
+#' @return A list of two elements. The first element \code{fun} corresponds to
+#' the log likelihood function. The second element \code{par_names} indicates
+#' the order in which the unknowns are returned.
 #' @export
 #'
 #' @examples
@@ -33,6 +41,10 @@ sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls,
                           meas_model_list, extra_stocks = NULL,
                           extra_constraints = NULL,
                           neg_log = FALSE) {
+
+  # ----------------------validations-------------------------------------------
+  check_measurement_models(meas_model_list)
+  # ----------------------------------------------------------------------------
 
   n_unk_proc <- nrow(pars_df)
 
@@ -327,4 +339,20 @@ arrange_pars <- function(pars_df, meas_model_list) {
   pars_df <- dplyr::select(pars_df, -"type_num")
 
   dplyr::mutate(pars_df, pos = dplyr::row_number())
+}
+
+check_measurement_models <- function(meas_model_list) {
+
+  vals <- lapply(meas_model_list, function(mm) {
+    actual_names   <- names(mm)
+    required_names <- c("stock_name", "stock_fit_type", "dist", "data")
+
+    missing <- required_names[!required_names %in% actual_names]
+
+    if(length(missing) > 0) {
+      elems <- paste(missing, collapse = ", ")
+      msg   <- paste0("'",elems, "' is (are) required in each element of 'meas_model_list'")
+      stop(msg, call. = FALSE)
+    }
+  })
 }

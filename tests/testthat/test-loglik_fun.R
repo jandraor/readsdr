@@ -640,3 +640,14 @@ test_that("arrange_pars() works in the presence of an unknown par in two measure
 
   expect_equal(actual_df, expected_df, check.attributes = FALSE)
 })
+
+test_that("check_measurement_models() returns the expected error",{
+
+  mm1 <- list(stock_mame = "Infected", stock_fit_type = "net_change",
+              dist = list(name     = "dpois",
+                          sim_data = "lambda",
+                          dist_offset = "1e-5"),
+              data = 1:10)
+
+  expect_error(check_measurement_models(list(mm1)))
+})

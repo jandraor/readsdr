@@ -15,7 +15,13 @@ sd_loglik_fun(
 )
 }
 \arguments{
-\item{pars_df}{A data frame}
+\item{pars_df}{A data frame of three columns (\code{name}, \code{type},
+\code{par_trans}). Each row in this data frame corresponds to an unknown
+parameter. The column \code{name} must correspond to exactly the parameter's
+name in the SD model. The entries in column \code{type} can be either
+\code{"constant"} or \code{"stock"}. Lastly, column \code{par_trans} supports
+the following transformations: \code{"log"} for strictly positive values
+& \code{"logit"} for unknowns in the interval (0,1).}
 
 \item{deSolve_components}{A list}
 
@@ -37,7 +43,9 @@ returns a positive value (for minimisation optimisers). If
 \code{FALSE}, the function returns the original log-likelihood.}
 }
 \value{
-A function
+A list of two elements. The first element \code{fun} corresponds to
+the log likelihood function. The second element \code{par_names} indicates
+the order in which the unknowns are returned.
 }
 \description{
 Generate a log-likelihood function for an SD model
