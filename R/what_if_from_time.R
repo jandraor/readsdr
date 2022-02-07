@@ -15,7 +15,7 @@
 #'   filepath       <- system.file("models/", "SIR.stmx", package = "readsdr")
 #'   mdl            <- read_xmile(filepath)
 #'   ds_components  <- mdl$deSolve_components
-#'   output         <- sd_what_if_from_time(3, list(c = 4), ds_components)
+#'   output         <- sd_what_if_from_time(3, Inf, list(c = 4), ds_components)
 sd_what_if_from_time <- function(time, up_to_time = Inf, par_list, ds_inputs,
                                  start_time = NULL, stop_time = NULL,
                                  timestep = NULL, integ_method = "euler") {
@@ -29,7 +29,7 @@ sd_what_if_from_time <- function(time, up_to_time = Inf, par_list, ds_inputs,
   if(!is.null(stop_time)) {
     ds_inputs$sim_params$stop <- stop_time
   } else {
-    stop_time <- ds_inputs$sim_params
+    stop_time <- ds_inputs$sim_params$stop
   }
 
   if(!is.null(timestep)) {

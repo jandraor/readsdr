@@ -44,5 +44,5 @@ What if from time t we change the value of some parameters
   filepath       <- system.file("models/", "SIR.stmx", package = "readsdr")
   mdl            <- read_xmile(filepath)
   ds_components  <- mdl$deSolve_components
-  output         <- sd_what_if_from_time(3, list(c = 4), ds_components)
+  output         <- sd_what_if_from_time(3, Inf, list(c = 4), ds_components)
 }
