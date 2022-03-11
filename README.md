@@ -68,7 +68,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     -   `Pulse` <sup>1</sup>
     -   `Step` <sup>1</sup>
     -   Endogenous table functions
-    -   Smoothing functions: `SMTH1`, `SMTH3`, `SMTHN`
+    -   Smoothing functions<sup>2</sup>: `SMTH1`, `SMTH3`, `SMTHN`
     -   Limited support to *uni-dimensional* arrays. *Apply all*
         translation is restricted to numeric values.
     -   Math functions: `ABS`, `SQRT`
@@ -82,10 +82,15 @@ or type `vignette("Introduction_to_readsdr")` in R.
     -   `Pulse Train` <sup>1</sup>
     -   `Step` <sup>1</sup>
     -   Endogenous table functions
-    -   Smoothing functions: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI`
+    -   Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`,
+        `SMOOTH3I`, `SMOOTHI`
     -   Math functions: `ABS`, `SQRT`
 
 <sup>1</sup> Restricted to Euler integration.
+
+<sup>2</sup> These functions cannot be part of more complex mathematical
+expressions. That is, the auxiliary variable must only contain one
+smoothing function and **nothing else**.
 
 ## Notes
 

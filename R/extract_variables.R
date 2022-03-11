@@ -20,6 +20,9 @@
 #' @noRd
 
 extract_variables <- function(lhs, rhs) {
+
+  rhs <- stringr::str_replace(rhs, "\\.memory", "")
+
   raw_elements <- stringr::str_split(rhs, "\\b")[[1]] %>%
     stringi::stri_remove_empty()
 
@@ -36,6 +39,9 @@ extract_variables <- function(lhs, rhs) {
 
   # Filtering out ifelse
   detected_vars <- detected_vars[detected_vars != "ifelse"]
+
+  # Filtering out fixed delay
+  detected_vars <- detected_vars[detected_vars != "sd_fixed_delay"]
 
   unique(detected_vars)
 }

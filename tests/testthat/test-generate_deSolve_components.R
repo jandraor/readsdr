@@ -53,8 +53,51 @@ test_that("get_deSolve_elems() returns the basic elements", {
 })
 
 test_that("get_deSolve_elems() returns the graph_fun element", {
-  expect_named(get_deSolve_elems(structure_m2 ),
+  expect_named(get_deSolve_elems(structure_m2),
                c("stocks", "consts", "func", "sim_params", "graph_funs"))
+})
+
+test_that("get_deSolve_elems handles models with FIXED DELAYS", {
+  mdl_structure <- list(parameters = list(),
+                        levels     = list(
+                          list(name      = "test",
+                               equation  = "inflow-outflow",
+                               initValue = 0)
+                        ),
+                        variables = list(
+                          list(name     = "inflow",
+                               equation = "3+ifelse(time>=2,3,0)"),
+                          list(name     = "outflow",
+                               equation = "sd_fixed_delay('inflow',time,2,0,.memory)")
+                        ),
+                        constants = list())
+
+  actual_obj <- get_deSolve_elems(mdl_structure)
+
+  func_body <- paste(
+    'with(as.list(c(stocks, auxs)), {',
+    'inflow <- 3 + ifelse(time >= 2, 3, 0)',
+    'outflow <- sd_fixed_delay("inflow", time, 2, 0, .memory)',
+    'd_test_dt <- inflow - outflow',
+    '.memory[as.character(time), c("inflow")] <<- inflow',
+    'return(list(c(d_test_dt), inflow = inflow, outflow = outflow))',
+    '})', sep = "\n")
+
+  model_func <- rlang::new_function(
+    args = rlang::exprs(time = , stocks =, auxs = ),
+    body = rlang::parse_expr(func_body)
+  )
+
+  expected_obj <- list(
+    stocks       = c(test = 0),
+    consts       = list(),
+    func         = model_func,
+    sim_params   = list(),
+    delayed_vars = c("inflow"))
+
+  actual_val <- all.equal(actual_obj, expected_obj, check.environment = FALSE)
+
+  expect_equal(actual_val, TRUE)
 })
 
 # construct_return_statement()--------------------------------------------------
@@ -129,7 +172,7 @@ test_that("generate_model_func() returns the expected fun", {
   )
 
   actual_obj <- generate_model_func(structure_m1$variables, structure_m1$levels,
-                                    structure_m1$constants, FALSE)
+                                    structure_m1$constants, FALSE, NULL)
 
   actual_val <- all.equal(actual_obj, model_func, check.environment = FALSE)
 
@@ -152,7 +195,7 @@ test_that("generate_model_func() works for models with graphical functions", {
   )
 
   actual_obj <- generate_model_func(structure_m2$variables, structure_m2$levels,
-                                    structure_m2$constants, TRUE)
+                                    structure_m2$constants, TRUE, NULL)
 
   actual_val <- all.equal(actual_obj, model_func, check.environment = FALSE)
 

@@ -30,7 +30,7 @@ test_that("translate_graph_func() returns the expected object", {
 				  </gf>
 			  </aux>
       </doc1>
-    </root>')%>%
+    </root>') %>%
     xml2::xml_find_first(".//d1:gf")
 
   actual_obj    <- translate_graph_func(test_gf_xml)

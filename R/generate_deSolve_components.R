@@ -6,8 +6,10 @@ get_deSolve_elems <- function(mdl_structure) {
   ds_graphs_funs <- generate_gf_list(variables)
   there_are_gf   <- ifelse(length(ds_graphs_funs) > 0, TRUE, FALSE)
 
+  delayed_vars <- identify_delayed_vars(variables)
+
   ds_model_func <- generate_model_func(variables, levels, constants,
-                                       there_are_gf)
+                                       there_are_gf, delayed_vars)
   ds_stocks     <- generate_stocks_vector(levels)
   ds_consts     <- generate_constants_vector(constants)
 
@@ -17,9 +19,9 @@ get_deSolve_elems <- function(mdl_structure) {
     func       = ds_model_func,
     sim_params = mdl_structure$parameters)
 
-  if(there_are_gf){
-     deSolve_components$graph_funs <- ds_graphs_funs
-  }
+  if(there_are_gf) deSolve_components$graph_funs <- ds_graphs_funs
+
+  if(length(delayed_vars) > 0) deSolve_components$delayed_vars <- delayed_vars
 
   deSolve_components
 }
@@ -92,7 +94,8 @@ construct_return_statement <- function(stocks, variables, constants) {
   paste0('return (list(', body_return,'))')
 }
 
-generate_model_func <- function (variables, stocks, constants, graph_fun) {
+generate_model_func <- function (variables, stocks, constants, graph_fun,
+                                 delayed_vars) {
   variables        <- arrange_variables(variables)
   var_equations    <- construct_vars_text(variables)
   net_flows        <- construct_nf_text(stocks)
@@ -106,9 +109,20 @@ generate_model_func <- function (variables, stocks, constants, graph_fun) {
   func_body <- paste(
     with_statement,
     var_equations,
-    net_flows,
-    return_statement,
-    '})', sep = "\n")
+    net_flows, sep = "\n")
+
+  if(!is.null(delayed_vars)) {
+
+    sapply(delayed_vars, function(d_var) {
+      stringr::str_glue(".memory[as.character(time), c('{d_var}')] <<- {d_var}")
+    }) -> memory_vector
+
+    memory_lines <- paste(memory_vector, collapse = "\n")
+
+    func_body <- paste(func_body, memory_lines, sep = "\n")
+  }
+
+  func_body <- paste(func_body, return_statement, '})', sep = "\n")
 
   func_args <- NULL
 

@@ -16,6 +16,8 @@
 sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
                         timestep = NULL, integ_method = "euler") {
 
+  .env <- new.env()
+
   if(!(integ_method %in% c("euler", "rk4"))) stop("Invalid integration method")
 
   if(is.null(start_time)) start_time  <- ds_inputs$sim_params$start
@@ -25,13 +27,24 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
   # Create time vector
   simtime  <- seq(start_time, stop_time, by = timestep)
 
+  ds_func              <- ds_inputs$func
+  environment(ds_func) <- .env
+
+  if(!is.null(ds_inputs$delayed_vars)) {
+    n_points  <- length(simtime)
+    n_vars    <- length(ds_inputs$delayed_vars)
+    NAs       <- rep(NA, n_points * n_vars)
+    memory_df <- matrix(c(simtime, NAs), ncol = n_vars + 1) |> as.data.frame()
+    colnames(memory_df) <- c("time", ds_inputs$delayed_vars)
+    rownames(memory_df) <- simtime
+    .env$.memory        <- memory_df
+  }
+
   ode_args <- list(y      = ds_inputs$stocks,
                    times  = simtime,
-                   func   = ds_inputs$func,
+                   func   = ds_func,
                    parms  = ds_inputs$consts,
                    method = integ_method)
-
-
 
   if("graph_funs" %in% names(ds_inputs)) {
     ode_args$graph_funs <- ds_inputs$graph_funs

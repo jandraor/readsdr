@@ -6,6 +6,10 @@ extract_structure_from_XMILE <- function(filepath) {
   sim_specs  <- xml2::xml_find_all(raw_xml, ".//d1:sim_specs")
   parameters <- create_param_obj_xmile(sim_specs)
 
+  # time_aux is meant for calculating init values of stocks
+  time_aux   <- list(name     = "time",
+                     equation = as.character(parameters$start))
+
   #-----------------------------------------------------------------------------
   dims_obj <- NULL
 
@@ -20,15 +24,22 @@ extract_structure_from_XMILE <- function(filepath) {
   variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
 
   auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
+  stocks_xml      <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
 
   vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj)
+
+  if(vendor == "Vensim") {
+    vars_and_consts <- extract_vars_in_stocks(stocks_xml, vars_and_consts)
+  }
+
   variables       <- arrange_variables(vars_and_consts$variables)
   constants       <- vars_and_consts$constants
 
-  stocks_xml     <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
-
-  args_fun       <- list(stocks_xml = stocks_xml, variables = variables,
-                         constants = constants, dims_obj = dims_obj)
+  args_fun       <- list(stocks_xml = stocks_xml,
+                         variables  = variables,
+                         constants  = constants,
+                         dims_obj   = dims_obj,
+                         time_aux   = time_aux)
 
   if("builtin_stocks" %in% names(vars_and_consts)) {
     args_fun$builtin_stocks <- vars_and_consts$builtin_stocks
@@ -49,17 +60,20 @@ compute_init_value <- function(var_name, equation, auxs) {
       stop(stringr::str_glue("Can't compute the init value of '{var_name}'"),
            call. = FALSE)
     }, {
+
       vars_in_equation <- extract_variables(var_name, equation)
       newEquation      <- equation
       auxs_names       <- sapply(auxs, function(aux) aux$name)
 
       for(var_in_equation in vars_in_equation) {
+
         pos_aux     <- which(auxs_names == var_in_equation)
         aux_obj     <- auxs[[pos_aux]]
         rpl_val     <- aux_obj$equation # replacement value
 
 
         if(!is.null(aux_obj$graph)){
+
           input_equation <- stringr::str_match(rpl_val, "f.+\\((.+)\\)")[[2]]
           input          <- compute_init_value("", input_equation, auxs)
           assign(aux_obj$graph_fun$name, aux_obj$graph_fun$fun)
@@ -67,20 +81,21 @@ compute_init_value <- function(var_name, equation, auxs) {
         }
 
         replacement <- paste0("(", rpl_val, ")")
-        pattern     <- paste0("\\b", var_in_equation, "\\b")
-        newEquation <- gsub(pattern, replacement, newEquation)
+        pattern     <- paste0("\\b", var_in_equation, "\\b(?!')")
+        newEquation <- gsub(pattern, replacement, newEquation, perl = TRUE)
       }
 
-      contains_characters <- stringr::str_detect(newEquation, "[A-Za-z]")
+      env <- environment()
+      env$.memory <- data.frame() # for sd_fixed_delay
+      newEquation <- safe_eval(newEquation, env)
 
-      if(contains_characters) {
+      if(is.character(newEquation)) {
         initValue <- compute_init_value(var_name, newEquation, auxs)
         return(initValue)
       }
 
-      if(!contains_characters) {
-        newEquation <- parse(text = newEquation)
-        initValue   <- eval(newEquation)
+      if(is.numeric(newEquation)) {
+        initValue   <- newEquation
       }
 
       initValue
@@ -192,4 +207,11 @@ sanitise_arrays <- function(equation, vendor) {
  }
 
   equation
+}
+
+safe_eval <- function(equation, env) {
+  tryCatch(
+    error = function(cnd) equation,
+    eval(parse(text = equation), envir = env)
+  )
 }

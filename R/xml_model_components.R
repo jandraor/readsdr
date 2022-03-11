@@ -47,10 +47,11 @@ create_param_obj_xmile <- function(sim_specs) {
 }
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants,
-                                   builtin_stocks = NULL, dims_obj = NULL) {
+                                   builtin_stocks = NULL, dims_obj = NULL,
+                                   time_aux) {
 
   if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
-    stop("A model must contain stocks", call. = FALSE)
+    stop("SD models must contain stocks", call. = FALSE)
   }
 
   # This makes consts & auxs have the same properties
@@ -59,6 +60,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   })
 
   stocks_list <- lapply(stocks_xml, extract_stock_info, dims_obj = dims_obj)
+  stocks_list <- remove_NULL(stocks_list)
   stocks_list <- unlist(stocks_list, recursive = FALSE)
 
   if(!is.null(builtin_stocks)) {
@@ -69,7 +71,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
     list(name = stock$name, equation = stock$initValue)
   })
 
-  auxs        <- c(variables, constants, stock_auxs)
+  auxs        <- c(variables, constants, stock_auxs, list(time_aux))
 
   n_stocks    <- length(stocks_list)
 
@@ -94,6 +96,12 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
 }
 
 extract_stock_info <- function(stock_xml, dims_obj) {
+
+  # Only God knows why Ventana would treat the FIXED DELAY as a stock
+  eq <- xml2::xml_find_all(stock_xml, ".//d1:eqn")
+  eq <- xml2::xml_text(eq)
+  if(any(grepl("DELAY_FIXED", eq))) return (NULL)
+  #-----------------------------------------------------------------------------
 
   dim_xml     <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")
   dimensions  <- xml2::xml_find_all(stock_xml, ".//d1:dim")

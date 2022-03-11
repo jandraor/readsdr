@@ -109,6 +109,20 @@ process failed", {
                "Can't compute the init value of 'test_stock'")
 })
 
+test_that("compute_init_value() handles sd_fixed_delay",{
+
+  stock_name         <- "smooth_ordered"
+  test_equation      <- "ordered"
+  test_auxs          <- list(
+    list(name = "ordered", equation = "sd_fixed_delay('placed',time,1,4,.memory)"),
+    list(name = "time", equation = "0"),
+    list(name = "placed", equation = "a+b"))
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
+
+  expected_val <- 4
+  expect_equal(actual_val, expected_val)
+})
+
 # sanitise_elem_name()----------------------------------------------------------
 
 test_that("sanitise_elem_name() returns the sanitised name when it has a

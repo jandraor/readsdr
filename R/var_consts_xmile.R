@@ -1,3 +1,15 @@
+
+#' Create an object that describe variables, constants and  builtin stocks
+#'
+#' @param auxs_xml An xml object.
+#' @param vendor A string that indicates the model's origin.
+#' @param dims_obj A list.
+#'
+#' @return A list of three elements: \code{variables}, \code{constants},
+#'   \code{builtin_stocks}. The element \code{variables} corresponds a list of
+#'    lists. Each sublist contains two elements: \code{name} & \code{equation}.
+#'
+#' @noRd
 create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
 
   #-----------------------------------------------------------------------------
@@ -248,7 +260,7 @@ interpret_equations_vensim <- function(non_const_obj) {
     fun_name           <- paste0("f_", var_name)
     equation           <- paste0(fun_name, "(", translation$input, ")")
     graph_fun          <- list(name = fun_name,
-                               fun = translation$graph_fun)
+                               fun  = translation$graph_fun)
   }
 
   var_obj <- list(name     = var_name,

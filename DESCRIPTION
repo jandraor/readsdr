@@ -14,7 +14,7 @@ Description: The goal of 'readsdr' is to bridge the design capabilities from
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     testthat (>= 2.1.0),
     igraph,

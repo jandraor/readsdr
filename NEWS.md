@@ -1,5 +1,6 @@
 # Development version
 
+* read_xmile() now translates Vensim's *DELAY FIXED*.
 * Add sd_what_if_from_time()
 * Add sd_impact_inputs()
 * Add sd_loglik_fun()
