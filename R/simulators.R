@@ -34,7 +34,7 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
     n_points  <- length(simtime)
     n_vars    <- length(ds_inputs$delayed_vars)
     NAs       <- rep(NA, n_points * n_vars)
-    memory_df <- matrix(c(simtime, NAs), ncol = n_vars + 1) |> as.data.frame()
+    memory_df <- matrix(c(simtime, NAs), ncol = n_vars + 1) %>% as.data.frame()
     colnames(memory_df) <- c("time", ds_inputs$delayed_vars)
     rownames(memory_df) <- simtime
     .env$.memory        <- memory_df
