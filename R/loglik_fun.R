@@ -14,7 +14,11 @@
 #'  \code{list(stock_name = "Infected", stock_fit_type = "net_change",
 #'             dist = list(name     = "dpois", sim_data = "lambda"),
 #'             data = 1:10)}
-#' @param extra_stocks An optional list
+#' @param extra_stocks An optional list of lists. Every sublist has two
+#'   elements. The first element corresponds to \code{name}, which is a string
+#'   that indicates the name of the stock whose initial value depends upon
+#'   another stock. The second element corresponds to \code{init}, whose value
+#'   (string) is an equation that expresses a constraint.
 #' @param extra_constraints An optional list
 #' @param neg_log A boolean that indicates whether the log-likelihood function
 #'        returns a positive or negative value. If \code{TRUE}, the function
