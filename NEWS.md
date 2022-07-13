@@ -1,11 +1,12 @@
 # Development version
 
+* read_xmile() returns the element graph only if the parameter *graph* is set to *TRUE*.
 * read_xmile() now translates Vensim's *DELAY FIXED*.
 * Add sd_what_if_from_time()
 * Add sd_impact_inputs()
 * Add sd_loglik_fun()
 * Add sd_net_change()
-* Fix bug (incorrect division due to missing parentheses) in the translation of SMOOTH
+* Fix bug (incorrect division due to missing parentheses) in the translation of *SMOOTH*.
 
 # 0.2.0
 

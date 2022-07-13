@@ -4,7 +4,7 @@
 \alias{read_xmile}
 \title{Read an XMILE file into R}
 \usage{
-read_xmile(filepath, stock_list = NULL, const_list = NULL)
+read_xmile(filepath, stock_list = NULL, const_list = NULL, graph = FALSE)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -16,6 +16,9 @@ stock to override and the element's value correspond to the new init value.}
 
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
+
+\item{graph}{A boolean parameter that indicates whether \code{read_xmile}
+returns a graph for the model.}
 }
 \value{
 This function returns a list with three elements. The first element,
@@ -23,8 +26,8 @@ This function returns a list with three elements. The first element,
 the names and equations (including graphical functions) for each stock or
 level, variable and constant. The second element, \emph{deSolve_components},
 is a list that contains initial values, constants and the function for
-simulating via deSolve. The third element, \emph{igraph} contains the
-data.frames for creating a graph with igraph.
+simulating via deSolve. The third element (optional), \emph{igraph} contains
+ the data.frames for creating a graph with igraph.
 }
 \description{
 \code{read_xmile} returns a list for constructing deSolve functions and graphs

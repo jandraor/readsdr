@@ -15,19 +15,23 @@
 #' @param const_list A list in which each element's name is the name of the
 #' constant to override and the element's value correspond to the new value.
 #'
+#' @param graph A boolean parameter that indicates whether \code{read_xmile}
+#'  returns a graph for the model.
+#'
 #' @return This function returns a list with three elements. The first element,
 #' \emph{description}, is a list that contains the simulation parameters, and
 #' the names and equations (including graphical functions) for each stock or
 #' level, variable and constant. The second element, \emph{deSolve_components},
 #' is a list that contains initial values, constants and the function for
-#' simulating via deSolve. The third element, \emph{igraph} contains the
-#' data.frames for creating a graph with igraph.
+#' simulating via deSolve. The third element (optional), \emph{igraph} contains
+#'  the data.frames for creating a graph with igraph.
 #' @export
 #'
 #' @examples
 #' path <- system.file("models", "SIR.stmx", package = "readsdr")
 #' read_xmile(path)
-read_xmile <- function(filepath, stock_list = NULL, const_list = NULL) {
+read_xmile <- function(filepath, stock_list = NULL, const_list = NULL,
+                       graph = FALSE) {
 
   model_structure    <- extract_structure_from_XMILE(filepath)
 
@@ -49,20 +53,26 @@ read_xmile <- function(filepath, stock_list = NULL, const_list = NULL) {
 
   deSolve_components <- get_deSolve_elems(model_structure)
 
-  igraph_inputs      <- tryCatch(
-    error = function(cnd) {
-      warning("This model cannot be converted into a graph (network)",
-              call. = FALSE)
-      NULL
-    },
-    get_igraph_inputs(model_structure)
-  )
-
-  list(
+  output <- list(
     description        = model_structure,
-    deSolve_components = deSolve_components,
-    graph_dfs          = igraph_inputs
-  )
+    deSolve_components = deSolve_components)
+
+  if(graph == TRUE) {
+
+    igraph_inputs      <- tryCatch(
+      error = function(cnd) {
+        warning("This model cannot be converted into a graph (network)",
+                call. = FALSE)
+        NULL
+      },
+      get_igraph_inputs(model_structure)
+    )
+
+    output$graph_dfs <- igraph_inputs
+  }
+
+  output
+
 }
 
 #' Parse XMILE to deSolve components

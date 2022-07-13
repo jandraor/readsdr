@@ -31,8 +31,8 @@ test_that("the output from read_xmile() is a list", {
 })
 
 test_that("the output from read_xmile() produces the required elements", {
-  expect_named(read_xmile(test_model), c("description", "deSolve_components",
-                                         "graph_dfs"))
+  expect_named(read_xmile(test_model, graph = TRUE),
+               c("description", "deSolve_components", "graph_dfs"))
 })
 
 sd_simulate <- function(mdl, method = "euler") {
