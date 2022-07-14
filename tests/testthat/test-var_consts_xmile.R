@@ -407,6 +407,8 @@ test_that("create_vars_consts_obj_xmile() handles apply all for constant vector"
   expect_equal(actual_obj, expected_obj)
 })
 
+#-------xml_to_elem_list--------------------------------------------------------
+
 test_that("xml_to_elem_list() handles a arrayed variable", {
   test_var_xml <- xml2::read_xml('
   <root>
@@ -440,4 +442,61 @@ test_that("xml_to_elem_list() handles a arrayed variable", {
   actual_obj   <- xml_to_elem_list(auxs_xml[[1]], "isee")
 
   expect_equal(actual_obj, expected_obj)
+})
+
+test_that("xml_to_elem_list() handles a 2 dimensional arrayed variable from Vensim", {
+
+  filepath        <- "./2d_pop.xmile"
+  raw_xml         <- xml2::read_xml(filepath)
+  variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  dims_obj        <- create_dims_obj(raw_xml)
+  auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
+
+  actual          <- xml_to_elem_list(auxs_xml[[1]],
+                                      vendor = "Vensim",
+                                      dims_obj = dims_obj)
+
+  expected <- list(
+    vars = list(
+      list(name     = "Net_growth_Westeros_Young",
+           equation = "Population_Westeros_Young*Growth_rate_Westeros_Young"),
+      list(name     = "Net_growth_Westeros_Old",
+           equation = "Population_Westeros_Old*Growth_rate_Westeros_Old"),
+      list(name     = "Net_growth_Essos_Young",
+           equation = "Population_Essos_Young*Growth_rate_Essos_Young"),
+      list(name     = "Net_growth_Essos_Old",
+           equation = "Population_Essos_Old*Growth_rate_Essos_Old")),
+    consts = list())
+
+  expect_equal(actual, expected)
+
+})
+
+test_that("xml_to_elem_list() handles a 2 dimensional arrayed constant from Vensim", {
+
+
+  filepath        <- "./2d_pop.xmile"
+  raw_xml         <- xml2::read_xml(filepath)
+  variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  dims_obj        <- create_dims_obj(raw_xml)
+  auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
+
+  actual          <- xml_to_elem_list(auxs_xml[[2]],
+                                      vendor = "Vensim",
+                                      dims_obj = dims_obj)
+
+  expected <- list(
+    vars   = NULL,
+    consts = list(
+      list(name     = "Growth_rate_Westeros_Young",
+           value    = 0.01),
+      list(name     = "Growth_rate_Westeros_Old",
+           value    = 0.1),
+      list(name     = "Growth_rate_Essos_Young",
+           value    = 0.05),
+      list(name     = "Growth_rate_Essos_Old",
+           value    = 0.05)))
+
+  expect_equal(actual, expected)
+
 })

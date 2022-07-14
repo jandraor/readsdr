@@ -113,6 +113,13 @@ test_that("read_xmile() allows the user to override values of constants", {
   expect_equal(mdl$deSolve_components$consts[[1]], 0.02)
 })
 
+test_that("read_xmile() suppports n-dimensional arrays from Vensim", {
+
+  expect_named(read_xmile("./2d_pop.xmile"),
+               c("description", "deSolve_components"))
+
+})
+
 #xmile_to_deSolve()-------------------------------------------------------------
 
 test_that("xmile_to_deSolve() returns a list", {
