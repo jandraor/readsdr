@@ -41,17 +41,26 @@ arrange_variables <- function(var_list) {
 
   equations_df$ocurrence <- NULL
 
-  aux_ids   <- equations_df$id
+  aux_ids          <- equations_df$id
   sorted_variables <- vector(mode = "list", length = n_equations)
   current_pos      <- 1
 
   while (length(aux_ids) > 0) {
-    id <- aux_ids[1]
+
+    id           <- aux_ids[1]
     pos_equation <- which(id == equations_df$id)
-    equation <- var_list[[pos_equation]]$equation
-    other_ids <- aux_ids[-1]
-    lhs     <- var_list[[pos_equation]]$name
-    rh_vars <- extract_variables(lhs, equation)
+    equation     <- var_list[[pos_equation]]$equation
+    other_ids    <- aux_ids[-1]
+    lhs          <- var_list[[pos_equation]]$name
+    rh_vars      <- extract_variables(lhs, equation)
+
+    if(length(rh_vars) == 0L) {
+
+      msg <- paste0("There are no variables in the RHS of `", lhs, "`. RHS: ",
+                    equation)
+
+      stop(msg, call. = FALSE)
+    }
 
     undefined_vars <- sapply(rh_vars, function(var){
       ifelse(var %in% var_names && states[var] == 0, TRUE, FALSE)

@@ -33,3 +33,11 @@ test_that("arrange_variables() returns an empty list if the input is an empty li
   expected_val <- list()
   expect_equal(actual_val, expected_val)
 })
+
+test_that("arrange_variables() returns an error should the rhs does not contain variables", {
+
+  test_list <- list(list(name = "c", equation = "a+b"),
+                    list(name = "a", equation = "3"))
+
+  expect_error(arrange_variables(test_list))
+})
