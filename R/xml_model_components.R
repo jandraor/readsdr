@@ -47,19 +47,20 @@ create_param_obj_xmile <- function(sim_specs) {
 }
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants,
-                                   builtin_stocks = NULL, dims_obj = NULL,
-                                   time_aux) {
+                                   builtin_stocks = NULL, dims_obj,
+                                   time_aux, vendor) {
 
   if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
     stop("SD models must contain stocks", call. = FALSE)
   }
 
-  # This makes consts & auxs have the same properties
+  # This function makes consts & auxs to have the same properties
   constants <- lapply(constants, function(const) {
     list(name = const$name, equation = const$value)
   })
 
-  stocks_list <- lapply(stocks_xml, extract_stock_info, dims_obj = dims_obj)
+  stocks_list <- lapply(stocks_xml, extract_stock_info, dims_obj = dims_obj,
+                        vendor = vendor)
   stocks_list <- remove_NULL(stocks_list)
   stocks_list <- unlist(stocks_list, recursive = FALSE)
 
@@ -95,7 +96,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   stocks_list
 }
 
-extract_stock_info <- function(stock_xml, dims_obj) {
+extract_stock_info <- function(stock_xml, dims_obj, vendor) {
 
   # Only God knows why Ventana would treat the FIXED DELAY as a stock
   eq <- xml2::xml_find_all(stock_xml, ".//d1:eqn")
@@ -110,17 +111,16 @@ extract_stock_info <- function(stock_xml, dims_obj) {
   is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
   if(is_arrayed) {
-    dim_name     <- xml2::xml_attr(dimensions[[1]], "name")
 
-    cld_xml      <- xml2::xml_children(stock_xml)
-    child_names  <- xml2::xml_name(cld_xml)
+    dim_tags  <- xml2::xml_find_all(dim_xml, ".//d1:dim")
 
-    if("eqn" %in% child_names) subs <- dims_obj[[dim_name]]
+    dim_names <- sapply(dim_tags, function(elem_tag) {
+      xml2::xml_attr(elem_tag, "name")
+    })
 
-    if(!("eqn" %in% child_names)) {
-      elements_xml <- xml2::xml_find_all(stock_xml, ".//d1:element")
-      subs         <- xml2::xml_attr(elements_xml, "subscript")
-    }
+    dims_list        <- lapply(dim_names, function(dim_name) dims_obj[[dim_name]])
+    names(dims_list) <- dim_names
+    elems            <- combine_dims(dims_list)
   }
 
   inflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
@@ -133,7 +133,7 @@ extract_stock_info <- function(stock_xml, dims_obj) {
     inflow_list <- list(inflow_vctr)
 
     if(is_arrayed) {
-      inflow_list <- lapply(subs, function(s) paste(inflow_vctr, s, sep = "_"))
+      inflow_list <- lapply(elems, function(s) paste(inflow_vctr, s, sep = "_"))
     }
 
     text_inflow  <- sapply(inflow_list, function(inflows) paste(inflows,
@@ -150,7 +150,7 @@ extract_stock_info <- function(stock_xml, dims_obj) {
     outflow_list <- list(outflow_vctr)
 
     if(is_arrayed) {
-      outflow_list <- lapply(subs, function(s) paste(outflow_vctr, s, sep = "_"))
+      outflow_list <- lapply(elems, function(s) paste(outflow_vctr, s, sep = "_"))
     }
 
     text_outflow  <- sapply(outflow_list, function(outflows) {
@@ -179,12 +179,30 @@ extract_stock_info <- function(stock_xml, dims_obj) {
     sanitise_elem_name() %>% check_elem_name()
 
   if(is_arrayed) {
-    stock_names <- paste(stock_names, subs, sep = "_")
+    stock_names <- paste(stock_names, elems, sep = "_")
   }
 
+  #-----------------------------------------------------------------------------
 
   initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
     xml2::xml_text() %>% sanitise_init_value()
+
+  n_init <- length(initValues)
+
+  if(is_arrayed & n_init == 1L) {
+
+    is_const <- !is.na(suppressWarnings(as.numeric(initValues)))
+
+    if(!is_const) {
+
+      if(vendor == "Vensim"){
+        initValues <- devectorise_equation(initValues, dims_list)
+      }
+    }
+  }
+
+
+  #-----------------------------------------------------------------------------
 
   summary_stocks <- data.frame(name      = stock_names,
                                equation  = netflows,

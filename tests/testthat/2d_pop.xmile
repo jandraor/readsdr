@@ -40,6 +40,9 @@
 					<eqn>
 					init_pop[Region,Age]
 					</eqn>
+					<inflow>
+					Net growth
+					</inflow>
 				</element>
 			</stock>
 			<aux name="Net_growth">

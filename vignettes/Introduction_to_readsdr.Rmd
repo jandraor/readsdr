@@ -107,7 +107,7 @@ is achieved by the function **read_xmile**.
 library(readsdr)
 
 filepath <- system.file("models/", "SIR.stmx", package = "readsdr")
-mdl      <- read_xmile(filepath) 
+mdl      <- read_xmile(filepath, graph = TRUE) 
 ```
 
 _read_xmile_ returns a list of three elements. The element _description_ 
