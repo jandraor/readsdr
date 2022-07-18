@@ -86,6 +86,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     + Endogenous table functions
     + Smoothing functions^2^: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI` 
     + Math functions: `ABS`, `SQRT` 
+    + Limited support to *bi-dimensional* arrays.
     
 ^1^ Restricted to Euler integration.
 

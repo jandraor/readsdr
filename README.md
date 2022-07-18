@@ -85,6 +85,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     -   Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`,
         `SMOOTH3I`, `SMOOTHI`
     -   Math functions: `ABS`, `SQRT`
+    -   Limited support to *bi-dimensional* arrays.
 
 <sup>1</sup> Restricted to Euler integration.
 
