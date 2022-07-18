@@ -1,5 +1,6 @@
 # Development version
 
+* Add support to bidimensional vectors in Vensim.
 * read_xmile() returns the element graph only if the parameter *graph* is set to *TRUE*.
 * read_xmile() now translates Vensim's *DELAY FIXED*.
 * Add sd_what_if_from_time()
