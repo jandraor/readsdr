@@ -74,7 +74,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     + Smoothing functions^2^: `SMTH1`, `SMTH3`, `SMTHN`
     + Limited support to *uni-dimensional* arrays. *Apply all* translation is restricted to numeric values.
     + Math functions: `ABS`, `SQRT`
-    + Stats functions: `NORMAL`
+    + Stats functions: `NORMAL`^3^
 * **Vensim**
     + Comparison operators (`=`, `<>`)
     + Logical operators (`:AND:`, `:OR:`, `:NOT:`) 
@@ -87,10 +87,13 @@ or type `vignette("Introduction_to_readsdr")` in R.
     + Smoothing functions^2^: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI` 
     + Math functions: `ABS`, `SQRT` 
     + Limited support to *bi-dimensional* arrays.
+    + Stats functions: `RANDOM NORMAL`^3^
     
 ^1^ Restricted to Euler integration.
 
 ^2^ These functions cannot be part of more complex mathematical expressions. That is, the auxiliary variable must only contain one smoothing function and **nothing else**.
+
+^3^ Seed is ignored.
 
 ## Notes
 

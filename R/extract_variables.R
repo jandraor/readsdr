@@ -43,5 +43,9 @@ extract_variables <- function(lhs, rhs) {
   # Filtering out fixed delay
   detected_vars <- detected_vars[detected_vars != "sd_fixed_delay"]
 
+  # Filtering out words reserved for RNG
+  detected_vars <- detected_vars[!detected_vars %in% c("rnorm", "rtruncnorm",
+                                                    "truncnorm")]
+
   unique(detected_vars)
 }

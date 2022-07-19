@@ -49,7 +49,6 @@ summary(mdl)
 #>                    Length Class  Mode
 #> description        4      -none- list
 #> deSolve_components 4      -none- list
-#> graph_dfs          2      -none- list
 ```
 
 For reading Vensim models, they must be exported as .xmile.
@@ -72,7 +71,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     -   Limited support to *uni-dimensional* arrays. *Apply all*
         translation is restricted to numeric values.
     -   Math functions: `ABS`, `SQRT`
-    -   Stats functions: `NORMAL`
+    -   Stats functions: `NORMAL`<sup>3</sup>
 -   **Vensim**
     -   Comparison operators (`=`, `<>`)
     -   Logical operators (`:AND:`, `:OR:`, `:NOT:`)
@@ -86,12 +85,15 @@ or type `vignette("Introduction_to_readsdr")` in R.
         `SMOOTH3I`, `SMOOTHI`
     -   Math functions: `ABS`, `SQRT`
     -   Limited support to *bi-dimensional* arrays.
+    -   Stats functions: `RANDOM NORMAL`<sup>3</sup>
 
 <sup>1</sup> Restricted to Euler integration.
 
 <sup>2</sup> These functions cannot be part of more complex mathematical
 expressions. That is, the auxiliary variable must only contain one
 smoothing function and **nothing else**.
+
+<sup>3</sup> Seed is ignored.
 
 ## Notes
 

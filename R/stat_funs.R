@@ -36,6 +36,29 @@ translate_NORMAL <- function(equation, vendor) {
     }
   }
 
+  if(vendor == "Vensim") {
+
+    detection_pattern <- "\\bRANDOM_NORMAL\\b"
+    pattern_found     <- stringr::str_detect(equation, detection_pattern)
+
+    if(pattern_found) {
+
+      pattern_normal <- stringr::regex("RANDOM_NORMAL\\((.+?),(.+?),(.+?),(.+?),(.+?)\\)",
+                                       dotall = TRUE, ignore_case = TRUE)
+
+      string_match <- stringr::str_match(equation, pattern_normal)
+      min_val      <- string_match[[2]]
+      max_val      <- string_match[[3]]
+      norm_mean    <- string_match[[4]]
+      norm_sd      <- string_match[[5]]
+      replacement  <- stringr::str_glue("truncnorm::rtruncnorm(1,{min_val},{max_val},{norm_mean},{norm_sd})")
+
+      new_equation <- stringr::str_replace(equation, pattern_normal,
+                                           replacement)
+
+    }
+  }
+
   new_equation
 }
 

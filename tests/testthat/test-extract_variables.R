@@ -63,3 +63,13 @@ test_that("extract_variables() ignores fixed delay", {
   equation <- 'sd_fixed_delay("inflow", 6, 2, 0, .memory)'
   expect_equal(extract_variables(test_lhs, equation), "inflow")
 })
+
+test_that("extract_variables() ignores truncnorm words", {
+  lhs      <- "Inventory"
+  equation <- "(((truncnorm::rtruncnorm(1,0,200,Mean_of_Demand,Sd_of_Demand)))*(5))"
+  actual   <- extract_variables(lhs, equation)
+  expected <- c("Mean_of_Demand", "Sd_of_Demand")
+
+  expect_equal(actual, expected)
+
+})
