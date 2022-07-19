@@ -1,5 +1,6 @@
 # Development version
 
+* Support the translation of *RANDOM NORMAL* from Vensim.
 * Add support to bidimensional vectors in Vensim.
 * read_xmile() returns the element graph only if the parameter *graph* is set to *TRUE*.
 * read_xmile() now translates Vensim's *DELAY FIXED*.
