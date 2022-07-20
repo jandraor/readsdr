@@ -355,8 +355,11 @@ test_that("create_level_obj_xmile() handles stock vectors", {
   time_aux   <- list(name     = "time",
                      equation = 0)
 
+  dims_obj <- list(region = c("A", "B"))
+
   actual_obj <- create_level_obj_xmile(test_stocks_xml, test_vars, test_consts,
-                                       time_aux = time_aux)
+                                       time_aux = time_aux,
+                                       dims_obj = dims_obj)
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -443,7 +446,10 @@ test_that("extract_stock_info() handles a stock vector", {
     list(name = "Population_A", equation = "growth_A", initValue = "100"),
     list(name = "Population_B", equation = "growth_B", initValue = "200"))
 
-  actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj = NULL)
+  dims_obj <- list(region = c("A", "B"))
+
+  actual_obj <- extract_stock_info(test_stocks_xml[[1]],
+                                   dims_obj = dims_obj)
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -476,6 +482,34 @@ test_that("extract_stock_info() handles vector stock with a unique initialisatio
   dims_obj <- list(Age = c(1:4))
 
   actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj)
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("extract_stock_info() handles a 2D stock from Vensim", {
+
+  filepath        <- "./2d_pop.xmile"
+
+  raw_xml       <- xml2::read_xml(filepath)
+  dims_obj      <- create_dims_obj(raw_xml)
+  variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  stocks_xml    <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
+  stock_xml     <- stocks_xml[[1]]
+  actual_obj    <- extract_stock_info(stocks_xml[[1]], dims_obj, "Vensim")
+
+  expected_obj <- list(
+    list(name       = "Population_Westeros_Young",
+         equation   = "Net_growth_Westeros_Young",
+         initValue = "init_pop_Westeros_Young"),
+    list(name       = "Population_Westeros_Old",
+         equation   = "Net_growth_Westeros_Old",
+         initValue = "init_pop_Westeros_Old"),
+    list(name       = "Population_Essos_Young",
+         equation   = "Net_growth_Essos_Young",
+         initValue = "init_pop_Essos_Young"),
+    list(name       = "Population_Essos_Old",
+         equation   = "Net_growth_Essos_Old",
+         initValue = "init_pop_Essos_Old"))
 
   expect_equal(actual_obj, expected_obj)
 })

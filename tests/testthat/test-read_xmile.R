@@ -31,8 +31,8 @@ test_that("the output from read_xmile() is a list", {
 })
 
 test_that("the output from read_xmile() produces the required elements", {
-  expect_named(read_xmile(test_model), c("description", "deSolve_components",
-                                         "graph_dfs"))
+  expect_named(read_xmile(test_model, graph = TRUE),
+               c("description", "deSolve_components", "graph_dfs"))
 })
 
 sd_simulate <- function(mdl, method = "euler") {
@@ -111,6 +111,13 @@ test_that("read_xmile() allows the user to override values of constants", {
   mdl        <- read_xmile(test_model, const_list = const_list)
   expect_equal(mdl$description$constants[[1]]$value, 0.02)
   expect_equal(mdl$deSolve_components$consts[[1]], 0.02)
+})
+
+test_that("read_xmile() suppports n-dimensional arrays from Vensim", {
+
+  expect_named(read_xmile("./2d_pop.xmile"),
+               c("description", "deSolve_components"))
+
 })
 
 #xmile_to_deSolve()-------------------------------------------------------------

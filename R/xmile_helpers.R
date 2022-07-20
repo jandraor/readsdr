@@ -39,7 +39,8 @@ extract_structure_from_XMILE <- function(filepath) {
                          variables  = variables,
                          constants  = constants,
                          dims_obj   = dims_obj,
-                         time_aux   = time_aux)
+                         time_aux   = time_aux,
+                         vendor     = vendor)
 
   if("builtin_stocks" %in% names(vars_and_consts)) {
     args_fun$builtin_stocks <- vars_and_consts$builtin_stocks

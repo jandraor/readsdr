@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+	<header>
+		<product version="1.0" lang="en">Vensim</product>
+		<vendor>Ventana Systems, Inc.</vendor>
+		<created>
+		</created>
+		<modified>
+		</modified>
+		<name>
+		</name>
+		<caption>
+		</caption>
+	</header>
+	<sim_specs method="RK4" time_units="Month">
+		<start>0</start>
+		<stop>100</stop>
+		<dt>1</dt>
+	</sim_specs>
+	<dimensions>
+		<dim name="Age">
+			<elem name="Young" />
+			<elem name="Old" />
+		</dim>
+		<dim name="Region">
+			<elem name="Westeros" />
+			<elem name="Essos" />
+		</dim>
+	</dimensions>
+	<model>
+		<variables>
+			<stock name="Population">
+				<units></units>
+				<doc></doc>
+				<dimensions>
+				<dim name="Region" />
+				<dim name="Age" />
+				</dimensions>
+				<element subscript = "Region,Age">
+					<eqn>
+					init_pop[Region,Age]
+					</eqn>
+					<inflow>
+					Net growth
+					</inflow>
+				</element>
+			</stock>
+			<aux name="Net_growth">
+				<units></units>
+				<doc></doc>
+				<dimensions>
+				<dim name="Region" />
+				<dim name="Age" />
+				</dimensions>
+					<eqn>Population[Region,Age] * Growth_rate[Region,Age]					</eqn>
+			</aux>
+			<aux name="Growth_rate">
+				<units></units>
+				<doc></doc>
+				<dimensions>
+				<dim name="Region" />
+				<dim name="Age" />
+				</dimensions>
+					<eqn>0.01,0.1;0.05,0.05;					</eqn>
+			</aux>
+			<aux name="init_pop">
+				<units></units>
+				<doc></doc>
+				<dimensions>
+				<dim name="Region" />
+				<dim name="Age" />
+				</dimensions>
+					<eqn>80,20;50,50;					</eqn>
+			</aux>
+		</variables>
+	</model>
+</xmile>
