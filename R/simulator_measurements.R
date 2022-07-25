@@ -7,13 +7,13 @@
 #'   - \code{stock_name} (a string): refers to the stock upon which measurements are made;
 #'
 #'   - \code{meas_type} (a string): indicates whether the measurement is performed on the
-#'  value of the stock ('as-is') or its net change ('net_change');
+#'  value of the stock ('as_is') or its net change ('net_change');
 #'
 #'   - \code{dist} (a list): The probability distribution used to model measurements on
 #'   the stock. This list also consists of three elements:
 #'   name (RNG function such as rnorm), stock_par (indicates which distribution's
 #'   parameter corresponds to the measured stock), and extra_pars, should the
-#'   probability required additional parameters.
+#'   probability distributions requires additional parameters.
 #'
 #'@inheritParams sd_simulate
 #'
@@ -38,7 +38,7 @@
 #'                   stop_time    = 10,
 #'                   timestep     = 1/16,
 #'                   integ_method = "rk4")
-sd_measurements <- function(n_meas, meas_model, ds_inputs,
+sd_measurements <- function(n_meas, ds_inputs, meas_model,
                             start_time   = NULL,
                             stop_time    = NULL,
                             timestep     = NULL,

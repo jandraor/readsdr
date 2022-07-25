@@ -14,8 +14,8 @@ test_that("sd_measurements() returns the expected data frame", {
   meas_model <- list(mm1)
 
   actual <- sd_measurements(n_meas       = 2,
-                            meas_model   = meas_model,
                             ds_inputs    = mdl$deSolve_components,
+                            meas_model   = meas_model,
                             start_time   = 0,
                             stop_time    = 10,
                             timestep     = 1/16,
@@ -59,8 +59,8 @@ test_that("sd_measurements() returns the expected data frame for the measurement
   meas_model <- list(mm1)
 
   actual <- sd_measurements(n_meas       = 2,
-                            meas_model   = meas_model,
                             ds_inputs    = mdl$deSolve_components,
+                            meas_model   = meas_model,
                             start_time   = 0,
                             stop_time    = 10,
                             timestep     = 1/16,
