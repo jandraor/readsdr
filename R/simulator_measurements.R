@@ -79,6 +79,11 @@ measurements_as_is <- function(n_meas, X_output, sampling_dist) {
   stk_df      <- discrete_df[, c("time", stk)]
   time_vals   <- discrete_df[, "time"]
   vals        <- discrete_df[, stk]
+
+  if("stock_trans" %in% names(sampling_dist$dist)) {
+    vals <- do.call(sampling_dist$dist$stock_trans, list(vals))
+  }
+
   n_vals      <- length(vals)
 
   r_fun       <- sampling_dist$dist$name
