@@ -281,4 +281,13 @@ check_win <- function() {
   is_win
 }
 
+update_sim_params <- function(ds_inputs, start_time, stop_time, timestep) {
+
+  if(!is.null(start_time)) ds_inputs$sim_params$start <- start_time
+  if(!is.null(stop_time))  ds_inputs$sim_params$stop  <- stop_time
+  if(!is.null(timestep))   ds_inputs$sim_params$dt    <- timestep
+
+  ds_inputs
+}
+
 
