@@ -129,7 +129,8 @@ stan_data <- function(vars_vector, type, inits = TRUE) {
 
   data_declaration_list <- lapply(obj_list, function(var_obj) {
 
-    stringr::str_glue("  {var_obj[[1]]} {var_obj[[2]]}[n_obs];")
+    stringr::str_glue("  array[n_obs] {var_obj[[1]]} {var_obj[[2]]};")
+
   })
 
   data_declaration <- paste(data_declaration_list, collapse = "\n")
@@ -141,11 +142,114 @@ stan_data <- function(vars_vector, type, inits = TRUE) {
     "  int<lower = 1> n_difeq;",
     data_declaration,
     "  real t0;",
-    "  real ts[n_obs];", sep = "\n")
+    "  array[n_obs] real ts;", sep = "\n")
 
   if(inits) {
-    stan_d <- paste(stan_d, "  vector[n_difeq] y0;", sep = "\n")
+    stan_d <- paste(stan_d, "  vector[n_difeq] x0;", sep = "\n")
   }
 
   paste(stan_d, "}", sep = "\n")
+}
+
+dist_type <- function(dist_names) {
+
+  dist_db <- data.frame(id = c("neg_binomial",
+                               "neg_binomial_2",
+                               "poisson",
+                               "normal",
+                               "lognormal"),
+                        type = c("int",
+                                 "int",
+                                 "int",
+                                 "real",
+                                 "real"))
+
+  indexes <- match(dist_names, dist_db$id)
+
+  dist_db[indexes, "type"]
+}
+
+stan_params <- function(unk_list) {
+
+  unk_elems <- names(unk_list)
+
+  parameter_lines <- NULL
+
+  if("consts" %in% unk_elems) {
+
+    lines_list      <- lapply(unk_list$consts, build_parameter_line)
+    parameter_lines <- paste(lines_list, collapse = "\n")
+  }
+
+
+
+  if("stocks" %in% unk_elems) {
+
+    lines_list  <- lapply(unk_list$stocks, build_parameter_line, "stock")
+    stock_lines <- paste(lines_list, collapse = "\n")
+
+    if(!is.null(parameter_lines)) {
+
+      parameter_lines <- paste(parameter_lines, stock_lines, sep = "\n")
+    } else {
+      parameter_lines <- stock_lines
+    }
+
+  }
+
+  if("measurement" %in% unk_elems) {
+
+    lines_list <- lapply(unk_list$measurement, build_parameter_line)
+    meas_lines <- paste(lines_list, collapse = "\n")
+
+    if(!is.null(parameter_lines)) {
+
+      parameter_lines <- paste(parameter_lines, meas_lines, sep = "\n")
+    } else {
+      parameter_lines <- meas_lines
+    }
+
+  }
+
+  paste(
+    "parameters {",
+    parameter_lines,
+    "}", sep = "\n")
+}
+
+build_parameter_line <- function(par_obj, type = "") {
+
+   obj_elems <- names(par_obj)
+
+   decl <- "  real" # declaration
+
+   if(all(c("min", "max") %in% obj_elems)) {
+
+     #bounds
+     bds <- stringr::str_glue("<lower = {par_obj$min}, upper = {par_obj$max}>")
+
+     decl <- paste0(decl, bds)
+   }
+
+   if("min" %in% obj_elems & !"max" %in% obj_elems) {
+     bds <- stringr::str_glue("<lower = {par_obj$min}>")
+
+     decl <- paste0(decl, bds)
+   }
+
+   if(!"min" %in% obj_elems & "max" %in% obj_elems) {
+     bds <- stringr::str_glue("<upper = {par_obj$max}>")
+
+     decl <- paste0(decl, bds)
+   }
+
+   par_name <- par_obj$name
+
+   if(type == "stock") par_name <- paste0(par_name, "0")
+
+   if("par_trans" %in% obj_elems) par_name <- paste(par_name,
+                                                    par_obj$par_trans,
+                                                    sep = "_")
+
+   stringr::str_glue("{decl} {par_name};")
 }

@@ -53,7 +53,7 @@ test_that("stan_ode_function() returns the expected string", {
 
   expected_stan_function <- paste(
     "functions {",
-    "  vector lotka_volterra(real time, vector y, real[] params) {",
+    "  vector lotka_volterra(real time, vector y, array[] real params) {",
     "    vector[2] dydt;",
     "    real Bx;",
     "    real Dx;",
@@ -78,7 +78,7 @@ test_that("create_stan_function() allows user to add other functions", {
 
   expected_stan_function <- paste(
     "functions {",
-    "  vector lotka_volterra(real time, vector y, real[] params) {",
+    "  vector lotka_volterra(real time, vector y, array[] real params) {",
     "    vector[2] dydt;",
     "    real Bx;",
     "    real Dx;",
@@ -112,7 +112,7 @@ test_that("create_stan_function() allows user to add other functions", {
 
 test_that("get_fun_declaration() returns the expected string", {
   expect_equal(get_fun_declaration("lotka_volterra"),
-               "  vector lotka_volterra(real time, vector y, real[] params) {")
+               "  vector lotka_volterra(real time, vector y, array[] real params) {")
 })
 
 test_that("get_diffeq_declaration() returns the expected string", {

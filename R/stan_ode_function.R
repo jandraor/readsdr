@@ -60,7 +60,7 @@ stan_ode_function <- function(filepath, func_name, pars = NULL,
 }
 
 get_fun_declaration <- function(func_name) {
-  paste0("  vector ", func_name, "(real time, vector y, real[] params) {")
+  paste0("  vector ", func_name, "(real time, vector y, array[] real params) {")
 }
 
 get_diffeq_declaration <- function(n_stocks) {
