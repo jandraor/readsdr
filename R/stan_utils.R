@@ -253,3 +253,5 @@ build_parameter_line <- function(par_obj, type = "") {
 
    stringr::str_glue("{decl} {par_name};")
 }
+
+

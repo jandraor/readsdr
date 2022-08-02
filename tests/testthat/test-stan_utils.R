@@ -134,4 +134,3 @@ test_that("stan_params() returns the expected string", {
 
   expect_equal(actual, expected)
 })
-
