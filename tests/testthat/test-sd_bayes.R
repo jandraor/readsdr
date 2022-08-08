@@ -2,34 +2,15 @@ test_that("sd_Bayes() returns the expected file", {
 
   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
 
-  mm1 <- list(measured_stock = "C",
-              meas_type      = "net_change",
-              meas_name      = "y",
-              dist           = list(
-                name       = "neg_binomial_2",
-                stock_par  = "mu"))
-
+  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  p1 <- list(name = "par_beta",
-             min  = 0)
+  prior <- list(
+    sd_prior("par_beta", "lognormal", 0, 1),
+    sd_prior("par_rho", "beta", 2, 2),
+    sd_prior("I", "lognormal", 0, 1))
 
-  p2 <- list(name = "rho",
-             min  = 0,
-             max  = 1)
-
-  s1 <- list(name = "I",
-             min  = 0)
-
-  m1 <- list(name      = "phi",
-             par_trans = "inv",
-             min       = 0)
-
-  unk_list <- list(consts      = list(p1, p2),
-                   stocks      = list(s1),
-                   measurement = list(m1))
-
-  actual   <- sd_Bayes(filepath, meas_mdl, unk_list)
+  actual   <- sd_Bayes(filepath, prior, meas_mdl)
 
   fileName <- "SEIR_nbinom.stan"
 

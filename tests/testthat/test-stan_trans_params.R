@@ -2,43 +2,29 @@
 
 test_that("stan_trans_params() returns the expected string", {
 
-  p1 <- list(name = "par_beta",
-             min  = 0)
-
-  p2 <- list(name = "par_rho",
-             min  = 0,
-             max  = 1)
-
-  s1 <- list(name = "I",
-             min  = 0)
-
-  m1 <- list(name      = "phi",
-             par_trans = "inv",
-             min       = 0)
-
-  unk_list <- list(consts      = list(p1, p2),
-                   stocks      = list(s1),
-                   measurement = list(m1))
+  prior <- list(sd_prior("par_beta", "lognormal", c(0, 1)),
+                sd_prior("par_rho", "beta", c(2, 2)),
+                sd_prior("I0", "lognormal", c(0, 1), "init"))
 
   filepath        <- system.file("models/", "SEIR.stmx", package = "readsdr")
   model_structure <- extract_structure_from_XMILE(filepath)
 
-  actual <- stan_trans_params(unk_list, model_structure$levels)
+  actual <- stan_trans_params(prior, model_structure$levels)
 
   expected <-  paste(
     "transformed parameters{",
     "  array[n_obs] vector[n_difeq] x; // Output from the ODE solver",
     "  vector[n_difeq] x0;",
     "  array[n_params] real params;",
-    "  //assignments",
-    "  real phi;",
     "  array[n_obs] real delta_x;",
+    "  real phi;",
+    "  //assignments",
     "  phi = 1 / inv_phi;",
     "  x0[1] = 10000 - 1 * I0; // S",
     "  x0[2] = 0; // E",
     "  x0[3] = I0; // I",
     "  x0[4] = 0; // R",
-    "  x0[5] = 0; // C",
+    "  x0[5] = I0; // C",
     "  params[1] = par_beta;",
     "  params[2] = par_rho;",
     "  x = ode_rk45(X_model, x0, t0, ts, params);",

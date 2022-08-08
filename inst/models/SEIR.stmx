@@ -22,7 +22,7 @@
 	<model>
 		<variables>
 			<stock name="S">
-				<eqn>9999</eqn>
+				<eqn>n - I0</eqn>
 				<outflow>S_to_E</outflow>
 			</stock>
 			<stock name="E">
@@ -31,7 +31,7 @@
 				<outflow>E_to_I</outflow>
 			</stock>
 			<stock name="I">
-				<eqn>1</eqn>
+				<eqn>I0</eqn>
 				<inflow>E_to_I</inflow>
 				<outflow>I_to_R</outflow>
 			</stock>
@@ -49,7 +49,7 @@
 				<eqn>par_gamma * I</eqn>
 			</flow>
 			<stock name="C">
-				<eqn>1</eqn>
+				<eqn>I0</eqn>
 				<inflow>C_in</inflow>
 			</stock>
 			<flow name="C in">
@@ -69,6 +69,9 @@
 			</aux>
 			<aux name="par rho">
 				<eqn>0.75</eqn>
+			</aux>
+			<aux name="I0">
+				<eqn>1</eqn>
 			</aux>
 		</variables>
 		<views>
@@ -228,6 +231,7 @@
 					<from>par_rho</from>
 					<to>C_in</to>
 				</connector>
+				<aux x="533" y="520" name="I0"/>
 			</view>
 		</views>
 	</model>

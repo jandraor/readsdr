@@ -1,4 +1,6 @@
-sd_Bayes <- function(filepath, meas_mdl, unk_list) {
+sd_Bayes <- function(filepath, prior, meas_mdl) {
+
+  mdl_structure <- extract_structure_from_XMILE(filepath)
 
   ODE_fn      <- "X_model"
   stan_fun    <- stan_ode_function(filepath, ODE_fn)
@@ -8,14 +10,15 @@ sd_Bayes <- function(filepath, meas_mdl, unk_list) {
   dist_types  <- dist_type(dist_names)
   stan_data   <- stan_data(meas_vars, dist_types)
 
-  stan_params     <- stan_params(unk_list)
-  model_structure <- extract_structure_from_XMILE(filepath)
+  lvl_obj       <- mdl_structure$levels
 
-  stan_tp     <- stan_trans_params(unk_list, model_structure$levels)
-  stan_model  <- ""
-  stan_gc     <- ""
+  stan_params   <- stan_params(prior)
+
+  stan_tp     <- stan_trans_params(prior, model_structure$levels)
+  stan_model  <- stan_model(prior, meas_mdl)
+  stan_gc     <- stan_gc(meas_mdl)
 
   paste(stan_fun, stan_data, stan_params,
-        stan_tp, stan_model, stan_gc, sep = "\n")
+        stan_tp, stan_model, stan_gc, sep = "\n") |> cat()
 
 }

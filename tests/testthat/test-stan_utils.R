@@ -99,38 +99,3 @@ test_that("dist_type() returns the expected string", {
 
   expect_equal(actual, expected)
 })
-
-#------------------stan_params()------------------------------------------------
-
-test_that("stan_params() returns the expected string", {
-
-  p1 <- list(name = "par_beta",
-             min  = 0)
-
-  p2 <- list(name = "par_rho",
-             min  = 0,
-             max  = 1)
-
-  s1 <- list(name = "I",
-             min  = 0)
-
-  m1 <- list(name      = "phi",
-             par_trans = "inv",
-             min       = 0)
-
-  unk_list <- list(consts      = list(p1, p2),
-                   stocks      = list(s1),
-                   measurement = list(m1))
-
-  actual <- stan_params(unk_list)
-
-  expected <- paste(
-    "parameters {",
-    "  real<lower = 0> par_beta;",
-    "  real<lower = 0, upper = 1> par_rho;",
-    "  real<lower = 0> I0;",
-    "  real<lower = 0> phi_inv;",
-    "}", sep = "\n")
-
-  expect_equal(actual, expected)
-})
