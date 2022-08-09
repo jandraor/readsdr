@@ -9,13 +9,13 @@ test_that("stan_trans_params() returns the expected string", {
   filepath        <- system.file("models/", "SEIR.stmx", package = "readsdr")
   model_structure <- extract_structure_from_XMILE(filepath)
 
-  actual <- stan_trans_params(prior, model_structure$levels)
+  actual <- stan_trans_params(prior, model_structure$levels, TRUE)
 
   expected <-  paste(
     "transformed parameters{",
     "  array[n_obs] vector[n_difeq] x; // Output from the ODE solver",
-    "  vector[n_difeq] x0;",
     "  array[n_params] real params;",
+    "  vector[n_difeq] x0; // init values",
     "  array[n_obs] real delta_x;",
     "  real phi;",
     "  //assignments",
@@ -36,4 +36,34 @@ test_that("stan_trans_params() returns the expected string", {
 
   expect_equal(actual, expected)
 
+})
+
+test_that("construct_pars_asg() ignores inits & meas pars", {
+
+  prior <- list(list(par_name = "par_beta", type = "constant"),
+                list(par_name = "par_rho", type = "constant"),
+                list(par_name = "I0", type = "init"),
+                list(par_name = "inv_phi", type = "meas_par"))
+
+  actual   <- construct_pars_asg(prior)
+  expected <- paste("  params[1] = par_beta;",
+                    "  params[2] = par_rho;", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
+test_that("extract_par_trans() returns the expected list", {
+
+  prior <- list(list(par_name = "par_beta", type = "constant"),
+                list(par_name = "par_rho", type = "constant"),
+                list(par_name = "I0", type = "init"),
+                list(par_name = "inv_phi", type = "meas_par",
+                     par_trans = "inv"))
+
+  actual <- extract_par_trans(prior)
+
+  expected <- list(list(decl  = "  real phi;",
+                        trans = "  phi = 1 / inv_phi;"))
+
+  expect_equal(actual, expected)
 })

@@ -84,74 +84,47 @@ extract_timeseries_stock <- function(stock_name, posterior_df, all_stocks,
   stock_ts
 }
 
+# Stan's data block for ODE models
+stan_data <- function(meas_mdl, unk_inits) {
 
-#' Stan's transformed data block for ODE models
-#'
-#' @return a string
-#' @export
-#'
-#' @examples
-#' td <- stan_transformed_data()
-stan_transformed_data <- function() {
-  stan_td <- paste(
-    "transformed data {",
-    "  real x_r[0];",
-    "  int  x_i[0];",
-    "}", sep = "\n")
-}
-
-
-#' Stan's data block for ODE models
-#'
-#' @param vars_vector a string vector. Each element corresponds to a vector's
-#' name for which users will supply data.
-#' @param inits a boolean. Indicates whether the block includes the declaration
-#' for stocks' init values.
-#' @param type a string vector. It must have the same length as vars_vector .
-#'  This parameter indicates the type of the variables declared by
-#'  vars_vector.
-#'
-#'
-#' @return a string that contains the Stan code for the data block.
-#' @export
-#'
-#' @examples
-#' stan_data("y", "int")
-#' stan_data("y", "real", FALSE)
-stan_data <- function(vars_vector, type, inits = TRUE) {
-
-  if(length(vars_vector) != length(type)) {
-    stop("Different length sizes between 'vars_vector' & 'type' pars",
-         call. = FALSE)
-  }
-
-  obj_list <- Map(c, type, vars_vector)
-
-  data_declaration_list <- lapply(obj_list, function(var_obj) {
-
-    stringr::str_glue("  array[n_obs] {var_obj[[1]]} {var_obj[[2]]};")
-
-  })
-
-  data_declaration <- paste(data_declaration_list, collapse = "\n")
-
-  stan_d <- paste(
-    "data {",
+  decl <- paste(
     "  int<lower = 1> n_obs;",
     "  int<lower = 1> n_params;",
-    "  int<lower = 1> n_difeq;",
-    data_declaration,
-    "  real t0;",
-    "  array[n_obs] real ts;", sep = "\n")
+    "  int<lower = 1> n_difeq;", sep = "\n")
 
-  if(inits) {
-    stan_d <- paste(stan_d, "  vector[n_difeq] x0;", sep = "\n")
+  data_decl <- lapply(meas_mdl, construct_data_decl) %>%
+    paste(collapse = "\n")
+
+  final_decl <- paste("  real t0;",
+                      "  array[n_obs] real ts;", sep = "\n")
+
+  body_block <- paste(decl, data_decl, final_decl, sep = "\n")
+
+  if(!unk_inits) {
+    body_block <- paste(body_block,
+                        "  vector[n_difeq] x0;", sep = "\n")
   }
 
-  paste(stan_d, "}", sep = "\n")
+  paste("data {", body_block, "}", sep = "\n")
 }
 
-dist_type <- function(dist_names) {
+construct_data_decl <- function(meas_obj) {
+
+  split_strings <- strsplit(meas_obj, "~")[[1]]
+
+  lhs <- split_strings[[1]] %>% stringr::str_trim()
+
+  rhs  <- split_strings[[2]] %>% stringr::str_trim()
+  type <- get_dist_type(rhs)
+
+  stringr::str_glue("  array[n_obs] {type} {lhs};")
+}
+
+get_dist_type <- function(rhs) {
+
+  pattern       <- "(.+?)\\(.+\\)"
+  string_match  <- stringr::str_match(rhs, pattern)
+  dist_name     <- string_match[[2]]
 
   dist_db <- data.frame(id = c("neg_binomial",
                                "neg_binomial_2",
@@ -164,7 +137,50 @@ dist_type <- function(dist_names) {
                                  "real",
                                  "real"))
 
-  indexes <- match(dist_names, dist_db$id)
+  index <- match(dist_name, dist_db$id)
 
-  dist_db[indexes, "type"]
+  dist_db[index, "type"]
 }
+
+get_dist_obj <- function(rhs) {
+
+  pattern       <- "(.+?)(\\(.+\\))"
+  string_match  <- stringr::str_match(rhs, pattern)
+  dist_name     <- string_match[[2]]
+
+  args_text <- string_match[[3]] %>%
+    stringr::str_remove("^\\(") %>%
+    stringr::str_remove("\\)$")
+
+  args_list <- strsplit(args_text, ",")[[1]] %>% stringr::str_trim() |>
+    as.list()
+
+  args_names <- get_dist_args(dist_name)
+
+  names(args_list) <- args_names
+
+  c(list(dist_name = dist_name), args_list)
+
+}
+
+get_dist_args <- function(dist) {
+
+  if(dist == "beta") return (c("alpha", "beta"))
+  if(dist == "exponential") return (c("beta"))
+  if(dist == "lognormal") return (c("mu", "sigma"))
+  if(dist == "neg_binomial_2") return (c("mu", "phi"))
+
+  msg <- stringr::str_glue("Distribution '{dist}' not supported")
+  stop(msg, call. = FALSE)
+}
+
+decompose_meas <- function(meas_obj) {
+
+  split_strings <- strsplit(meas_obj, "~")[[1]]
+  lhs           <- split_strings[[1]] %>% stringr::str_trim()
+  rhs           <- split_strings[[2]] %>% stringr::str_trim()
+
+  list(lhs = lhs,
+       rhs = rhs)
+}
+

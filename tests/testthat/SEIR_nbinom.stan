@@ -29,7 +29,7 @@ parameters {
   real<lower = 0> par_beta;
   real<lower = 0> I0;
   real<lower = 0, upper = 1> par_rho;
-  real<lower = 0> phi_inv;
+  real<lower = 0> inv_phi;
 }
 transformed parameters{
   array[n_obs + 1] vector[n_difeq] x; // Output from the ODE solver
@@ -37,9 +37,9 @@ transformed parameters{
   real pred;
   vector[n_difeq] x0;
   array[n_params] real params;
-  real phi_inv;
+  real phi;
   //assignments
-  phi_inv = 1 / phi;
+  phi = 1 / inv_phi;
   x0[1] = 10000 - 1 * I0;
   x0[2] = 0;
   x0[3] = I0;

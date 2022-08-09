@@ -1,11 +1,3 @@
-test_that("stan_transformed_data() returns the expected string", {
-  expected_string <- paste(
-    "transformed data {",
-    "  real x_r[0];",
-    "  int  x_i[0];",
-    "}", sep = "\n")
-  expect_equal(stan_transformed_data(), expected_string)
-})
 
 test_that("extract_timeseries_var() returns the expected data frame", {
   test_df <- data.frame(`var[1]` = rep(0, 2),
@@ -37,7 +29,38 @@ test_that("extract_timeseries_stock() returns the expected data frame", {
                expected_df)
 })
 
+test_that("construct_data_decl() returns the expected string", {
+
+  meas_obj   <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  actual     <- construct_data_decl(meas_obj)
+  expected   <- "  array[n_obs] int y;"
+
+  expect_equal(actual, expected)
+})
+
 test_that("stan_data() returns the expected string", {
+
+  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  meas_mdl <- list(mm1)
+
+  expected_string <- paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    "  array[n_obs] int y;",
+    "  real t0;",
+    "  array[n_obs] real ts;",
+    "}", sep = "\n")
+
+  expect_equal(stan_data(meas_mdl, TRUE), expected_string)
+
+})
+
+test_that("stan_data() declares the vector for init values", {
+
+  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  meas_mdl <- list(mm1)
 
   expected_string <- paste(
     "data {",
@@ -50,52 +73,18 @@ test_that("stan_data() returns the expected string", {
     "  vector[n_difeq] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data("y", "int"), expected_string)
+  expect_equal(stan_data(meas_mdl, FALSE), expected_string)
 })
 
-test_that("stan_data() allows the user to remove y0", {
+test_that("get_dist_obj() declares the vector for init values", {
 
-  expected_string <- paste(
-    "data {",
-    "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;",
-    "  int<lower = 1> n_difeq;",
-    "  array[n_obs] int y;",
-    "  real t0;",
-    "  array[n_obs] real ts;",
-    "}", sep = "\n")
+  rhs <- "neg_binomial_2(net_flow(C), phi)"
 
-  expect_equal(stan_data("y", "int", inits = FALSE), expected_string)
-})
+  actual <- get_dist_obj(rhs)
 
-test_that("stan_data() allows the user to specify the var type", {
-
-  expected_string <- paste(
-    "data {",
-    "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;",
-    "  int<lower = 1> n_difeq;",
-    "  array[n_obs] real y;",
-    "  real t0;",
-    "  array[n_obs] real ts;",
-    "}", sep = "\n")
-
-  expect_equal(stan_data("y", "real", inits = FALSE), expected_string)
-})
-
-test_that("stan_data() returns an error when different sizes", {
-  expect_error(stan_data(c("y1", "y2"), "real", inits = FALSE),
-               "Different length sizes between 'vars_vector' & 'type' pars")
-})
-
-test_that("dist_type() returns the expected string", {
-
-  dist_names <- c("poisson", "lognormal", "poisson", "neg_binomial_2",
-                  "normal")
-
-  actual     <- dist_type(dist_names)
-
-  expected   <- c("int", "real", "int", "int", "real")
+  expected <- list(dist_name = "neg_binomial_2",
+                   mu        = "net_flow(C)",
+                   phi       = "phi")
 
   expect_equal(actual, expected)
 })

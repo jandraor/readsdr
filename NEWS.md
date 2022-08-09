@@ -1,5 +1,6 @@
 # Development version
 
+* Deprecate **stan_data()** & **stan_transformed_data()**
 * Add **sd_measurements()**.
 * Support the translation of *RANDOM NORMAL* from Vensim.
 * Add support to bidimensional vectors in Vensim.
