@@ -13,3 +13,14 @@ test_that("construct_prior_line() returns the expected string", {
 
   expect_equal(actual, expected)
 })
+
+test_that("construct_likelihood_line() returns the expected string", {
+
+  meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"
+
+  actual   <- construct_likelihood_line(meas_obj, 1)
+
+  expected <- "  y ~ neg_binomial_2(delta_x_1, phi);"
+
+  expect_equal(actual, expected)
+})

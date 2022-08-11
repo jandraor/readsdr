@@ -18,7 +18,9 @@ sd_Bayes <- function(filepath, prior, meas_mdl) {
 
   stan_params   <- stan_params(prior)
 
-  stan_tp     <- stan_trans_params(prior, mdl_structure$levels, unk_inits)
+  stan_tp     <- stan_trans_params(prior, meas_mdl, mdl_structure$levels,
+                                   unk_inits)
+
   stan_model  <- stan_model(prior, meas_mdl)
   stan_gc     <- stan_gc(meas_mdl)
 

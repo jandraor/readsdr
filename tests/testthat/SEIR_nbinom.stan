@@ -48,9 +48,9 @@ transformed parameters{
   params[1] = beta;
   params[2] = rho;
   o = ode_rk45(X_model, x0, t0, ts, params);
-  delta_x[1] =  x[1, 5]  - x0[5];
+  delta_x[1] =  x[1, 5]  - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {
-    delta_x[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;
+    delta_x_1[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;
   }
 }
 model {
