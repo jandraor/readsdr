@@ -537,3 +537,52 @@ test_that("create_dims_obj() returns the expected object", {
 
   expect_equal(actual_obj, expected_obj)
 })
+
+# get_init_value()--------------------------------------------------------------
+
+
+
+test_that("get_init_value() returns the expected list", {
+
+  stock_obj <- list(name      = "S",
+                    equation  = "-S_to_E",
+                    initValue = "n - I0")
+
+  auxs <- list(list(name     = "n",
+                    equation = 10000),
+               list(name     = "I0",
+                    equation = 1))
+
+  actual <- get_init_value(stock_obj, auxs, NULL)
+
+  expected <- list(name      = "S",
+                   equation  = "-S_to_E",
+                   initValue = 9999)
+
+  expect_equal(actual, expected)
+
+})
+
+test_that("get_init_value() returns the expected list with fixed init", {
+
+  stock_obj <- list(name      = "S",
+                    equation  = "-S_to_E",
+                    initValue = "n - I0")
+
+  auxs <- list(list(name     = "n",
+                    equation = 10000),
+               list(name     = "I0",
+                    equation = 1))
+
+  fixed_inits <- "I0"
+
+  actual <- get_init_value(stock_obj, auxs, fixed_inits)
+
+  expected <- list(name      = "S",
+                   equation  = "-S_to_E",
+                   initValue = "(10000) - I0")
+
+  expect_equal(actual, expected)
+
+})
+

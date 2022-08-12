@@ -1,4 +1,5 @@
-extract_structure_from_XMILE <- function(filepath) {
+# inits_vector is only used for sd_bayes()
+extract_structure_from_XMILE <- function(filepath, inits_vector = NULL) {
 
   raw_xml <- safe_read(filepath)
   vendor  <- which_vendor(raw_xml)
@@ -46,6 +47,8 @@ extract_structure_from_XMILE <- function(filepath) {
     args_fun$builtin_stocks <- vars_and_consts$builtin_stocks
   }
 
+  if(!is.null(inits_vector)) args_fun$fixed_inits <- inits_vector
+
   levels         <- do.call("create_level_obj_xmile", args_fun)
 
   list(parameters = parameters,
@@ -54,17 +57,23 @@ extract_structure_from_XMILE <- function(filepath) {
        constants = constants)
 }
 
-compute_init_value <- function(var_name, equation, auxs) {
+compute_init_value <- function(var_name, equation, auxs, fixed_inits) {
 
   tryCatch(
     error = function(cnd) {
-      stop(stringr::str_glue("Can't compute the init value of '{var_name}'"),
+     stop(stringr::str_glue("Can't compute the init value of '{var_name}'"),
            call. = FALSE)
     }, {
 
       vars_in_equation <- extract_variables(var_name, equation)
       newEquation      <- equation
       auxs_names       <- sapply(auxs, function(aux) aux$name)
+
+      if(!is.null(fixed_inits)) {
+
+          vars_in_equation <- vars_in_equation[!vars_in_equation %in% fixed_inits]
+          if(length(vars_in_equation) == 0) return (newEquation)
+      }
 
       for(var_in_equation in vars_in_equation) {
 
@@ -76,7 +85,7 @@ compute_init_value <- function(var_name, equation, auxs) {
         if(!is.null(aux_obj$graph)){
 
           input_equation <- stringr::str_match(rpl_val, "f.+\\((.+)\\)")[[2]]
-          input          <- compute_init_value("", input_equation, auxs)
+          input          <- compute_init_value("", input_equation, auxs, fixed_inits)
           assign(aux_obj$graph_fun$name, aux_obj$graph_fun$fun)
           rpl_val        <- do.call(aux_obj$graph_fun$name, list(input))
         }
@@ -91,7 +100,7 @@ compute_init_value <- function(var_name, equation, auxs) {
       newEquation <- safe_eval(newEquation, env)
 
       if(is.character(newEquation)) {
-        initValue <- compute_init_value(var_name, newEquation, auxs)
+        initValue <- compute_init_value(var_name, newEquation, auxs, fixed_inits)
         return(initValue)
       }
 

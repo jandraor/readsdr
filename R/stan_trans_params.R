@@ -84,7 +84,7 @@ get_trans_line <- function(par_obj) {
   }
 }
 
-construct_stock_init_lines <- function(stock_list) {
+construct_stock_init_lines <- function(stock_list, unk_init_list) {
 
   lines_list <- purrr::imap_chr(stock_list, function(stk_obj, i) {
     stk_name <- stk_obj$name
@@ -170,8 +170,6 @@ get_delta_first_asg <- function(meas_mdl, lvl_obj) {
 
   lvl_names <- get_names(lvl_obj)
 
-  lvl_names <- get_names(lvl_obj)
-
   lapply(seq_along(meas_mdl), function(i) {
 
     meas_obj        <- meas_mdl[[i]]
@@ -183,7 +181,7 @@ get_delta_first_asg <- function(meas_mdl, lvl_obj) {
 
     idx <- which(lvl_name == lvl_names)
 
-    stringr::str_glue("  delta_x[1] =  x[1, {idx}] - x0[{idx}] + 1e-5;")
+    stringr::str_glue("  delta_x_{i}[1] =  x[1, {idx}] - x0[{idx}] + 1e-5;")
   }) %>% paste(collapse = "\n")
 
 }

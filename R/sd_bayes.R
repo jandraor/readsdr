@@ -1,32 +1,53 @@
 sd_Bayes <- function(filepath, prior, meas_mdl) {
 
-  mdl_structure <- extract_structure_from_XMILE(filepath)
-
-  ODE_fn      <- "X_model"
-  stan_fun    <- stan_ode_function(filepath, ODE_fn)
-
   extra_priors <- lapply(meas_mdl, extract_extra_prior) %>% remove_NULL()
 
   if(length(extra_priors) > 0) prior <- c(prior, extra_priors)
 
-  unk_types   <- sapply(prior, function(prior_obj) prior_obj$type)
-  unk_inits   <- any(unk_types == "init")
+  unk_types     <- sapply(prior, function(prior_obj) prior_obj$type)
+  any_unk_inits <- any(unk_types == "init")
 
-  stan_data   <- stan_data(meas_mdl, unk_inits)
+  unk_inits <- NULL
 
-  lvl_obj       <- mdl_structure$levels
+  if(any_unk_inits) {
 
-  stan_params   <- stan_params(prior)
+    inits_idx <- which(unk_types == "init")
+
+    unk_inits <- sapply(prior[inits_idx ],
+                        function(prior_obj) prior_obj$par_name)
+  }
+
+  mdl_pars      <- NULL
+  any_unk_const <- any(unk_types == "constant")
+
+  if(any_unk_const) {
+
+    const_idx <- which(unk_types == "constant")
+    mdl_pars  <- sapply(prior[const_idx],
+                        function(prior_obj) prior_obj$par_name)
+  }
+
+  mdl_structure <- extract_structure_from_XMILE(filepath, unk_inits)
+
+  ODE_fn      <- "X_model"
+  stan_fun    <- stan_ode_function(func_name       = ODE_fn,
+                                   pars            = mdl_pars,
+                                   XMILE_structure = mdl_structure)
+
+  stan_data   <- stan_data(meas_mdl, any_unk_inits)
+
+  stan_params <- stan_params(prior)
 
   stan_tp     <- stan_trans_params(prior, meas_mdl, mdl_structure$levels,
-                                   unk_inits)
+                                   any_unk_inits)
 
   stan_model  <- stan_model(prior, meas_mdl)
   stan_gc     <- stan_gc(meas_mdl)
 
-  paste(stan_fun, stan_data, stan_params,
-        stan_tp, stan_model, stan_gc, sep = "\n") |> cat()
+  stan_file <- paste(stan_fun, stan_data, stan_params,
+                     stan_tp, stan_model, stan_gc, "", sep = "\n")
 
+  stan_file
 }
 
 extract_extra_prior <- function(meas_obj) {

@@ -28,6 +28,7 @@ extract_dim_elems <- function(dim_tag) {
 
 
 create_param_obj_xmile <- function(sim_specs) {
+
   start      <- sim_specs %>% xml2::xml_find_first("//d1:start") %>%
     xml2::xml_double()
   stop       <- sim_specs %>% xml2::xml_find_first("//d1:stop") %>%
@@ -36,7 +37,7 @@ create_param_obj_xmile <- function(sim_specs) {
   dt         <- xml2::xml_double(dt_html)
 
   if(xml2::xml_has_attr(dt_html ,"reciprocal")) {
-    if(xml2::xml_attr(dt_html ,"reciprocal") == "true"){
+    if(xml2::xml_attr(dt_html, "reciprocal") == "true"){
       dt <- 1 / dt
     }
   }
@@ -48,7 +49,7 @@ create_param_obj_xmile <- function(sim_specs) {
 
 create_level_obj_xmile <- function(stocks_xml, variables, constants,
                                    builtin_stocks = NULL, dims_obj,
-                                   time_aux, vendor) {
+                                   time_aux, vendor, fixed_inits = NULL) {
 
   if(length(stocks_xml) == 0L & is.null(builtin_stocks)) {
     stop("SD models must contain stocks", call. = FALSE)
@@ -73,25 +74,7 @@ create_level_obj_xmile <- function(stocks_xml, variables, constants,
   })
 
   auxs        <- c(variables, constants, stock_auxs, list(time_aux))
-
-  n_stocks    <- length(stocks_list)
-
-  for(i in seq_len(n_stocks)){
-    initValue  <- stocks_list[[i]]$initValue
-    stock_name <- stocks_list[[i]]$name
-
-    is_numeric <- suppressWarnings(!is.na(as.numeric(initValue)))
-
-    if(is_numeric) {
-      stocks_list[[i]]$initValue <- as.numeric(initValue)
-    }
-
-    if(!is_numeric) {
-      newInitValue               <- compute_init_value(stock_name, initValue,
-                                                       auxs)
-      stocks_list[[i]]$initValue <- as.numeric(newInitValue)
-    }
-  }
+  stocks_list <- lapply(stocks_list, get_init_value, auxs, fixed_inits)
 
   stocks_list
 }
@@ -209,4 +192,26 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
                                initValue = initValues)
 
   unname(as_row_list(summary_stocks))
+}
+
+get_init_value <- function(stock_obj, auxs, fixed_inits) {
+
+  initValue  <- stock_obj$initValue
+  stock_name <- stock_obj$name
+
+  is_numeric <- suppressWarnings(!is.na(as.numeric(initValue)))
+
+  if(is_numeric) stock_obj$initValue <- as.numeric(initValue)
+
+  if(!is_numeric) {
+
+    newInitValue <- compute_init_value(stock_name, initValue, auxs, fixed_inits)
+
+    if(is.null(fixed_inits)) newInitValue <- as.numeric(newInitValue)
+
+    stock_obj$initValue <- newInitValue
+  }
+
+  stock_obj
+
 }

@@ -9,13 +9,27 @@ test_that("stan_trans_params() returns the expected string", {
                      type      = "meas_par",
                      par_trans = "inv"))
 
-  filepath        <- system.file("models/", "SEIR.stmx", package = "readsdr")
-  model_structure <- extract_structure_from_XMILE(filepath)
+
+  lvl_obj <- list(list(name      = "S",
+                       equation  = "-S_to_E",
+                       initValue = "10000 - I0"),
+                  list(name      = "E",
+                       equation  = "S_to_E-E_to_I",
+                       initValue = "0"),
+                  list(name      = "I",
+                       equation  = "E_to_I-I_to_R",
+                       initValue = "I0"),
+                  list(name      = "R",
+                       equation  = "I_to_R",
+                       initValue = "0"),
+                  list(name      = "C",
+                       equation  = "C_in",
+                       initValue = "I0"))
 
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  actual <- stan_trans_params(prior, meas_mdl, model_structure$levels, TRUE)
+  actual <- stan_trans_params(prior, meas_mdl, lvl_obj, TRUE)
 
   expected <-  paste(
     "transformed parameters{",
@@ -33,9 +47,9 @@ test_that("stan_trans_params() returns the expected string", {
     "  params[1] = par_beta;",
     "  params[2] = par_rho;",
     "  x = ode_rk45(X_model, x0, t0, ts, params);",
-    "  delta_x[1] =  x[1, 5]  - x0[5] + 1e-5;",
+    "  delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;",
     "  for (i in 1:n_obs-1) {",
-    "    delta_x[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;",
+    "    delta_x_1[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;",
     "  }",
     "}", sep = "\n")
 
@@ -81,6 +95,38 @@ test_that("extract_delta_decl() returns the expected list", {
   actual <- extract_delta_decl(meas_mdl)
 
   expected <- list("  array[n_obs] real delta_x_1;")
+
+  expect_equal(actual, expected)
+})
+
+test_that("construct_stock_init_lines() returns the expected list", {
+
+  lvl_obj <- list(list(name      = "S",
+                       equation  = "-S_to_E",
+                       initValue = "10000 - I0"),
+                  list(name      = "E",
+                       equation  = "S_to_E-E_to_I",
+                       initValue = "0"),
+                  list(name      = "I",
+                       equation  = "E_to_I-I_to_R",
+                       initValue = "I0"),
+                  list(name      = "R",
+                       equation  = "I_to_R",
+                       initValue = "0"),
+                  list(name      = "C",
+                       equation  = "C_in",
+                       initValue = "I0"))
+
+  prior <- list(list(par_name = "I0", type = "init"))
+
+  actual <- construct_stock_init_lines(lvl_obj)
+
+  expected <- paste(
+    "  x0[1] = 10000 - I0; // S",
+    "  x0[2] = 0; // E",
+    "  x0[3] = I0; // I",
+    "  x0[4] = 0; // R",
+    "  x0[5] = I0; // C", sep = "\n")
 
   expect_equal(actual, expected)
 })

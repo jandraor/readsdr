@@ -1,4 +1,30 @@
-context("XMILE helpers")
+# extract_structure_from_XMILE()------------------------------------------------
+
+test_that("extract_structure_from_XMILE() returns the expected list for an
+unknown init for sd_bayes", {
+
+  filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
+
+  actual <- extract_structure_from_XMILE(filepath, "I0")[["levels"]]
+
+  expected <- list(list(name      = "S",
+                        equation  = "-S_to_E",
+                        initValue = "(10000) - I0"),
+                   list(name      = "E",
+                        equation  = "S_to_E-E_to_I",
+                        initValue = 0),
+                   list(name      = "I",
+                        equation  = "E_to_I-I_to_R",
+                        initValue = "I0"),
+                   list(name      = "R",
+                        equation  = "I_to_R",
+                        initValue = 0),
+                   list(name      = "C",
+                        equation  = "C_in",
+                        initValue = "I0"))
+
+  expect_equal(actual, expected)
+})
 
 # compute_init_value()----------------------------------------------------------
 test_that("compute_init_value() extracts the expected initial value when it is
@@ -6,7 +32,7 @@ the defined by a constant", {
   stock_name    <- "test_stock"
   equation      <- "c"
   auxs          <- list(list(name = "c", equation = "100"))
-  actual_val    <- compute_init_value(stock_name, equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -19,7 +45,7 @@ the defined by a one-level nested equation", {
     list(name = "c", equation = "c1 + c2"),
     list(name = "c1", equation = "80"),
     list(name = "c2", equation = "20"))
-  actual_val    <- compute_init_value(stock_name, equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -36,7 +62,7 @@ the defined by a two-level nested equation", {
     list(name = "c4", equation = "4"),
     list(name = "c5", equation = "40"),
     list(name = "c6", equation = "2"))
-  actual_val    <- compute_init_value(stock_name, equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -47,7 +73,7 @@ the defined by a constant and variable", {
   equation      <- "3 + c"
   auxs          <- list(
     list(name = "c", equation = "97"))
-  actual_val    <- compute_init_value(stock_name, equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -60,7 +86,7 @@ the defined by a constant and a one-level nested variable", {
     list(name = "c", equation = "c1 - c2"),
     list(name = "c1", equation = "27"),
     list(name = "c2", equation = "7"))
-  actual_val    <- compute_init_value(stock_name, equation, auxs)
+  actual_val    <- compute_init_value(stock_name, equation, auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -73,7 +99,7 @@ all variables are defined by constants", {
     list(name = "ey", equation = "20000"),
     list(name = "ep", equation = "1"),
     list(name = "eyvm", equation = "5"))
-  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs, NULL)
   expected_val  <- 4000
   expect_equal(actual_val, expected_val)
 })
@@ -97,7 +123,7 @@ graph function along the process", {
              yright = 100)
          )),
     list(name = "init_value", equation = "100"))
-  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs, NULL)
   expected_val  <- 100
   expect_equal(actual_val, expected_val)
 })
@@ -117,9 +143,28 @@ test_that("compute_init_value() handles sd_fixed_delay",{
     list(name = "ordered", equation = "sd_fixed_delay('placed',time,1,4,.memory)"),
     list(name = "time", equation = "0"),
     list(name = "placed", equation = "a+b"))
-  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs)
+
+  actual_val    <- compute_init_value(stock_name, test_equation, test_auxs, NULL)
 
   expected_val <- 4
+  expect_equal(actual_val, expected_val)
+})
+
+test_that("compute_init_value() returns the expected value with a fixed init", {
+
+  stock_name    <- "S"
+  equation      <- "n - I0"
+
+  auxs          <- list(list(name     = "n",
+                             equation = 10000),
+                        list(name     = "I0",
+                             equation = 1))
+
+  fixed_inits   <- "I0"
+  actual_val    <- compute_init_value(stock_name, equation, auxs, fixed_inits)
+
+  expected_val  <- "(10000) - I0"
+
   expect_equal(actual_val, expected_val)
 })
 

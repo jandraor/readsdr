@@ -17,9 +17,16 @@
 #' stan_ode_function(path, "my_model")
 stan_ode_function <- function(filepath, func_name, pars = NULL,
                               const_list = NULL,
-                              extra_funs = NULL) {
+                              extra_funs = NULL, XMILE_structure) {
 
-  XMILE_structure  <- extract_structure_from_XMILE(filepath)
+  if (!missing(XMILE_structure)) {
+
+    if (!missing(filepath)) {
+      msg <- "'filepath' and 'XMILE_structure' both specified"
+      stop(msg)
+    }
+  }
+  else XMILE_structure  <- extract_structure_from_XMILE(filepath)
 
   if(!is.null(const_list)) {
     XMILE_structure <- override_consts(XMILE_structure, const_list)
