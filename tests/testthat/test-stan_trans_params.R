@@ -29,7 +29,7 @@ test_that("stan_trans_params() returns the expected string", {
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  actual <- stan_trans_params(prior, meas_mdl, lvl_obj, TRUE)
+  actual <- stan_trans_params(prior, meas_mdl, lvl_obj, TRUE, FALSE)
 
   expected <-  paste(
     "transformed parameters{",
@@ -144,4 +144,32 @@ test_that("get_for_body() returns the expected list", {
 
   expect_equal(actual, expected)
 
+})
+
+test_that("get_pred_asg() returns the expected string", {
+
+  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  meas_mdl <- list(mm1)
+
+  lvl_obj <- list(list(name      = "S",
+                       equation  = "-S_to_E",
+                       initValue = "10000 - I0"),
+                  list(name      = "E",
+                       equation  = "S_to_E-E_to_I",
+                       initValue = "0"),
+                  list(name      = "I",
+                       equation  = "E_to_I-I_to_R",
+                       initValue = "I0"),
+                  list(name      = "R",
+                       equation  = "I_to_R",
+                       initValue = "0"),
+                  list(name      = "C",
+                       equation  = "C_in",
+                       initValue = "I0"))
+
+  actual <- get_pred_asg(meas_mdl, lvl_obj)
+
+  expected <- "  y_pred = x[n_obs + 1, 5] - x[n_obs, 5];"
+
+  expect_equal(actual, expected)
 })

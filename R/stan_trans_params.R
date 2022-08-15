@@ -1,9 +1,13 @@
 
-stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits) {
+stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
 
-  var_decl <- paste(
-    "  array[n_obs] vector[n_difeq] x; // Output from the ODE solver",
-    "  array[n_params] real params;", sep = "\n")
+  sim_output_decl <- ifelse(
+    LFO_CV,
+    "  array[n_obs + 1] vector[n_difeq] x; // Output from the ODE solver",
+    "  array[n_obs] vector[n_difeq] x; // Output from the ODE solver")
+
+  var_decl <- paste(sim_output_decl, "  array[n_params] real params;",
+                    sep = "\n")
 
   if(unk_inits) {
 
@@ -28,6 +32,10 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits) {
       paste(collapse = "\n")
 
     var_decl <- paste(var_decl, par_trans_decl, sep = "\n")
+  }
+
+  if(LFO_CV) {
+    var_decl <- paste(var_decl, "  real y_pred;", sep = "\n")
   }
 
   # Assignments
@@ -63,8 +71,10 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits) {
 
     asg <- paste(asg, delta_asg, sep = "\n")
 
-
+    if(LFO_CV) asg <- paste(asg, get_pred_asg(meas_mdl, lvl_obj), sep = "\n")
   }
+
+
 
   block_body <- paste(var_decl, asg, sep = "\n")
 
@@ -205,4 +215,25 @@ get_for_body <- function(meas_mdl, lvl_obj) {
     stringr::str_glue("    delta_x_{i}[i + 1] = x[i + 1, {idx}] - x[i, {idx}] + 1e-5;")
   }) %>% paste(collapse = "\n")
 
+}
+
+get_pred_asg <- function(meas_mdl, lvl_obj) {
+
+  lvl_names <- get_names(lvl_obj)
+
+  lapply(seq_along(meas_mdl), function(i) {
+
+    meas_obj        <- meas_mdl[[i]]
+    decomposed_meas <- decompose_meas(meas_obj)
+    lhs             <- decomposed_meas$lhs
+    rhs             <- decomposed_meas$rhs
+
+    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
+      stringr::str_trim()
+
+    idx <- which(lvl_name == lvl_names)
+
+    stringr::str_glue("  {lhs}_pred = x[n_obs + 1, {idx}] - x[n_obs, {idx}];")
+
+  }) %>% paste(collapse = "\n")
 }

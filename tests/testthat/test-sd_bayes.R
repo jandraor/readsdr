@@ -10,7 +10,7 @@ test_that("sd_Bayes() returns the expected file", {
     sd_prior("par_rho", "beta", c(2, 2)),
     sd_prior("I0", "lognormal", c(0, 1), "init"))
 
-  actual   <- sd_Bayes(filepath, prior, meas_mdl)
+  actual   <- sd_Bayes(filepath, meas_mdl, prior)
 
   fileName <- "SEIR_nbinom.stan"
 

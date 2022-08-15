@@ -1,3 +1,16 @@
+#' SD prior
+#'
+#' @param par_name A string
+#' @param dist A string
+#' @param dist_pars A vector
+#' @param type A string. It can be either 'constant' or 'init'. It is 'constant'
+#' by default.
+#'
+#' @return A list
+#' @export
+#'
+#' @examples
+#' sd_prior("par_beta", "lognormal", c(0, 1))
 sd_prior <- function(par_name, dist, dist_pars, type = "constant") {
 
   if(dist == "beta") {

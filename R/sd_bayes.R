@@ -1,4 +1,23 @@
-sd_Bayes <- function(filepath, prior, meas_mdl) {
+#' Create Stan file for Bayesian inference
+#'
+#' @param meas_mdl A list
+#' @param prior A list
+#'
+#' @inheritParams read_xmile
+#'
+#' @return A string
+#' @export
+#'
+#' @examples
+#'   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
+#'   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
+#'   meas_mdl <- list(mm1)
+#'   prior <- list(
+#'     sd_prior("par_beta", "lognormal", c(0, 1)),
+#'     sd_prior("par_rho", "beta", c(2, 2)),
+#'     sd_prior("I0", "lognormal", c(0, 1), "init"))
+#'   sd_Bayes(filepath, meas_mdl, prior)
+sd_Bayes <- function(filepath, meas_mdl, prior, LFO_CV = FALSE) {
 
   extra_priors <- lapply(meas_mdl, extract_extra_prior) %>% remove_NULL()
 
@@ -34,15 +53,15 @@ sd_Bayes <- function(filepath, prior, meas_mdl) {
                                    pars            = mdl_pars,
                                    XMILE_structure = mdl_structure)
 
-  stan_data   <- stan_data(meas_mdl, any_unk_inits)
+  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV)
 
   stan_params <- stan_params(prior)
 
   stan_tp     <- stan_trans_params(prior, meas_mdl, mdl_structure$levels,
-                                   any_unk_inits)
+                                   any_unk_inits, LFO_CV)
 
   stan_model  <- stan_model(prior, meas_mdl)
-  stan_gc     <- stan_gc(meas_mdl)
+  stan_gc     <- stan_gc(meas_mdl, LFO_CV)
 
   stan_file <- paste(stan_fun, stan_data, stan_params,
                      stan_tp, stan_model, stan_gc, "", sep = "\n")

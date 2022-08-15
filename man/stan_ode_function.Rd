@@ -9,7 +9,8 @@ stan_ode_function(
   func_name,
   pars = NULL,
   const_list = NULL,
-  extra_funs = NULL
+  extra_funs = NULL,
+  XMILE_structure
 )
 }
 \arguments{

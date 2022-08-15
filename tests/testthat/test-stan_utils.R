@@ -32,7 +32,7 @@ test_that("extract_timeseries_stock() returns the expected data frame", {
 test_that("construct_data_decl() returns the expected string", {
 
   meas_obj   <- "y ~ neg_binomial_2(net_flow(C), phi)"
-  actual     <- construct_data_decl(meas_obj)
+  actual     <- construct_data_decl(meas_obj, FALSE)
   expected   <- "  array[n_obs] int y;"
 
   expect_equal(actual, expected)
@@ -53,7 +53,7 @@ test_that("stan_data() returns the expected string", {
     "  array[n_obs] real ts;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, TRUE), expected_string)
+  expect_equal(stan_data(meas_mdl, TRUE, FALSE), expected_string)
 
 })
 
@@ -73,7 +73,32 @@ test_that("stan_data() declares the vector for init values", {
     "  vector[n_difeq] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, FALSE), expected_string)
+  expect_equal(stan_data(meas_mdl, FALSE, FALSE), expected_string)
+
+  expected_string <- paste(
+    "data {",
+    "  int<lower = 1> n_obs;",
+    "  int<lower = 1> n_params;",
+    "  int<lower = 1> n_difeq;",
+    "  array[n_obs] int y;",
+    "  int y_ahead;",
+    "  real t0;",
+    "  array[n_obs + 1] real ts;",
+    "  vector[n_difeq] x0;",
+    "}", sep = "\n")
+
+  expect_equal(stan_data(meas_mdl, FALSE, TRUE), expected_string)
+})
+
+test_that("construct_data_decl() returns the expected string", {
+  meas_obj      <- "y ~ neg_binomial_2(net_flow(C), phi)"
+
+  actual <- construct_data_decl(meas_obj, TRUE)
+
+  expected <- paste("  array[n_obs] int y;",
+                    "  int y_ahead;", sep = "\n")
+
+  expect_equal(actual, expected)
 })
 
 test_that("get_dist_obj() declares the vector for init values", {

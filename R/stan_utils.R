@@ -85,18 +85,22 @@ extract_timeseries_stock <- function(stock_name, posterior_df, all_stocks,
 }
 
 # Stan's data block for ODE models
-stan_data <- function(meas_mdl, unk_inits) {
+stan_data <- function(meas_mdl, unk_inits, LFO_CV) {
 
   decl <- paste(
     "  int<lower = 1> n_obs;",
     "  int<lower = 1> n_params;",
     "  int<lower = 1> n_difeq;", sep = "\n")
 
-  data_decl <- lapply(meas_mdl, construct_data_decl) %>%
+  data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
     paste(collapse = "\n")
 
-  final_decl <- paste("  real t0;",
-                      "  array[n_obs] real ts;", sep = "\n")
+  ts_decl <- ifelse(LFO_CV,
+                    "  array[n_obs + 1] real ts;",
+                    "  array[n_obs] real ts;")
+
+  final_decl <- paste("  real t0;", ts_decl, sep = "\n")
+
 
   body_block <- paste(decl, data_decl, final_decl, sep = "\n")
 
@@ -108,7 +112,7 @@ stan_data <- function(meas_mdl, unk_inits) {
   paste("data {", body_block, "}", sep = "\n")
 }
 
-construct_data_decl <- function(meas_obj) {
+construct_data_decl <- function(meas_obj, LFO_CV) {
 
   split_strings <- strsplit(meas_obj, "~")[[1]]
 
@@ -117,7 +121,13 @@ construct_data_decl <- function(meas_obj) {
   rhs  <- split_strings[[2]] %>% stringr::str_trim()
   type <- get_dist_type(rhs)
 
-  stringr::str_glue("  array[n_obs] {type} {lhs};")
+  inference_data_line <- stringr::str_glue("  array[n_obs] {type} {lhs};")
+
+  if(!LFO_CV) return(inference_data_line)
+
+  pred_data_line <- stringr::str_glue("  {type} {lhs}_ahead;")
+
+  paste(inference_data_line, pred_data_line, sep = "\n")
 }
 
 get_dist_type <- function(rhs) {
@@ -169,6 +179,7 @@ get_dist_args <- function(dist) {
   if(dist == "exponential") return (c("beta"))
   if(dist == "lognormal") return (c("mu", "sigma"))
   if(dist == "neg_binomial_2") return (c("mu", "phi"))
+  if(dist == "poisson") return (c("lambda"))
 
   msg <- stringr::str_glue("Distribution '{dist}' not supported")
   stop(msg, call. = FALSE)
