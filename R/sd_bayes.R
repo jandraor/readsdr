@@ -17,7 +17,8 @@
 #'     sd_prior("par_rho", "beta", c(2, 2)),
 #'     sd_prior("I0", "lognormal", c(0, 1), "init"))
 #'   sd_Bayes(filepath, meas_mdl, prior)
-sd_Bayes <- function(filepath, meas_mdl, prior, LFO_CV = FALSE) {
+sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
+                     LFO_CV = FALSE) {
 
   extra_priors <- lapply(meas_mdl, extract_extra_prior) %>% remove_NULL()
 
@@ -51,6 +52,7 @@ sd_Bayes <- function(filepath, meas_mdl, prior, LFO_CV = FALSE) {
   ODE_fn      <- "X_model"
   stan_fun    <- stan_ode_function(func_name       = ODE_fn,
                                    pars            = mdl_pars,
+                                   const_list      = const_list,
                                    XMILE_structure = mdl_structure)
 
   stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV)

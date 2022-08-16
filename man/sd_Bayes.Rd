@@ -4,7 +4,7 @@
 \alias{sd_Bayes}
 \title{Create Stan file for Bayesian inference}
 \usage{
-sd_Bayes(filepath, meas_mdl, prior)
+sd_Bayes(filepath, meas_mdl, prior, const_list = NULL, LFO_CV = FALSE)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -14,6 +14,9 @@ from Vensim with extension .xmile}
 \item{meas_mdl}{A list}
 
 \item{prior}{A list}
+
+\item{const_list}{A list in which each element's name is the name of the
+constant to override and the element's value correspond to the new value.}
 }
 \value{
 A string
