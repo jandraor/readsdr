@@ -1,4 +1,4 @@
-test_that("sd_Bayes() returns the expected file", {
+test_that("sd_Bayes() returns the expected file for a measured net flow", {
 
   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
 
@@ -18,6 +18,27 @@ test_that("sd_Bayes() returns the expected file", {
 
   expect_equal(actual, expected)
 
+})
+
+test_that("sd_Bayes() returns the expected file for a measured stock", {
+
+  filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
+
+  prior <- list(
+    sd_prior("par_beta", "lognormal", c(0, 1)),
+    sd_prior("par_rho", "beta", c(2, 2)),
+    sd_prior("I0", "lognormal", c(0, 1), "init"))
+
+  m1      <- "y ~ poisson(C)"
+  meas_mdl <- list(m1)
+
+  actual <- sd_Bayes(filepath, meas_mdl, prior)
+
+  fileName <- "SEIR_C_meas.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
 })
 
 test_that("extract_extra_prior() returns the expected list", {

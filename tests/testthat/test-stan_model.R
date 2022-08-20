@@ -23,4 +23,14 @@ test_that("construct_likelihood_line() returns the expected string", {
   expected <- "  y ~ neg_binomial_2(delta_x_1, phi);"
 
   expect_equal(actual, expected)
+
+  meas_obj <- "y ~ poisson(C)"
+
+  lvl_names <- c("S", "E", "I", "R", "C")
+
+  actual   <- construct_likelihood_line(meas_obj, 1, lvl_names)
+
+  expected <- "  y ~ poisson(x[:, 5]);"
+
+  expect_equal(actual, expected)
 })
