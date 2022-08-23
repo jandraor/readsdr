@@ -1,5 +1,6 @@
 
-stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
+stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, data_params,
+                              LFO_CV) {
 
   sim_output_decl <- ifelse(
     LFO_CV,
@@ -24,7 +25,7 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
     var_decl        <- paste(var_decl, delta_decl, sep = "\n")
   }
 
-  par_trans_list <- extract_par_trans(prior) %>% remove_NULL()
+  par_trans_list <- extract_par_trans(estimated_params) %>% remove_NULL()
 
   if(length(par_trans_list) > 0) {
 
@@ -40,7 +41,7 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
 
   # Assignments
 
-  pars_asg <- construct_pars_asg(prior)
+  pars_asg <- construct_pars_asg(estimated_params, data_params)
   asg      <- pars_asg
 
   if(unk_inits) {
@@ -110,9 +111,9 @@ construct_stock_init_lines <- function(stock_list, unk_init_list) {
   paste(lines_list, collapse = "\n")
 }
 
-construct_pars_asg <- function(prior) {
+construct_pars_asg <- function(estimated_params, data_params) {
 
-  par_names <- sapply(prior, function(prior_obj) {
+  par_names <- sapply(estimated_params, function(prior_obj) {
 
     if(prior_obj$type == "init" | prior_obj$type == "meas_par") return (NULL)
 
@@ -121,17 +122,19 @@ construct_pars_asg <- function(prior) {
     remove_NULL() %>%
     as.character()
 
+  if(!is.null(data_params)) par_names <- c(par_names, data_params)
+
   stringr::str_glue("  params[{seq_along(par_names)}] = {par_names};") %>%
     paste(collapse = "\n")
 
 }
 
-extract_par_trans <- function(prior) {
+extract_par_trans <- function(estimated_params) {
 
-  types   <- sapply(prior, function(prior_obj) prior_obj$type)
+  types   <- sapply(estimated_params, function(prior_obj) prior_obj$type)
   indexes <- which(types == "meas_par")
 
-  meas_pars <- prior[indexes]
+  meas_pars <- estimated_params[indexes]
 
   lapply(meas_pars, function(par_obj) {
 

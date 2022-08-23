@@ -1,7 +1,10 @@
 #' Create Stan file for Bayesian inference
 #'
 #' @param meas_mdl A list
-#' @param prior A list
+#' @param estimated_parameters A list
+#' @param data_parameters A optional string vector defining which model
+#"   parameters will be configured through the Stan data block. That is, the
+#"   user will provide fixed values for such parameters at every Stan run.
 #'
 #' @inheritParams read_xmile
 #'
@@ -9,22 +12,23 @@
 #' @export
 #'
 #' @examples
-#'   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
-#'   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
-#'   meas_mdl <- list(mm1)
-#'   prior <- list(
+#'   filepath         <- system.file("models/", "SEIR.stmx", package = "readsdr")
+#'   mm1              <- "y ~ neg_binomial_2(net_flow(C), phi)"
+#'   meas_mdl         <- list(mm1)
+#'   estimated_params <- list(
 #'     sd_prior("par_beta", "lognormal", c(0, 1)),
 #'     sd_prior("par_rho", "beta", c(2, 2)),
 #'     sd_prior("I0", "lognormal", c(0, 1), "init"))
-#'   sd_Bayes(filepath, meas_mdl, prior)
-sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
-                     LFO_CV = FALSE) {
+#'   sd_Bayes(filepath, meas_mdl, estimated_params)
+sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
+                     const_list = NULL, LFO_CV = FALSE) {
 
-  extra_priors <- lapply(meas_mdl, extract_extra_prior) %>% remove_NULL()
+  extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
 
-  if(length(extra_priors) > 0) prior <- c(prior, extra_priors)
+  if(length(extra_params) > 0) estimated_params <- c(estimated_params,
+                                                     extra_params)
 
-  unk_types     <- sapply(prior, function(prior_obj) prior_obj$type)
+  unk_types     <- sapply(estimated_params, function(prior_obj) prior_obj$type)
   any_unk_inits <- any(unk_types == "init")
 
   unk_inits <- NULL
@@ -33,7 +37,7 @@ sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
 
     inits_idx <- which(unk_types == "init")
 
-    unk_inits <- sapply(prior[inits_idx ],
+    unk_inits <- sapply(estimated_params[inits_idx ],
                         function(prior_obj) prior_obj$par_name)
   }
 
@@ -43,11 +47,15 @@ sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
   if(any_unk_const) {
 
     const_idx <- which(unk_types == "constant")
-    mdl_pars  <- sapply(prior[const_idx],
+    mdl_pars  <- sapply(estimated_params[const_idx],
                         function(prior_obj) prior_obj$par_name)
   }
 
+  if(!is.null(data_params)) mdl_pars <- c(mdl_pars, data_params)
+
   mdl_structure <- extract_structure_from_XMILE(filepath, unk_inits)
+  lvl_obj       <- mdl_structure$levels
+  lvl_names   <- get_names(mdl_structure$levels)
 
   ODE_fn      <- "X_model"
   stan_fun    <- stan_ode_function(func_name       = ODE_fn,
@@ -55,15 +63,14 @@ sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
                                    const_list      = const_list,
                                    XMILE_structure = mdl_structure)
 
-  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV)
+  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params)
 
-  stan_params <- stan_params(prior)
+  stan_params <- stan_params(estimated_params)
 
-  stan_tp     <- stan_trans_params(prior, meas_mdl, mdl_structure$levels,
-                                   any_unk_inits, LFO_CV)
+  stan_tp     <- stan_trans_params(estimated_params, meas_mdl, lvl_obj,
+                                   any_unk_inits, data_params, LFO_CV)
 
-  lvl_names   <- get_names(mdl_structure$levels)
-  stan_model  <- stan_model(prior, meas_mdl, lvl_names)
+  stan_model  <- stan_model(estimated_params, meas_mdl, lvl_names)
 
   stan_gc     <- stan_gc(meas_mdl, LFO_CV, lvl_names)
 
@@ -73,7 +80,7 @@ sd_Bayes <- function(filepath, meas_mdl, prior, const_list = NULL,
   stan_file
 }
 
-extract_extra_prior <- function(meas_obj) {
+extract_extra_params <- function(meas_obj) {
 
   decomposed_meas <- decompose_meas(meas_obj)
   dist_obj        <- get_dist_obj(decomposed_meas$rhs)

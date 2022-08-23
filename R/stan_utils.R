@@ -85,7 +85,7 @@ extract_timeseries_stock <- function(stock_name, posterior_df, all_stocks,
 }
 
 # Stan's data block for ODE models
-stan_data <- function(meas_mdl, unk_inits, LFO_CV) {
+stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params) {
 
   decl <- paste(
     "  int<lower = 1> n_obs;",
@@ -107,6 +107,14 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV) {
   if(!unk_inits) {
     body_block <- paste(body_block,
                         "  vector[n_difeq] x0;", sep = "\n")
+  }
+
+  if(!is.null(data_params)) {
+
+    data_params_lines <- stringr::str_glue("  real {data_params};") %>%
+      paste(collapse = "\n")
+
+    body_block <- paste(body_block, data_params_lines, sep = "\n")
   }
 
   paste("data {", body_block, "}", sep = "\n")

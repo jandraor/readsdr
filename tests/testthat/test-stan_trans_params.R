@@ -2,12 +2,12 @@
 
 test_that("stan_trans_params() returns the expected string", {
 
-  prior <- list(sd_prior("par_beta", "lognormal", c(0, 1)),
-                sd_prior("par_rho", "beta", c(2, 2)),
-                sd_prior("I0", "lognormal", c(0, 1), "init"),
-                list(par_name = "inv_phi",
-                     type      = "meas_par",
-                     par_trans = "inv"))
+  estimated_params <- list(sd_prior("par_beta", "lognormal", c(0, 1)),
+                           sd_prior("par_rho", "beta", c(2, 2)),
+                           sd_prior("I0", "lognormal", c(0, 1), "init"),
+                           list(par_name  = "inv_phi",
+                                type      = "meas_par",
+                                par_trans = "inv"))
 
 
   lvl_obj <- list(list(name      = "S",
@@ -29,7 +29,10 @@ test_that("stan_trans_params() returns the expected string", {
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  actual <- stan_trans_params(prior, meas_mdl, lvl_obj, TRUE, FALSE)
+  actual <- stan_trans_params(estimated_params, meas_mdl, lvl_obj,
+                              unk_inits   = TRUE,
+                              data_params = NULL,
+                              LFO_CV      = FALSE)
 
   expected <-  paste(
     "transformed parameters{",
@@ -59,12 +62,12 @@ test_that("stan_trans_params() returns the expected string", {
 
 test_that("construct_pars_asg() ignores inits & meas pars", {
 
-  prior <- list(list(par_name = "par_beta", type = "constant"),
-                list(par_name = "par_rho", type = "constant"),
-                list(par_name = "I0", type = "init"),
-                list(par_name = "inv_phi", type = "meas_par"))
+  estimated_params <- list(list(par_name = "par_beta", type = "constant"),
+                           list(par_name = "par_rho", type = "constant"),
+                           list(par_name = "I0", type = "init"),
+                           list(par_name = "inv_phi", type = "meas_par"))
 
-  actual   <- construct_pars_asg(prior)
+  actual   <- construct_pars_asg(estimated_params, NULL)
   expected <- paste("  params[1] = par_beta;",
                     "  params[2] = par_rho;", sep = "\n")
 

@@ -4,7 +4,14 @@
 \alias{sd_Bayes}
 \title{Create Stan file for Bayesian inference}
 \usage{
-sd_Bayes(filepath, meas_mdl, prior, const_list = NULL, LFO_CV = FALSE)
+sd_Bayes(
+  filepath,
+  meas_mdl,
+  estimated_params,
+  data_params = NULL,
+  const_list = NULL,
+  LFO_CV = FALSE
+)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -13,10 +20,12 @@ from Vensim with extension .xmile}
 
 \item{meas_mdl}{A list}
 
-\item{prior}{A list}
-
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
+
+\item{estimated_parameters}{A list}
+
+\item{data_parameters}{A optional string vector defining which model}
 }
 \value{
 A string
@@ -25,12 +34,12 @@ A string
 Create Stan file for Bayesian inference
 }
 \examples{
-  filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
-  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
-  meas_mdl <- list(mm1)
-  prior <- list(
+  filepath         <- system.file("models/", "SEIR.stmx", package = "readsdr")
+  mm1              <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  meas_mdl         <- list(mm1)
+  estimated_params <- list(
     sd_prior("par_beta", "lognormal", c(0, 1)),
     sd_prior("par_rho", "beta", c(2, 2)),
     sd_prior("I0", "lognormal", c(0, 1), "init"))
-  sd_Bayes(filepath, meas_mdl, prior)
+  sd_Bayes(filepath, meas_mdl, estimated_params)
 }
