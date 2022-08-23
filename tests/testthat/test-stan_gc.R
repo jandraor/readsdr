@@ -24,6 +24,17 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
     "}", sep = "\n")
 
   expect_equal(actual, expected)
+
+  meas_mdl <- list("y ~ poisson(net_flow(C))")
+  actual   <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  log_lik = poisson_lpmf(y | delta_x_1);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
 })
 
 test_that("stan_gc() returns the expected string for a stock measurement", {

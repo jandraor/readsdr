@@ -42,6 +42,7 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
 
 get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
 
+  nf_pattern    <- "net_flow\\(.+?\\)"
   delta_counter <- 1 # This has to change.
 
   if(dist_obj$dist_name == "neg_binomial_2") {
@@ -61,16 +62,11 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
 
   if(dist_obj$dist_name == "poisson") {
 
-    nf_pattern <- "net_flow\\(.+?\\)"
-    is_nf      <- stringr::str_detect(dist_obj$lambda, nf_pattern)
-
-    if(is_nf) {
-
-      dist_obj$lambda <- stringr::str_glue("poisson(delta_x_{delta_counter})")
-    }
+    is_nf                      <- stringr::str_detect(dist_obj$lambda,
+                                                      nf_pattern)
+    if(is_nf)  dist_obj$lambda <- stringr::str_glue("delta_x_{delta_counter}")
 
     if(!is_nf) dist_obj$lambda <- translate_stock(dist_obj$lambda, lvl_names)
-
 
     ll_statement <- ifelse(
       LFO_CV,
