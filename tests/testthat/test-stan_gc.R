@@ -51,6 +51,19 @@ test_that("stan_gc() returns the expected string for a stock measurement", {
     "}", sep = "\n")
 
   expect_equal(actual, expected)
+
+  meas_mdl <- list("y ~ poisson(C)")
+  actual   <- stan_gc(meas_mdl, TRUE, c("S", "E", "I", "R", "C"))
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  real log_lik_pred;",
+    "  log_lik = poisson_lpmf(y | x[:, 5]);",
+    "  log_lik_pred = poisson_lpmf(y_ahead | y_pred);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
 })
 
 test_that("get_log_lik_statement() returns the expected string", {

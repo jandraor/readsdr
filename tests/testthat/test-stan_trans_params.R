@@ -151,25 +151,19 @@ test_that("get_pred_asg() returns the expected string", {
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  lvl_obj <- list(list(name      = "S",
-                       equation  = "-S_to_E",
-                       initValue = "10000 - I0"),
-                  list(name      = "E",
-                       equation  = "S_to_E-E_to_I",
-                       initValue = "0"),
-                  list(name      = "I",
-                       equation  = "E_to_I-I_to_R",
-                       initValue = "I0"),
-                  list(name      = "R",
-                       equation  = "I_to_R",
-                       initValue = "0"),
-                  list(name      = "C",
-                       equation  = "C_in",
-                       initValue = "I0"))
+  lvl_names <- c("S", "E", "I", "R", "C")
 
-  actual <- get_pred_asg(meas_mdl, lvl_obj)
+  actual <- get_pred_asg(meas_mdl, lvl_names, "delta_meas")
 
   expected <- "  y_pred = x[n_obs + 1, 5] - x[n_obs, 5];"
+
+  expect_equal(actual, expected)
+
+  mm1       <-  "y ~ poisson(C)"
+  meas_mdl  <- list(mm1)
+  lvl_names <- c("S", "E", "I", "R", "C")
+  actual    <- get_pred_asg(meas_mdl, lvl_names, "stock_meas")
+  expected  <- "  y_pred = x[n_obs + 1, 5];"
 
   expect_equal(actual, expected)
 })

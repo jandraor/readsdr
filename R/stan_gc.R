@@ -4,12 +4,12 @@ stan_gc <- function(meas_mdl, LFO_CV, lvl_names) {
 
   if(LFO_CV) decl <- paste(decl, "  real log_lik_pred;", sep = "\n")
 
-  rhs         <- get_log_lik_statement(meas_mdl, FALSE, lvl_names)
+  rhs         <- get_log_lik_statement(meas_mdl, FALSE, lvl_names) # review this line
   log_lik_asg <- paste("  log_lik =", rhs)
 
   if(LFO_CV) {
 
-    rhs_pred    <- get_ll_pred_asg(meas_mdl, LFO_CV)
+    rhs_pred    <- get_ll_pred_asg(meas_mdl, LFO_CV, lvl_names)
     pred_asg    <- paste("  log_lik_pred =", rhs_pred)
     log_lik_asg <- paste(log_lik_asg, pred_asg, sep = "\n")
   }
@@ -80,7 +80,7 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
   stop(msg, call. = FALSE)
 }
 
-get_ll_pred_asg <- function(meas_mdl, LFO_CV) {
+get_ll_pred_asg <- function(meas_mdl, LFO_CV, lvl_names) {
 
   delta_counter <- 1
   n_meas        <- length(meas_mdl)
@@ -93,7 +93,7 @@ get_ll_pred_asg <- function(meas_mdl, LFO_CV) {
     decomposed_meas <- decompose_meas(meas_obj)
     dist_obj        <- get_dist_obj(decomposed_meas$rhs)
     ll_lines[[i]]   <- get_dist_dens_mass_fun(decomposed_meas$lhs, dist_obj,
-                                              LFO_CV)
+                                              LFO_CV, lvl_names)
   }
 
   ll_lines %>% paste(collapse = "+") %>% paste0(";")

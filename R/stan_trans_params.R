@@ -57,6 +57,8 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
   run_model_line <- "  x = ode_rk45(X_model, x0, t0, ts, params);"
   asg            <- paste(asg, run_model_line, sep = "\n")
 
+  lvl_names  <- get_names(lvl_obj)
+
   if(length(delta_meas) > 0) {
 
     delta_first_asg <- get_delta_first_asg(delta_meas, lvl_obj)
@@ -71,10 +73,14 @@ stan_trans_params <- function(prior, meas_mdl, lvl_obj, unk_inits, LFO_CV) {
 
     asg <- paste(asg, delta_asg, sep = "\n")
 
-    if(LFO_CV) asg <- paste(asg, get_pred_asg(meas_mdl, lvl_obj), sep = "\n")
+    if(LFO_CV) asg <- paste(asg, get_pred_asg(meas_mdl, lvl_names, "delta_meas"), sep = "\n")
   }
 
+  if(length(delta_meas) == 0 & LFO_CV) {
 
+    y_pred_asg <- get_pred_asg(meas_mdl, lvl_names, "stock_meas")
+    asg        <- paste(asg, y_pred_asg, sep = "\n")
+  }
 
   block_body <- paste(var_decl, asg, sep = "\n")
 
@@ -217,9 +223,7 @@ get_for_body <- function(meas_mdl, lvl_obj) {
 
 }
 
-get_pred_asg <- function(meas_mdl, lvl_obj) {
-
-  lvl_names <- get_names(lvl_obj)
+get_pred_asg <- function(meas_mdl, lvl_names, meas_type) {
 
   lapply(seq_along(meas_mdl), function(i) {
 
@@ -228,12 +232,24 @@ get_pred_asg <- function(meas_mdl, lvl_obj) {
     lhs             <- decomposed_meas$lhs
     rhs             <- decomposed_meas$rhs
 
-    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
-      stringr::str_trim()
+    if(meas_type == "delta_meas") {
 
-    idx <- which(lvl_name == lvl_names)
+      lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
+        stringr::str_trim()
 
-    stringr::str_glue("  {lhs}_pred = x[n_obs + 1, {idx}] - x[n_obs, {idx}];")
+      idx <- which(lvl_name == lvl_names)
+      pred_asg <- stringr::str_glue("  {lhs}_pred = x[n_obs + 1, {idx}] - x[n_obs, {idx}];")
+    }
+
+    if(meas_type == "stock_meas") {
+
+       dist_obj <- get_dist_obj(rhs)
+       lvl_name <- dist_obj[[2]]
+       idx      <- which(lvl_name == lvl_names)
+       pred_asg <- stringr::str_glue("  {lhs}_pred = x[n_obs + 1, {idx}];")
+    }
+
+    pred_asg
 
   }) %>% paste(collapse = "\n")
 }
