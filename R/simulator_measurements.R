@@ -1,19 +1,8 @@
 #' Generate measurements
 #'
-#' @param n_meas Number of measurements
-#' @param meas_model Measurement model. A list of sampling distributions. Each
-#' sampling distribution is a list of three elements:
-#'
-#'   - \code{stock_name} (a string): refers to the stock upon which measurements are made;
-#'
-#'   - \code{meas_type} (a string): indicates whether the measurement is performed on the
-#'  value of the stock ('as_is') or its net change ('net_change');
-#'
-#'   - \code{dist} (a list): The probability distribution used to model measurements on
-#'   the stock. This list also consists of three elements:
-#'   name (RNG function such as rnorm), stock_par (indicates which distribution's
-#'   parameter corresponds to the measured stock), and extra_pars, should the
-#'   probability distributions requires additional parameters.
+#' @param n_meas Number of measurements. An integer.
+#' @param meas_model Measurement model. A list of strings, in which each string
+#' corresponds to sampling statement in Stan language.
 #'
 #'@inheritParams sd_simulate
 #'
@@ -24,11 +13,7 @@
 #'   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
 #'   mdl      <- read_xmile(filepath)
 #'
-#'   mm1 <- list(stock_name = "C",
-#'               meas_type  = "as_is",
-#'               dist       = list(name       = "rnbinom",
-#'                                 stock_par  = "mu",
-#'                                 extra_pars = list(size = 0.1)))
+#'   mm1        <- "y ~ poisson(C)"
 #'   meas_model <- list(mm1)
 #'
 #'   sd_measurements(n_meas       = 2,
@@ -38,7 +23,7 @@
 #'                   stop_time    = 10,
 #'                   timestep     = 1/16,
 #'                   integ_method = "rk4")
-sd_measurements <- function(n_meas, ds_inputs, meas_model,
+sd_measurements <- function(n_meas, meas_model, ds_inputs,
                             start_time   = NULL,
                             stop_time    = NULL,
                             timestep     = NULL,
@@ -49,83 +34,95 @@ sd_measurements <- function(n_meas, ds_inputs, meas_model,
   ds_inputs <- update_sim_params(ds_inputs, start_time, stop_time, timestep)
   X_output  <- sd_simulate(ds_inputs, integ_method = integ_method)
 
+  purrr::map_dfr(meas_model, function(sampling_statement) {
 
-  purrr::map_dfr(meas_model, function(sampling_dist) {
+    sampling_obj <- sampling_statement_to_list(sampling_statement)
 
-    meas_type <- sampling_dist$meas_type
+    # measurement type (mt)
+    mt <- sampling_obj$meas_type
 
-    if(meas_type == "as_is") {
+    if(mt == "as_is") meas_df <- measurements_as_is(n_meas, X_output,
+                                                           sampling_obj)
 
-      meas_df <- measurements_as_is(n_meas, X_output, sampling_dist)
-    }
-
-    if(meas_type == "net_change") {
-
-      meas_df <- measurements_net_change(n_meas, X_output, sampling_dist)
-
-    }
+    if(mt == "net_flow") meas_df <- measurements_net_change(n_meas, X_output,
+                                                            sampling_obj)
 
     meas_df
-
-
-
   })
 }
 
-measurements_as_is <- function(n_meas, X_output, sampling_dist) {
+measurements_as_is <- function(n_meas, X_output, sampling_obj) {
 
   discrete_df <- X_output[X_output$time - trunc(X_output$time) == 0, ]
-  stk         <- sampling_dist$stock_name
+  # This line below assumes that the sampling distribution's first parameter is
+  #   always the measured stock.
+  stk         <- sampling_obj$dist[[2]]
   stk_df      <- discrete_df[, c("time", stk)]
   time_vals   <- discrete_df[, "time"]
   vals        <- discrete_df[, stk]
 
-  if("stock_trans" %in% names(sampling_dist$dist)) {
-    vals <- do.call(sampling_dist$dist$stock_trans, list(vals))
-  }
-
   n_vals      <- length(vals)
 
-  r_fun       <- sampling_dist$dist$name
-  args        <- list(n_vals, vals)
-  names(args) <- c("n", sampling_dist$dist$stock_par)
+  r_fun       <- sampling_obj$dist$dist_name
 
-  if("extra_pars" %in% names(sampling_dist$dist)) {
-    args <- c(args, sampling_dist$dist$extra_pars)
-  }
+  if(length(sampling_obj$dist) == 2L) args <- list(n_vals, vals)
+
+  if(length(sampling_obj$dist) == 3L) args <- list(n_vals, vals,
+                                                   as.numeric(sampling_obj$dist[[3]]))
+
+  names(args) <- c("n", names(sampling_obj$dist)[-1])
 
   purrr::map_dfr(seq_len(n_meas), function(iter) {
 
     data.frame(iter        = iter,
                time        = time_vals,
-               var_name    = stk,
+               var_name    = sampling_obj$meas_name,
                measurement = do.call(r_fun, args))
 
   })
 }
 
-measurements_net_change <- function(n_meas, X_output, sampling_dist) {
+measurements_net_change <- function(n_meas, X_output, sampling_obj) {
 
-  stk           <- sampling_dist$stock_name
+  nf            <- sampling_obj$dist[[2]]
+  stk           <- stringr::str_match(nf, "net_flow\\((.+?)\\)")[[2]]
   net_change_df <- sd_net_change(X_output, stk)
+
   vals          <- net_change_df$value
   n_vals        <- nrow(net_change_df)
 
-  r_fun       <- sampling_dist$dist$name
-  args        <- list(n_vals, vals)
-  names(args) <- c("n", sampling_dist$dist$stock_par)
+  r_fun       <- sampling_obj$dist$dist_name
 
-  if("extra_pars" %in% names(sampling_dist$dist)) {
-    args <- c(args, sampling_dist$dist$extra_pars)
-  }
+  if(length(sampling_obj$dist) == 2L) args <- list(n_vals, vals)
+
+  if(length(sampling_obj$dist) == 3L) args <- list(n_vals, vals,
+                                                   as.numeric(sampling_obj$dist[[3]]))
+
+  names(args) <- c("n", names(sampling_obj$dist)[-1])
 
   purrr::map_dfr(seq_len(n_meas), function(iter) {
 
     data.frame(iter        = iter,
                time        = net_change_df$time,
-               var_name    = paste0("delta_", stk),
+               var_name    = sampling_obj$meas_name,
                measurement = do.call(r_fun, args))
 
   })
+}
+
+sampling_statement_to_list <- function(sampling_statement) {
+
+  decomposed_statement <- decompose_meas(sampling_statement)
+  dist_obj             <- get_dist_obj(decomposed_statement$rhs,
+                                       language = "R")
+  meas_type <- "as_is"
+
+  nf_pattern                <- get_pattern_regex("net_flow")
+  is_net_flow               <- stringr::str_detect(dist_obj[[2]], nf_pattern)
+  if(is_net_flow) meas_type <- "net_flow"
+
+  list(meas_type  = meas_type,
+       meas_name  = decomposed_statement$lhs,
+       dist       = dist_obj)
 }
 

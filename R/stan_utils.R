@@ -160,7 +160,7 @@ get_dist_type <- function(rhs) {
   dist_db[index, "type"]
 }
 
-get_dist_obj <- function(rhs) {
+get_dist_obj <- function(rhs, language = "Stan") {
 
   pattern       <- "(.+?)(\\(.+\\))"
   string_match  <- stringr::str_match(rhs, pattern)
@@ -173,20 +173,30 @@ get_dist_obj <- function(rhs) {
   args_list <- strsplit(args_text, ",")[[1]] %>% stringr::str_trim() |>
     as.list()
 
-  args_names <- get_dist_args(dist_name)
+  args_names <- get_dist_args(dist_name, language)
 
   names(args_list) <- args_names
+
+  if(language == "R") dist_name <- Stan_to_R(dist_name)
 
   c(list(dist_name = dist_name), args_list)
 
 }
 
-get_dist_args <- function(dist) {
+get_dist_args <- function(dist, language) {
 
   if(dist == "beta") return (c("alpha", "beta"))
   if(dist == "exponential") return (c("beta"))
   if(dist == "lognormal") return (c("mu", "sigma"))
-  if(dist == "neg_binomial_2") return (c("mu", "phi"))
+
+  if(dist == "neg_binomial_2") {
+
+    if(language == "R") return(c("mu", "size"))
+
+    return (c("mu", "phi"))
+  }
+
+
   if(dist == "poisson") return (c("lambda"))
 
   msg <- stringr::str_glue("Distribution '{dist}' not supported")
@@ -201,6 +211,14 @@ decompose_meas <- function(meas_obj) {
 
   list(lhs = lhs,
        rhs = rhs)
+}
+
+Stan_to_R <- function(dist_name) {
+
+  translation_db <- list(neg_binomial_2 = "rnbinom",
+                         poisson        = "rpois")
+
+  translation_db[[dist_name]]
 }
 
 
