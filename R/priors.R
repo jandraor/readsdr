@@ -22,6 +22,19 @@ sd_prior <- function(par_name, dist, dist_pars, type = "constant") {
                      min      = 0,
                      max      = 1,
                      type     = type)
+
+    return(dist_obj)
+  }
+
+  if(dist == "exponential") {
+
+    dist_obj <- list(par_name = par_name,
+                     dist     = "exponential",
+                     beta     = dist_pars[[1]],
+                     min      = 0,
+                     type     = type)
+
+    return(dist_obj)
   }
 
   if(dist == "lognormal") {
@@ -32,7 +45,13 @@ sd_prior <- function(par_name, dist, dist_pars, type = "constant") {
                      sigma    = dist_pars[[2]],
                      min      = 0,
                      type     = type)
+
+    return(dist_obj)
   }
 
- dist_obj
+  msg <- paste0("sd_prior() does not support the '", dist, "' distribution.")
+
+  stop(msg, call. = FALSE)
+
+
 }

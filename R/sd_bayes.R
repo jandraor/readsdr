@@ -1,10 +1,16 @@
 #' Create Stan file for Bayesian inference
 #'
-#' @param meas_mdl A list
-#' @param estimated_parameters A list
-#' @param data_parameters A optional string vector defining which model
+#' @param meas_mdl A list of strings. Each string corresponds to a sampling
+#' statement written in Stan language.
+#' @param estimated_params A list of lists. Each sublist describes each
+#'   parameter that will be estimated in the inference stage. To construct this
+#'   description, the user can avail of the function `sd_prior`.
+#' @param data_params An optional string vector defining which model
 #"   parameters will be configured through the Stan data block. That is, the
 #"   user will provide fixed values for such parameters at every Stan run.
+#' @param LFO_CV An optional boolean that indicates whether the returned Stan
+#'   file supports Leave-Future-Out Cross-Validation. This support corresponds to
+#'   estimating the log-likelihood of the ts + 1 measurement.
 #'
 #' @inheritParams read_xmile
 #'
@@ -25,8 +31,20 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
 
-  if(length(extra_params) > 0) estimated_params <- c(estimated_params,
-                                                     extra_params)
+  if(length(extra_params) > 0) {
+
+    est_params_names <- get_names(estimated_params, "par_name")
+
+    for(extra_par_obj in extra_params) {
+
+      extra_par_name <- extra_par_obj$par_name
+
+      if(!extra_par_name %in% est_params_names) {
+
+        estimated_params <- c(estimated_params, list(extra_par_obj))
+      }
+    }
+  }
 
   unk_types     <- sapply(estimated_params, function(prior_obj) prior_obj$type)
   any_unk_inits <- any(unk_types == "init")
@@ -97,6 +115,20 @@ extract_extra_params <- function(meas_obj) {
                       par_trans = "inv")
 
     return(prior_obj)
+  }
+
+  if(dist_obj$dist_name == "normal") {
+
+    par_name <- as.character(stringr::str_glue("{dist_obj$sigma}"))
+
+    prior_obj <- list(par_name  = par_name,
+                      dist      = "exponential",
+                      beta      = 1,
+                      min       = 0,
+                      type      = "meas_par")
+
+    return(prior_obj)
+
   }
 
   NULL

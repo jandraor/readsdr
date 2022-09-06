@@ -35,6 +35,17 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
     "}", sep = "\n")
 
   expect_equal(actual, expected)
+
+  meas_mdl <- list("y ~ normal(net_flow(C), tau)")
+  actual   <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  log_lik = normal_lpdf(y | delta_x_1, tau);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
 })
 
 test_that("stan_gc() returns the expected string for a stock measurement", {

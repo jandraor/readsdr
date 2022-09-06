@@ -189,6 +189,13 @@ get_dist_args <- function(dist, language) {
   if(dist == "exponential") return (c("beta"))
   if(dist == "lognormal") return (c("mu", "sigma"))
 
+  if(dist == "normal") {
+
+    if(language == "R") return(c("mean", "sd"))
+
+    return (c("mu", "sigma"))
+  }
+
   if(dist == "neg_binomial_2") {
 
     if(language == "R") return(c("mu", "size"))
@@ -215,7 +222,8 @@ decompose_meas <- function(meas_obj) {
 
 Stan_to_R <- function(dist_name) {
 
-  translation_db <- list(neg_binomial_2 = "rnbinom",
+  translation_db <- list(normal         = "rnorm",
+                         neg_binomial_2 = "rnbinom",
                          poisson        = "rpois")
 
   translation_db[[dist_name]]

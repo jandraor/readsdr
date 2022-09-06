@@ -42,8 +42,22 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
 
 get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
 
-  nf_pattern    <- "net_flow\\(.+?\\)"
+  nf_pattern    <- get_pattern_regex("net_flow")
   delta_counter <- 1 # This has to change.
+
+  if(dist_obj$dist_name == "normal") {
+
+    is_nf <- stringr::str_detect(dist_obj$mu, nf_pattern)
+    if(is_nf)  dist_obj$mu <- stringr::str_glue("delta_x_{delta_counter}")
+    if(!is_nf) dist_obj$mu <- translate_stock(dist_obj$mu, lvl_names)
+
+    ll_statement <- ifelse(
+      LFO_CV,
+      stringr::str_glue("normal_lpdf({lhs}_ahead | {lhs}_pred, {dist_obj$sigma})"),
+      stringr::str_glue("normal_lpdf({lhs} | {dist_obj$mu}, {dist_obj$sigma})"))
+
+    return(ll_statement)
+  }
 
   if(dist_obj$dist_name == "neg_binomial_2") {
 
@@ -76,7 +90,7 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
     return(ll_statement)
   }
 
-  msg <- stringr::str_glue("Distribution '{dist_obj$dist_name}' not supported")
+  msg <- stringr::str_glue("get_dist_dens_mass_fun() does not support the '{dist_obj$dist_name}' distribution.")
   stop(msg, call. = FALSE)
 }
 

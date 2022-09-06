@@ -18,14 +18,21 @@ sd_Bayes(
 or .xmile. Vensim files (.mdl) are not xmile files. They must be exported
 from Vensim with extension .xmile}
 
-\item{meas_mdl}{A list}
+\item{meas_mdl}{A list of strings. Each string corresponds to a sampling
+statement written in Stan language.}
+
+\item{estimated_params}{A list of lists. Each sublist describes each
+parameter that will be estimated in the inference stage. To construct this
+description, the user can avail of the function `sd_prior`.}
+
+\item{data_params}{An optional string vector defining which model}
 
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
 
-\item{estimated_parameters}{A list}
-
-\item{data_parameters}{A optional string vector defining which model}
+\item{LFO_CV}{An optional boolean that indicates whether the returned Stan
+file supports Leave-Future-Out Cross-Validation. This support corresponds to
+estimating the log-likelihood of the ts + 1 measurement.}
 }
 \value{
 A string

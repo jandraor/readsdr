@@ -5,19 +5,33 @@ test_that("sd_Bayes() returns the expected file for a measured net flow", {
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  prior <- list(
+  estimated_params <- list(
     sd_prior("par_beta", "lognormal", c(0, 1)),
     sd_prior("par_rho", "beta", c(2, 2)),
     sd_prior("I0", "lognormal", c(0, 1), "init"))
 
-  actual   <- sd_Bayes(filepath, meas_mdl, prior)
+  actual   <- sd_Bayes(filepath, meas_mdl, estimated_params)
 
   fileName <- "SEIR_nbinom.stan"
-
   expected <- readChar(fileName, file.info(fileName)$size)
 
   expect_equal(actual, expected)
 
+  estimated_params <- list(
+    sd_prior("par_beta", "lognormal", c(0, 1)),
+    sd_prior("par_rho", "beta", c(2, 2)),
+    sd_prior("I0", "lognormal", c(0, 1), "init"),
+    sd_prior("tau", "exponential", 0.2, "meas_par"))
+
+  m1       <- "y ~ normal(net_flow(C), tau)"
+  meas_mdl <- list(m1)
+
+  actual <- sd_Bayes(filepath, meas_mdl, estimated_params)
+
+  fileName <- "SEIR_normal.stan"
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
 })
 
 test_that("sd_Bayes() returns the expected file for a measured stock", {
@@ -76,6 +90,18 @@ test_that("extract_extra_params() returns the expected list", {
                    min       = 0,
                    type      = "meas_par",
                    par_trans = "inv")
+
+  expect_equal(actual, expected)
+
+  meas_obj <- "y ~ normal(net_flow(C), tau)"
+
+  actual   <- extract_extra_params(meas_obj)
+
+  expected <- list(par_name  = "tau",
+                   dist      = "exponential",
+                   beta      = 1,
+                   min       = 0,
+                   type      = "meas_par")
 
   expect_equal(actual, expected)
 })
