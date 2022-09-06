@@ -61,15 +61,17 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names) {
 
   if(dist_obj$dist_name == "neg_binomial_2") {
 
+    is_nf                      <- stringr::str_detect(dist_obj$mu,
+                                                      nf_pattern)
+
+    if(is_nf)  dist_obj$mu <- stringr::str_glue("delta_x_{delta_counter}")
+
+    if(!is_nf) dist_obj$mu <- translate_stock(dist_obj$lambda, lvl_names)
+
     ll_statement <- ifelse(
       LFO_CV,
       stringr::str_glue("neg_binomial_2_lpmf({lhs}_ahead | {lhs}_pred, {dist_obj$phi})"),
       stringr::str_glue("neg_binomial_2_lpmf({lhs} | {dist_obj$mu}, {dist_obj$phi})"))
-
-    pattern     <- "net_flow\\(.+?\\)"
-    replacement <- stringr::str_glue("delta_x_{delta_counter}")
-
-    ll_statement <- stringr::str_replace(ll_statement, pattern, replacement)
 
     return(ll_statement)
   }
