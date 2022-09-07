@@ -77,6 +77,22 @@ test_that("sd_Bayes() returns the expected file with data parameters defined", {
   expected <- readChar(fileName, file.info(fileName)$size)
 
   expect_equal(actual, expected)
+
+  # N is the data param
+
+  mm1      <- "y ~ poisson(net_flow(C))"
+  meas_mdl <- list(mm1)
+
+  actual <- sd_Bayes(filepath = filepath,
+                     meas_mdl = meas_mdl,
+                     estimated_params = estimated_params,
+                     data_params = c("N"))
+
+  fileName <- "./test_stan_files/SEIR_pois_N.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
 })
 
 test_that("extract_extra_params() returns the expected list", {

@@ -31,9 +31,9 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
 
-  if(length(extra_params) > 0) {
+  est_params_names <- get_names(estimated_params, "par_name")
 
-    est_params_names <- get_names(estimated_params, "par_name")
+  if(length(extra_params) > 0) {
 
     for(extra_par_obj in extra_params) {
 
@@ -47,17 +47,6 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
   }
 
   unk_types     <- sapply(estimated_params, function(prior_obj) prior_obj$type)
-  any_unk_inits <- any(unk_types == "init")
-
-  unk_inits <- NULL
-
-  if(any_unk_inits) {
-
-    inits_idx <- which(unk_types == "init")
-
-    unk_inits <- sapply(estimated_params[inits_idx ],
-                        function(prior_obj) prior_obj$par_name)
-  }
 
   mdl_pars      <- NULL
   any_unk_const <- any(unk_types == "constant")
@@ -71,9 +60,16 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   if(!is.null(data_params)) mdl_pars <- c(mdl_pars, data_params)
 
-  mdl_structure <- extract_structure_from_XMILE(filepath, unk_inits)
+  params <- c(est_params_names, data_params)
+
+  mdl_structure <- extract_structure_from_XMILE(filepath, params)
   lvl_obj       <- mdl_structure$levels
-  lvl_names   <- get_names(mdl_structure$levels)
+  lvl_names     <- get_names(mdl_structure$levels)
+
+  init_vals     <- purrr::map_chr(lvl_obj, "initValue")
+  init_vals     <- suppressWarnings(as.numeric(init_vals))
+
+  any_unk_inits <- ifelse(any(is.na(init_vals)), TRUE, FALSE)
 
   ODE_fn      <- "X_model"
   stan_fun    <- stan_ode_function(func_name       = ODE_fn,
