@@ -53,7 +53,7 @@ test_that("stan_data() returns the expected string", {
     "  array[n_obs] real ts;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, TRUE, FALSE, NULL), expected_string)
+  expect_equal(stan_data(meas_mdl, TRUE, FALSE, NULL, NULL), expected_string)
 
 })
 
@@ -73,7 +73,7 @@ test_that("stan_data() declares the vector for init values", {
     "  vector[n_difeq] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, FALSE, FALSE, NULL), expected_string)
+  expect_equal(stan_data(meas_mdl, FALSE, FALSE, NULL, NULL), expected_string)
 
   expected_string <- paste(
     "data {",
@@ -87,7 +87,7 @@ test_that("stan_data() declares the vector for init values", {
     "  vector[n_difeq] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, FALSE, TRUE, NULL), expected_string)
+  expect_equal(stan_data(meas_mdl, FALSE, TRUE, NULL, NULL), expected_string)
 })
 
 test_that("construct_data_decl() returns the expected string", {

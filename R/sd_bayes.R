@@ -27,7 +27,8 @@
 #'     sd_prior("I0", "lognormal", c(0, 1), "init"))
 #'   sd_Bayes(filepath, meas_mdl, estimated_params)
 sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
-                     const_list = NULL, LFO_CV = FALSE) {
+                     data_inits = NULL, const_list = NULL,
+                     LFO_CV = FALSE) {
 
   extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
 
@@ -60,7 +61,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   if(!is.null(data_params)) mdl_pars <- c(mdl_pars, data_params)
 
-  params <- c(est_params_names, data_params)
+  params <- c(est_params_names, data_params, data_inits)
 
   mdl_structure <- extract_structure_from_XMILE(filepath, params)
   lvl_obj       <- mdl_structure$levels
@@ -77,7 +78,8 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                                    const_list      = const_list,
                                    XMILE_structure = mdl_structure)
 
-  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params)
+  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params,
+                           data_inits)
 
   stan_params <- stan_params(estimated_params)
 
