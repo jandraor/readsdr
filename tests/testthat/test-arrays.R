@@ -1,3 +1,38 @@
+test_that("array_equations() returns the expected list", {
+
+  dims_obj  <- list(global_dims = list(Age = c("1", "2")),
+                    dictionary  = list(I = c("Age")))
+
+  vendor    <- "isee"
+  dim_names <- "Age"
+
+  aux_obj <- list(name     = "I_to_R",
+                  equation = "par_gamma*I")
+
+  actual <- array_equations(aux_obj, dims_obj, dim_names, vendor)
+
+  expected <- list(equations  = c("par_gamma*I_1", "par_gamma*I_2"),
+                    are_const  = c(FALSE, FALSE),
+                    elems      = c("1", "2"))
+
+  expect_equal(actual, expected)
+
+  dims_obj <- list(global_dims = list(Age = 1:2),
+                   dictionary  = list(lambda = "Age",
+                                      S      = "Age"))
+
+  aux_obj <- list(name     = "S_to_I",
+                  equation = "lambda*S")
+
+  actual <- array_equations(aux_obj, dims_obj, dim_names, vendor)
+
+  expected <- list(equations  = c("lambda_1*S_1", "lambda_2*S_2"),
+                   are_const  = c(FALSE, FALSE),
+                   elems      = c("1", "2"))
+
+  expect_equal(actual, expected)
+})
+
 test_that("devectorise_equation() returns the expected output", {
 
   dims_list     <- list(Region = c("Westeros", "Essos"),

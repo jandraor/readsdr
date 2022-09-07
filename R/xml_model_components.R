@@ -1,4 +1,5 @@
 create_dims_obj <- function(raw_xml) {
+
   dim_xml       <- xml2::xml_find_first(raw_xml, ".//d1:dimensions")
   dim_elems_xml <- xml2::xml_find_all(dim_xml, ".//d1:dim")
 
@@ -9,7 +10,33 @@ create_dims_obj <- function(raw_xml) {
   dims_list        <- lapply(dim_elems_xml, extract_dim_elems)
   names(dims_list) <- dim_names
 
-  dims_list
+  variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+
+  model_elems <- xml2::xml_find_all(variables_xml,
+                                   ".//d1:flow|.//d1:aux|.//d1:stock")
+
+  dictionary <- lapply(model_elems, function(elem_obj) {
+
+    elem_name <- xml2::xml_attr(elem_obj, "name") %>% sanitise_elem_name()
+
+    dim_xml   <- xml2::xml_find_all(elem_obj, ".//d1:dimensions")
+    dim_tags  <- xml2::xml_find_all(dim_xml, ".//d1:dim")
+    n_dims    <- length(dim_tags)
+
+    if(n_dims == 0) return(NULL)
+
+    dim_names <- sapply(dim_tags, function(elem_tag) {
+      xml2::xml_attr(elem_tag, "name")
+    })
+
+    dict_obj        <- list(dim_names)
+    names(dict_obj) <- elem_name
+    dict_obj
+  }) %>% remove_NULL() %>% unlist(recursive = FALSE)
+
+
+  list(global_dims = dims_list,
+       dictionary  = dictionary)
 }
 
 extract_dim_elems <- function(dim_tag) {
@@ -95,13 +122,15 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
 
   if(is_arrayed) {
 
+    global_dims <- dims_obj$global_dims
+
     dim_tags  <- xml2::xml_find_all(dim_xml, ".//d1:dim")
 
     dim_names <- sapply(dim_tags, function(elem_tag) {
       xml2::xml_attr(elem_tag, "name")
     })
 
-    dims_list        <- lapply(dim_names, function(dim_name) dims_obj[[dim_name]])
+    dims_list        <- lapply(dim_names, function(dim_name) global_dims[[dim_name]])
     names(dims_list) <- dim_names
     elems            <- combine_dims(dims_list)
   }
@@ -168,7 +197,7 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
   #-----------------------------------------------------------------------------
 
   initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
-    xml2::xml_text() %>% sanitise_init_value()
+    xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
 
   n_init <- length(initValues)
 

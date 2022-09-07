@@ -119,10 +119,16 @@ sanitise_elem_name <- function(elem_name) {
     stringr::str_replace_all(" |\\\\n", "_")
 }
 
-sanitise_init_value <- function(init_value) {
-  init_value %>%
+sanitise_init_value <- function(init_value, vendor, is_arrayed) {
+
+  clean_init <- init_value %>%
     stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
     stringr::str_replace_all("\n|\t|~","")
+
+  if(is_arrayed) clean_init <- purrr::map_chr(clean_init, sanitise_arrays,
+                                              vendor)
+
+  clean_init
 }
 
 sanitise_aux_equation <- function(equation, vendor) {

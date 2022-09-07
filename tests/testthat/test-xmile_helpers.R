@@ -182,12 +182,13 @@ test_that("sanitise_elem_name() deals with spaces", {
 # sanitise_init_value()---------------------------------------------------------
 
 test_that("sanitise_init_value() removes commentaries", {
-  actual_val <- sanitise_init_value("\n\t\t\t\t\t5800\n{(nic*ey)}\n\t\t\t\t\t")
+  actual_val <- sanitise_init_value("\n\t\t\t\t\t5800\n{(nic*ey)}\n\t\t\t\t\t",
+                                    "Vensim", FALSE)
   expect_equal(actual_val, "5800")
 })
 
 test_that("sanitise_init_value() removes commentaries", {
-  actual_val <- sanitise_init_value("total_population - 1")
+  actual_val <- sanitise_init_value("total_population - 1", "Vensim", FALSE)
   expect_equal(actual_val, "total_population - 1")
 })
 
@@ -305,7 +306,7 @@ test_that("eval_constant_expr() is not affected by elements in the global enviro
   expect_equal(actual_val, expected_val)
 })
 
-#===============================================================================
+# check_elem_name()=============================================================
 test_that("check_elem_name() throws an error in the presence of invalid names", {
   test_name <- "a+"
   expect_error(check_elem_name(test_name))

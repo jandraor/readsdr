@@ -69,19 +69,19 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
   dimensions  <- xml2::xml_find_all(aux_xml, ".//d1:dim")
   n_dims     <- length(dimensions)
 
-  is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
-
-  equations_xml <- xml2::xml_find_all(aux_xml, ".//d1:eqn")
-  raw_equations <- xml2::xml_text(equations_xml)
-
-  equations     <- sapply(raw_equations, sanitise_aux_equation, vendor,
-                          USE.NAMES = FALSE)
-
-  are_const     <- !is.na(suppressWarnings(as.numeric(equations)))
-
   raw_var_names <- xml2::xml_attr(aux_xml, "name")
   var_names     <- sanitise_elem_name(raw_var_names)
   var_names     <- check_elem_name(var_names)
+
+  is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
+
+  if(!is_arrayed) {
+
+    equation_xml <- xml2::xml_find_first(aux_xml, ".//d1:eqn")
+    raw_equation <- xml2::xml_text(equation_xml)
+    equations    <- sanitise_aux_equation(raw_equation, vendor)
+    are_const    <- !is.na(suppressWarnings(as.numeric(equations)))
+  }
 
   if(is_arrayed) {
 
@@ -97,43 +97,29 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
     # This means that the equation is vectorised
     if("eqn" %in% child_names) {
 
-      dims_list        <- lapply(dim_names, function(dim_name) dims_obj[[dim_name]])
-      names(dims_list) <- dim_names
-      elems            <- combine_dims(dims_list)
-
       equation_xml <- xml2::xml_find_first(aux_xml, ".//d1:eqn")
-      raw_equation <- xml2::xml_text(equation_xml)
+      raw_eq       <- xml2::xml_text(equation_xml)
+      eq           <- sanitise_aux_equation(raw_eq, vendor)
 
-      if(vendor == "Vensim") {
+      aux_obj <- list(name     = var_names,
+                      equation = eq)
 
-        vector_pattern <- create_array_pattern(dims_list)
-        is_an_array    <- stringr::str_detect(raw_equation, vector_pattern)
-
-        if(is_an_array) {
-
-          clean_equation <- raw_equation %>%
-            stringr::str_replace_all("\n|\t|~| ","") %>%
-            stringr::str_replace_all(";",",")
-
-          clean_equation <- substr(clean_equation,1, nchar(clean_equation) - 1)
-          equations      <- stringr::str_split(clean_equation, ",")[[1]]
-          are_const      <- !is.na(suppressWarnings(as.numeric(equations)))
-        }
-
-        if(!is_an_array) {
-
-          devec_eqs <- devectorise_equation(raw_equation, dims_list)
-
-          equations <- sapply(devec_eqs, sanitise_aux_equation, vendor,
-                              USE.NAMES = FALSE)
-
-          are_const <- !is.na(suppressWarnings(as.numeric(equations)))
-        }
-      }
+      array_obj <- array_equations(aux_obj, dims_obj, dim_names, vendor)
+      equations <- array_obj$equations
+      are_const <- array_obj$are_const
+      elems     <- array_obj$elems
     }
 
     if(!("eqn" %in% child_names)) {
-      elements_xml <- xml2::xml_find_all(aux_xml, ".//d1:element")
+
+      equations_xml <- xml2::xml_find_all(aux_xml, ".//d1:eqn")
+      raw_equations <- xml2::xml_text(equations_xml)
+
+      equations     <- sapply(raw_equations, sanitise_aux_equation, vendor,
+                              USE.NAMES = FALSE)
+
+      are_const     <- !is.na(suppressWarnings(as.numeric(equations)))
+      elements_xml  <- xml2::xml_find_all(aux_xml, ".//d1:element")
       elems         <- xml2::xml_attr(elements_xml, "subscript")
     }
 

@@ -391,7 +391,7 @@ test_that("create_vars_consts_obj_xmile() handles apply all for constant vector"
 
   auxs_xml <- xml2::xml_find_all(test_var_xml, ".//d1:flow|.//d1:aux")
 
-  dims_obj <- list(Region = c("A", "B"))
+  dims_obj <- list(global_dims = list(Region = c("A", "B")))
 
   actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee", dims_obj)
 
@@ -403,6 +403,41 @@ test_that("create_vars_consts_obj_xmile() handles apply all for constant vector"
       list(name  = "growth_rate_B",
            value = 0.1)
     ))
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("create_vars_consts_obj_xmile() handles Stella's apply all for equations", {
+
+  test_var_xml <- xml2::read_xml('
+  <root>
+    <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+      <variables>
+				<flow name="I to R">
+				<dimensions>
+					<dim name="Age"/>
+				</dimensions>
+				<eqn>par_gamma * I</eqn>
+			</flow>
+      </variables>
+    </doc1>
+  </root>')
+
+  auxs_xml <- xml2::xml_find_all(test_var_xml, ".//d1:flow|.//d1:aux")
+
+  dims_obj <- list(global_dims = list(Age = c("1", "2")),
+                   dictionary  = list(I = "Age"))
+
+  vendor <- "isee"
+
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj)
+
+  expected_obj <- list(
+    variables = list(list(name     = "I_to_R_1",
+                          equation = "par_gamma*I_1"),
+                     list(name     = "I_to_R_2",
+                          equation = "par_gamma*I_2")),
+    constants = list())
 
   expect_equal(actual_obj, expected_obj)
 })

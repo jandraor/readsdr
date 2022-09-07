@@ -1,4 +1,3 @@
-context("XML model components")
 
 test_model <-
   '<root>
@@ -355,11 +354,12 @@ test_that("create_level_obj_xmile() handles stock vectors", {
   time_aux   <- list(name     = "time",
                      equation = 0)
 
-  dims_obj <- list(region = c("A", "B"))
+  dims_obj <- list(global_dims = list(region = c("A", "B")))
 
   actual_obj <- create_level_obj_xmile(test_stocks_xml, test_vars, test_consts,
                                        time_aux = time_aux,
-                                       dims_obj = dims_obj)
+                                       dims_obj = dims_obj,
+                                       vendor = "isee")
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -405,7 +405,7 @@ test_that("create_level_obj_xmile() handles DELAY FIXED from Vensim", {
                      equation = 0)
 
   actual_obj <- create_level_obj_xmile(test_stocks_xml, test_vars, test_consts,
-                                       time_aux = time_aux)
+                                       time_aux = time_aux, vendor = "Vensim")
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -446,10 +446,10 @@ test_that("extract_stock_info() handles a stock vector", {
     list(name = "Population_A", equation = "growth_A", initValue = "100"),
     list(name = "Population_B", equation = "growth_B", initValue = "200"))
 
-  dims_obj <- list(region = c("A", "B"))
+  dims_obj <- list(global_dims = list(region = c("A", "B")))
 
   actual_obj <- extract_stock_info(test_stocks_xml[[1]],
-                                   dims_obj = dims_obj)
+                                   dims_obj = dims_obj, vendor = "isee")
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -479,9 +479,9 @@ test_that("extract_stock_info() handles vector stock with a unique initialisatio
     list(name = "E_3", equation = "IR_3-DR_3", initValue = "0"),
     list(name = "E_4", equation = "IR_4-DR_4", initValue = "0"))
 
-  dims_obj <- list(Age = c(1:4))
+  dims_obj <- list(global_dims = list(Age = c(1:4)))
 
-  actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj)
+  actual_obj <- extract_stock_info(test_stocks_xml[[1]], dims_obj, "isee")
 
   expect_equal(actual_obj, expected_obj)
 })
@@ -514,6 +514,29 @@ test_that("extract_stock_info() handles a 2D stock from Vensim", {
   expect_equal(actual_obj, expected_obj)
 })
 
+test_that("extract_stock_info() handles vectorised init values", {
+
+  filepath      <- "./test_models/vec_pop.stmx"
+  raw_xml       <- xml2::read_xml(filepath)
+  dims_obj      <- create_dims_obj(raw_xml)
+  variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  stocks_xml    <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
+  stock_xml     <- stocks_xml[[1]]
+
+  actual_obj    <- extract_stock_info(stocks_xml[[1]], dims_obj, "isee")
+
+  expected_obj <- list(
+    list(name      = "Population_1",
+         equation  = "net_growth_1",
+         initValue = "init_pop_1"),
+    list(name      = "Population_2",
+         equation  = "net_growth_2",
+         initValue = "init_pop_2 - 1")
+  )
+
+  expect_equal(actual_obj, expected_obj)
+})
+
 # create_dims_obj()-------------------------------------------------------------
 
 test_that("create_dims_obj() returns the expected object", {
@@ -532,8 +555,36 @@ test_that("create_dims_obj() returns the expected object", {
   </root>')
 
   actual_obj <- create_dims_obj(test_xml)
-  expected_obj <- list(Age = c(1:4),
-                       Interactions = c("b11", "b12"))
+  expected_obj <- list(global_dims = list(Age = c(1:4),
+                                          Interactions = c("b11", "b12")),
+                       dictionary = NULL)
+
+  expect_equal(actual_obj, expected_obj)
+
+
+  filepath <- "./2d_pop.xmile"
+  test_xml <- xml2::read_xml(filepath)
+  actual_obj <- create_dims_obj(test_xml)
+
+  expected_obj <- list(global_dims = list(Age = c("Young", "Old"),
+                                          Region = c("Westeros", "Essos")),
+                       dictionary = list(Population  = c("Region", "Age"),
+                                         Net_growth  = c("Region", "Age"),
+                                         Growth_rate = c("Region", "Age"),
+                                         init_pop    = c("Region", "Age")))
+
+  expect_equal(actual_obj, expected_obj)
+
+  filepath <- "./test_models/vec_pop.stmx"
+
+  test_xml <- xml2::read_xml(filepath)
+  actual_obj <- create_dims_obj(test_xml)
+
+  expected_obj <- list(global_dims = list(Region = 1:2),
+                       dictionary = list(Population  = "Region",
+                                         net_growth  = "Region",
+                                         growth_rate = "Region",
+                                         init_pop    = "Region"))
 
   expect_equal(actual_obj, expected_obj)
 })
