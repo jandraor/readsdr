@@ -196,8 +196,36 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
 
   #-----------------------------------------------------------------------------
 
-  initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
-    xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
+  cld_xml      <- xml2::xml_children(stock_xml)
+  child_names  <- xml2::xml_name(cld_xml)
+
+
+
+  approach <- ifelse(is_arrayed & "eqn" %in% child_names,
+                     "approach_1", "approach_2")
+
+  # Apply all from Stella
+  if(approach == "approach_1") {
+
+    eqn <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
+      xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
+
+    aux_obj <- list(name     = stock_names,
+                    equation = eqn)
+
+    array_obj  <- array_equations(aux_obj, dims_obj, dim_names, vendor)
+    initValues <- array_obj$equations
+  }
+
+
+  if(approach == "approach_2") {
+
+    initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
+     xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
+  }
+
+
+
 
   n_init <- length(initValues)
 

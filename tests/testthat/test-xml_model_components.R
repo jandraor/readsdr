@@ -523,7 +523,7 @@ test_that("extract_stock_info() handles vectorised init values", {
   stocks_xml    <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
   stock_xml     <- stocks_xml[[1]]
 
-  actual_obj    <- extract_stock_info(stocks_xml[[1]], dims_obj, "isee")
+  actual_obj    <- extract_stock_info(stock_xml , dims_obj, "isee")
 
   expected_obj <- list(
     list(name      = "Population_1",
@@ -533,6 +533,32 @@ test_that("extract_stock_info() handles vectorised init values", {
          equation  = "net_growth_2",
          initValue = "init_pop_2 - 1")
   )
+
+  expect_equal(actual_obj, expected_obj)
+
+
+  filepath      <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
+  raw_xml       <- xml2::read_xml(filepath)
+  dims_obj      <- create_dims_obj(raw_xml)
+  variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  stocks_xml    <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
+  stock_xml     <- stocks_xml[[1]]
+
+  actual_obj    <- extract_stock_info(stock_xml, dims_obj, "isee")
+
+  expected_obj <- list(
+    list(name      = "S_A",
+         equation  = "-S_to_E_A",
+         initValue = "N_A-I_A"),
+    list(name      = "S_B",
+         equation  = "-S_to_E_B",
+         initValue = "N_B-I_B"),
+    list(name      = "S_C",
+         equation  = "-S_to_E_C",
+         initValue = "N_C-I_C"),
+    list(name      = "S_D",
+         equation  = "-S_to_E_D",
+         initValue = "N_D-I_D"))
 
   expect_equal(actual_obj, expected_obj)
 })
