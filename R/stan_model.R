@@ -32,9 +32,13 @@ get_likelihood_lines <- function(meas_mdl, lvl_names) {
   meas_lines <- vector(mode = "character", length = n_meas)
 
   for(i in seq_len(n_meas)) {
-    meas_lines[[i]] <- construct_likelihood_line(meas_mdl[[i]],
-                                                 delta_counter,
-                                                 lvl_names)
+
+    ll_obj <- construct_likelihood_line(meas_mdl[[i]],
+                                 delta_counter,
+                                 lvl_names)
+
+    meas_lines[[i]] <- ll_obj$line
+    delta_counter   <- ll_obj$delta_counter
   }
 
   paste(meas_lines, collapse = "\n")
@@ -46,12 +50,17 @@ construct_likelihood_line <- function(meas_obj, delta_counter, lvl_names) {
   decomposed_meas <- decompose_meas(meas_obj)
   lhs             <- decomposed_meas$lhs
   dist_obj        <- get_dist_obj(decomposed_meas$rhs)
-  new_rhs         <- translate_lik_rhs(dist_obj, delta_counter, lvl_names)
+  translation_obj <- translate_lik_rhs(dist_obj, delta_counter, lvl_names)
+  new_rhs         <- translation_obj$rhs
 
-  stringr::str_glue("  {lhs} ~ {new_rhs};")
+  list(line          = as.character(stringr::str_glue("  {lhs} ~ {new_rhs};")),
+       delta_counter = translation_obj$delta_counter)
 }
 
 translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
+
+  return_obj <- list(rhs = NULL,
+                     delta_counter = delta_counter)
 
   if(dist_obj$dist_name == "normal") {
 
@@ -62,14 +71,15 @@ translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
 
     if(is_nf) {
 
-      new_rhs <- stringr::str_glue("normal(delta_x_{delta_counter}, {dist_obj$sigma})")
-      return(new_rhs)
+      return_obj$rhs           <- stringr::str_glue("normal(delta_x_{delta_counter}, {dist_obj$sigma})")
+      return_obj$delta_counter <- delta_counter + 1
+      return(return_obj)
     }
 
-    new_mu  <- translate_stock(stock_txt, lvl_names)
-    new_rhs <- stringr::str_glue("normal({new_mu}, {dist_obj$sigma})")
+    new_mu          <- translate_stock(stock_txt, lvl_names)
+    return_obj$rhs  <- stringr::str_glue("normal({new_mu}, {dist_obj$sigma})")
 
-    return(new_rhs)
+    return(return_obj)
   }
 
   if(dist_obj$dist_name == "neg_binomial_2") {
@@ -82,8 +92,9 @@ translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
 
     if(is_nf) {
 
-      new_rhs <- stringr::str_glue("neg_binomial_2(delta_x_{delta_counter}, {dist_obj$phi})")
-      return(new_rhs)
+      return_obj$rhs           <- stringr::str_glue("neg_binomial_2(delta_x_{delta_counter}, {dist_obj$phi})")
+      return_obj$delta_counter <- delta_counter + 1
+      return(return_obj)
     }
 
   }
@@ -98,14 +109,15 @@ translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
 
     if(is_nf) {
 
-      new_rhs <- stringr::str_glue("poisson(delta_x_{delta_counter})")
-      return(new_rhs)
+      return_obj$rhs           <- stringr::str_glue("poisson(delta_x_{delta_counter})")
+      return_obj$delta_counter <- delta_counter + 1
+      return(return_obj)
     }
 
-    new_lambda <- translate_stock(stock_txt, lvl_names)
-    new_rhs    <- stringr::str_glue("poisson({new_lambda})")
+    new_lambda         <- translate_stock(stock_txt, lvl_names)
+    return_obj$rhs     <- stringr::str_glue("poisson({new_lambda})")
 
-    return(new_rhs)
+    return(return_obj)
   }
 
   msg <- paste0("translate_lik_rhs() does not support the ",

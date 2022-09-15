@@ -120,18 +120,24 @@ test_that("sd_Bayes() returns the expected file with data inits defined", {
 
 test_that("sd_Bayes() returns the expected file for vectorised model", {
 
-  # filepath <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
-  #
-  # ag <- c("A", "B", "C", "D") # age_groups
-  #
-  # measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
-  # meas_mdl     <- as.list(measurements)
-  #
-  # estimated_params <- list(sd_prior("par_rho", "beta", c(2, 2)))
-  #
-  # actual <- sd_Bayes(filepath = filepath,
-  #                    meas_mdl = meas_mdl,
-  #                    estimated_params = estimated_params)
+  filepath <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
+
+  ag <- c("A", "B", "C", "D") # age_groups
+
+  measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
+  meas_mdl     <- as.list(measurements)
+
+  estimated_params <- list(sd_prior("par_rho", "beta", c(2, 2)))
+
+  actual <- sd_Bayes(filepath = filepath,
+                     meas_mdl = meas_mdl,
+                     estimated_params = estimated_params)
+
+  fileName <- "./test_stan_files/SEIR_age_pois.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
 })
 
 test_that("extract_extra_params() returns the expected list", {

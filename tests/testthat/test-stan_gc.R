@@ -77,6 +77,28 @@ test_that("stan_gc() returns the expected string for a stock measurement", {
   expect_equal(actual, expected)
 })
 
+test_that("stan_gc() returns the expected string for a vectorised net flow measurement", {
+
+  ag <- c("A", "B", "C", "D") # age_groups
+
+  measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
+  meas_mdl     <- as.list(measurements)
+
+  filepath  <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
+  mdl       <- read_xmile(filepath)
+  lvl_names <- sd_stocks(mdl)$name
+
+  actual       <- stan_gc(meas_mdl, FALSE, lvl_names)
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  log_lik = poisson_lpmf(y_A | delta_x_1)+poisson_lpmf(y_B | delta_x_2)+poisson_lpmf(y_C | delta_x_3)+poisson_lpmf(y_D | delta_x_4);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
 test_that("get_log_lik_statement() returns the expected string", {
 
   meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"

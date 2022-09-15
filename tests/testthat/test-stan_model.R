@@ -26,6 +26,33 @@ test_that("stan_model() returns the expected string", {
   expect_equal(actual, expected)
 })
 
+test_that("stan_model() returns the expected string for a vectorised model", {
+
+  ag <- c("A", "B", "C", "D") # age_groups
+
+  measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
+  meas_mdl     <- as.list(measurements)
+
+  estimated_params <- list(sd_prior("par_rho", "beta", c(2, 2)))
+
+  filepath  <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
+  mdl       <- read_xmile(filepath)
+  lvl_names <- sd_stocks(mdl)$name
+
+  actual <- stan_model(estimated_params, meas_mdl, lvl_names)
+
+  expected <- paste(
+    "model {",
+    "  par_rho ~ beta(2, 2);",
+    "  y_A ~ poisson(delta_x_1);",
+    "  y_B ~ poisson(delta_x_2);",
+    "  y_C ~ poisson(delta_x_3);",
+    "  y_D ~ poisson(delta_x_4);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
 test_that("construct_prior_line() returns the expected string", {
 
   prior_obj <- list(par_name = "par_beta",
@@ -48,7 +75,8 @@ test_that("construct_likelihood_line() returns the expected string", {
 
   actual   <- construct_likelihood_line(meas_obj, 1)
 
-  expected <- "  y ~ neg_binomial_2(delta_x_1, phi);"
+  expected <- list(line          = "  y ~ neg_binomial_2(delta_x_1, phi);",
+                   delta_counter = 2)
 
   expect_equal(actual, expected)
 
@@ -58,7 +86,8 @@ test_that("construct_likelihood_line() returns the expected string", {
 
   actual   <- construct_likelihood_line(meas_obj, 1, lvl_names)
 
-  expected <- "  y ~ poisson(x[:, 5]);"
+  expected <- list(line          = "  y ~ poisson(x[:, 5]);",
+                   delta_counter = 1)
 
   expect_equal(actual, expected)
 })
