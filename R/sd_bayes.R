@@ -36,6 +36,8 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
 
+  extra_params <- extra_params[!duplicated(extra_params)]
+
   est_params_names <- get_names(estimated_params, "par_name")
 
   if(length(extra_params) > 0) {
