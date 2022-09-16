@@ -31,14 +31,14 @@ functions {
     I_to_R_C = 0.5*y[11];
     I_to_R_D = 0.5*y[12];
     total_N = 10000+10000+10000+10000;
-    var_psi_A = 0*y[9]+0*y[10]+0*y[11]+0*y[12];
+    var_psi_A = params[1]*y[9]+0*y[10]+0*y[11]+0*y[12];
     var_psi_B = 0*y[9]+0*y[10]+0*y[11]+0*y[12];
     var_psi_C = 0*y[9]+0*y[10]+0*y[11]+0*y[12];
     var_psi_D = 0*y[9]+0*y[10]+0*y[11]+0*y[12];
-    C_in_A = params[1]*E_to_I_A;
-    C_in_B = params[1]*E_to_I_B;
-    C_in_C = params[1]*E_to_I_C;
-    C_in_D = params[1]*E_to_I_D;
+    C_in_A = params[2]*E_to_I_A;
+    C_in_B = params[2]*E_to_I_B;
+    C_in_C = params[2]*E_to_I_C;
+    C_in_D = params[2]*E_to_I_D;
     S_to_E_A = var_psi_A*y[1]/total_N;
     S_to_E_B = var_psi_B*y[2]/total_N;
     S_to_E_C = var_psi_C*y[3]/total_N;
@@ -79,6 +79,7 @@ data {
   vector[n_difeq] x0;
 }
 parameters {
+  real<lower = 0> k_AA;
   real<lower = 0, upper = 1> par_rho;
 }
 transformed parameters{
@@ -88,7 +89,8 @@ transformed parameters{
   array[n_obs] real delta_x_2;
   array[n_obs] real delta_x_3;
   array[n_obs] real delta_x_4;
-  params[1] = par_rho;
+  params[1] = k_AA;
+  params[2] = par_rho;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 17] - x0[17] + 1e-5;
   delta_x_2[1] =  x[1, 18] - x0[18] + 1e-5;
@@ -102,6 +104,7 @@ transformed parameters{
   }
 }
 model {
+  k_AA ~ normal(0, 10);
   par_rho ~ beta(2, 2);
   y_A ~ poisson(delta_x_1);
   y_B ~ poisson(delta_x_2);

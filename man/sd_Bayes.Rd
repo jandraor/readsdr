@@ -9,6 +9,7 @@ sd_Bayes(
   meas_mdl,
   estimated_params,
   data_params = NULL,
+  data_inits = NULL,
   const_list = NULL,
   LFO_CV = FALSE
 )
@@ -25,7 +26,14 @@ statement written in Stan language.}
 parameter that will be estimated in the inference stage. To construct this
 description, the user can avail of the function `sd_prior`.}
 
-\item{data_params}{An optional string vector defining which model}
+\item{data_params}{An optional string vector defining which model
+parameters will be configured through the Stan data block. That is, the
+user will provide fixed values for such parameters at every Stan run.}
+
+\item{data_inits}{An optional string vector defining which model
+parameters that \strong{only affect initial values} (of stocks) will be
+configured through the Stan data block. That is, the user will provide fixed
+values for such parameters at every Stan run.}
 
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}

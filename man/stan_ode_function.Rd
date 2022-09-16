@@ -28,6 +28,8 @@ constant to override and the element's value correspond to the new value.}
 
 \item{extra_funs}{A vector of strings. Each string corresponds to a
 user-defined function.}
+
+\item{XMILE_structure}{A list.}
 }
 \value{
 A string with the code containing a function with the model's

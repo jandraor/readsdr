@@ -6,6 +6,7 @@
 #'   considered as parameters in the ODE function
 #' @param extra_funs A vector of strings. Each string corresponds to a
 #' user-defined function.
+#' @param XMILE_structure A list.
 #' @inheritParams read_xmile
 #'
 #' @return A string with the code containing a function with the model's

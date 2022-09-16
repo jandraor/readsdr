@@ -4,7 +4,7 @@
 \alias{sd_prior}
 \title{SD prior}
 \usage{
-sd_prior(par_name, dist, dist_pars, type = "constant")
+sd_prior(par_name, dist, dist_pars, type = "constant", min_0 = FALSE)
 }
 \arguments{
 \item{par_name}{A string}
@@ -15,6 +15,10 @@ sd_prior(par_name, dist, dist_pars, type = "constant")
 
 \item{type}{A string. It can be either 'constant' or 'init'. It is 'constant'
 by default.}
+
+\item{min_0}{An optional boolean indicating whether the prior has a lower
+bound at zero. In the current implementation, this parameter only has an
+effect on normal priors.}
 }
 \value{
 A list
@@ -24,4 +28,5 @@ SD prior
 }
 \examples{
 sd_prior("par_beta", "lognormal", c(0, 1))
+sd_prior("par_rho", "normal", c(0, 1), min_0 = TRUE)
 }

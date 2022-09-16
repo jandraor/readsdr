@@ -185,7 +185,7 @@ get_dist_obj <- function(rhs, language = "Stan") {
 
 }
 
-get_dist_args <- function(dist, language) {
+get_dist_args <- function(dist, language = "Stan") {
 
   if(dist == "beta") return (c("alpha", "beta"))
   if(dist == "exponential") return (c("beta"))

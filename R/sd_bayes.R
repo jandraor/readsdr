@@ -6,8 +6,12 @@
 #'   parameter that will be estimated in the inference stage. To construct this
 #'   description, the user can avail of the function `sd_prior`.
 #' @param data_params An optional string vector defining which model
-#"   parameters will be configured through the Stan data block. That is, the
-#"   user will provide fixed values for such parameters at every Stan run.
+#'   parameters will be configured through the Stan data block. That is, the
+#'   user will provide fixed values for such parameters at every Stan run.
+#' @param data_inits An optional string vector defining which model
+#'  parameters that \strong{only affect initial values} (of stocks) will be
+#'  configured through the Stan data block. That is, the user will provide fixed
+#'  values for such parameters at every Stan run.
 #' @param LFO_CV An optional boolean that indicates whether the returned Stan
 #'   file supports Leave-Future-Out Cross-Validation. This support corresponds to
 #'   estimating the log-likelihood of the ts + 1 measurement.

@@ -127,7 +127,9 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
   measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
   meas_mdl     <- as.list(measurements)
 
-  estimated_params <- list(sd_prior("par_rho", "beta", c(2, 2)))
+  estimated_params <- list(
+    sd_prior("k_AA", "normal", c(0, 10), min_0 = TRUE),
+    sd_prior("par_rho", "beta", c(2, 2)))
 
   actual <- sd_Bayes(filepath = filepath,
                      meas_mdl = meas_mdl,
