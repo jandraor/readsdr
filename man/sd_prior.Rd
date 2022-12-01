@@ -14,7 +14,8 @@ sd_prior(par_name, dist, dist_pars, type = "constant", min_0 = FALSE)
 \item{dist_pars}{A vector}
 
 \item{type}{A string. It can be either 'constant' or 'init'. It is 'constant'
-by default.}
+by default. 'init' refers to parameters that have only affect the model at
+time 0.}
 
 \item{min_0}{An optional boolean indicating whether the prior has a lower
 bound at zero. In the current implementation, this parameter only has an

@@ -59,33 +59,33 @@ or type `vignette("Introduction_to_readsdr")` in R.
 
 ## Supported builtins
 
--   **Stella**
-    -   Comparison operators (`=`, `<>`)
-    -   Logical operators (`AND`, `OR`, `NOT`)
-    -   `If Else Then`
-    -   Inequality operators (`<`, `>`)
-    -   `Pulse` <sup>1</sup>
-    -   `Step` <sup>1</sup>
-    -   Endogenous table functions
-    -   Smoothing functions<sup>2</sup>: `SMTH1`, `SMTH3`, `SMTHN`
-    -   Limited support to *uni-dimensional* arrays. *Apply all*
-        translation is restricted to numeric values.
-    -   Math functions: `ABS`, `SQRT`
-    -   Stats functions: `NORMAL`<sup>3</sup>
--   **Vensim**
-    -   Comparison operators (`=`, `<>`)
-    -   Logical operators (`:AND:`, `:OR:`, `:NOT:`)
-    -   `IF_THEN_ELSE`
-    -   Inequality operators (`<`, `>`)
-    -   `Pulse` <sup>1</sup>
-    -   `Pulse Train` <sup>1</sup>
-    -   `Step` <sup>1</sup>
-    -   Endogenous table functions
-    -   Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`,
-        `SMOOTH3I`, `SMOOTHI`
-    -   Math functions: `ABS`, `SQRT`
-    -   Limited support to *bi-dimensional* arrays.
-    -   Stats functions: `RANDOM NORMAL`<sup>3</sup>
+- **Stella**
+  - Comparison operators (`=`, `<>`)
+  - Logical operators (`AND`, `OR`, `NOT`)
+  - `If Else Then`
+  - Inequality operators (`<`, `>`)
+  - `Pulse` <sup>1</sup>
+  - `Step` <sup>1</sup>
+  - Endogenous table functions
+  - Smoothing functions<sup>2</sup>: `SMTH1`, `SMTH3`, `SMTHN`
+  - Limited support to *uni-dimensional* arrays. *Apply all* translation
+    is restricted to numeric values.
+  - Math functions: `ABS`, `SQRT`
+  - Stats functions: `NORMAL`<sup>3</sup>
+- **Vensim**
+  - Comparison operators (`=`, `<>`)
+  - Logical operators (`:AND:`, `:OR:`, `:NOT:`)
+  - `IF_THEN_ELSE`
+  - Inequality operators (`<`, `>`)
+  - `Pulse` <sup>1</sup>
+  - `Pulse Train` <sup>1</sup>
+  - `Step` <sup>1</sup>
+  - Endogenous table functions
+  - Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`,
+    `SMOOTHI`
+  - Math functions: `ABS`, `SQRT`
+  - Limited support to *bi-dimensional* arrays.
+  - Stats functions: `RANDOM NORMAL`<sup>3</sup>
 
 <sup>1</sup> Restricted to Euler integration.
 
@@ -97,25 +97,44 @@ smoothing function and **nothing else**.
 
 ## Notes
 
--   *uniflow* and *non-negative* stock features from *Stella* are
-    **not** supported.
+- *uniflow* and *non-negative* stock features from *Stella* are **not**
+  supported.
 
--   No built-in is supported for translations to *Stan* code.
+- No built-in is supported for translations to *Stan* code.
 
--   Modules from *Stella* are **not** supported.
+- Modules from *Stella* are **not** supported.
+
+## Applications
+
+This package has been instrumental in the following works:
+
+- [Andrade & Duggan
+  (2022)](https://doi.org/10.1371/journal.pcbi.1010206). *Inferring the
+  effective reproductive number from deterministic and
+  semi-deterministic compartmental models using incidence and mobility
+  data*. **PLOS Computational Biology**.
+
+- [Andrade & Duggan (2021)](https://doi.org/10.1002/sdr.1693). *A
+  Bayesian approach to calibrate system dynamics models using
+  Hamiltonian Monte Carlo*. **System Dynamics Review**.
+
+- [Andrade & Duggan
+  (2020)](https://doi.org/10.1016/j.epidem.2020.100415). *An evaluation
+  of Hamiltonian Monte Carlo performance to calibrate age-structured
+  compartmental SEIR models to incidence data*. **Epidemics**.
 
 ## Acknowledgments
 
 Thanks to:
 
--   [Rogelio Oliva](http://people.tamu.edu/~roliva/) for advocating the
-    need to create an open-source tool for the System Dynamics community
-    and push forward this endeavour.
--   Sergey Naumov for his ideas to implement several functions in this
-    package.
--   [Jim
-    Duggan](http://www.nuigalway.ie/our-research/people/engineering-and-informatics/jamesduggan/)
-    from whom I borrowed ideas to implement this package.
+- [Rogelio Oliva](http://people.tamu.edu/~roliva/) for advocating the
+  need to create an open-source tool for the System Dynamics community
+  and push forward this endeavour.
+- Sergey Naumov for his ideas to implement several functions in this
+  package.
+- [Jim
+  Duggan](http://www.nuigalway.ie/our-research/people/engineering-and-informatics/jamesduggan/)
+  from whom I borrowed ideas to implement this package.
 
 ## References
 

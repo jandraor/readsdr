@@ -187,9 +187,23 @@ get_dist_obj <- function(rhs, language = "Stan") {
 
 get_dist_args <- function(dist, language = "Stan") {
 
-  if(dist == "beta") return (c("alpha", "beta"))
+  if(dist == "beta") {
+
+    if(language == "R") return(c("shape1", "shape2"))
+
+    return (c("alpha", "beta"))
+  }
+
   if(dist == "exponential") return (c("beta"))
-  if(dist == "lognormal") return (c("mu", "sigma"))
+
+  if(dist == "lognormal") {
+
+    if(language == "R") return(c("meanlog", "sdlog"))
+
+    return (c("mu", "sigma"))
+  }
+
+
 
   if(dist == "normal") {
 
@@ -224,11 +238,11 @@ decompose_meas <- function(meas_obj) {
 
 Stan_to_R <- function(dist_name) {
 
-  translation_db <- list(normal         = "rnorm",
+  translation_db <- list(beta           = "rbeta",
+                         lognormal      = "rlnorm",
+                         normal         = "rnorm",
                          neg_binomial_2 = "rnbinom",
                          poisson        = "rpois")
 
   translation_db[[dist_name]]
 }
-
-

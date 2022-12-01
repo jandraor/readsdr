@@ -4,7 +4,8 @@
 #' @param dist A string
 #' @param dist_pars A vector
 #' @param type A string. It can be either 'constant' or 'init'. It is 'constant'
-#' by default.
+#'   by default. 'init' refers to parameters that have only affect the model at
+#'   time 0.
 #' @param min_0 An optional boolean indicating whether the prior has a lower
 #'   bound at zero. In the current implementation, this parameter only has an
 #'   effect on normal priors.

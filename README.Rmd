@@ -103,6 +103,21 @@ or type `vignette("Introduction_to_readsdr")` in R.
 
 * Modules from _Stella_ are **not** supported.
 
+
+## Applications
+
+This package has been instrumental in the following works:
+
+* [Andrade & Duggan (2022)](https://doi.org/10.1371/journal.pcbi.1010206). _Inferring the effective reproductive number from deterministic and semi-deterministic compartmental models using incidence and mobility data_. **PLOS Computational Biology**.
+
+* [Andrade & Duggan (2021)](https://doi.org/10.1002/sdr.1693). _A Bayesian approach to calibrate system dynamics models using Hamiltonian Monte Carlo_. **System Dynamics Review**.
+
+* [Andrade & Duggan (2020)](https://doi.org/10.1016/j.epidem.2020.100415). _An evaluation of Hamiltonian Monte Carlo performance to calibrate age-structured compartmental SEIR models to incidence data_. **Epidemics**.
+
+
+
+
+
 ## Acknowledgments
 
 Thanks to:
