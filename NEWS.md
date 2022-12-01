@@ -1,5 +1,7 @@
 # Development version
 
+* Support Stella's *apply all* for uni-dimensional vectors.
+* Add **sd_Bayes()**.
 * Deprecate **stan_data()** & **stan_transformed_data()**
 * Add **sd_measurements()**.
 * Support the translation of *RANDOM NORMAL* from Vensim.
