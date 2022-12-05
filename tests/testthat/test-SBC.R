@@ -30,6 +30,37 @@ test_that("sd_data_generator_fun() returns the expected function", {
       ts       = 1:10))
 
   expect_equal(actual_list, expected, tolerance = 1e-6)
+
+  # Negative Binomial test
+  meas_mdl   <- list("y ~ neg_binomial_2(net_flow(C), phi)")
+
+  estimated_params <- list(
+    sd_prior("par_beta", "lognormal", c(0, 1)),
+    sd_prior("par_rho", "beta", c(2, 2)),
+    sd_prior("I0", "lognormal", c(0, 1), "init"))
+
+  actual_fun  <- sd_data_generator_fun(filepath, estimated_params, meas_mdl,
+                                       start_time = 0, stop_time = 10,
+                                       timestep = 1/32, integ_method = "rk4")
+
+  set.seed(300)
+  actual_list <- actual_fun()
+
+  expected <- list(
+    variables = list(
+      par_beta   = 3.950297,
+      par_rho    = 0.7321697,
+      I0         = 1.605586,
+      inv_phi    = 0.1033722),
+    generated =   list(
+      n_obs    = 10,
+      y        = c(3, 3, 15, 19, 71, 155, 332, 193, 803, 2453),
+      n_params = 2,
+      n_difeq  = 5,
+      t0       = 0,
+      ts       = 1:10))
+
+  expect_equal(actual_list, expected, tolerance = 1e-6)
 })
 
 test_that("prior_fun_factory() returns the expected list of functions", {

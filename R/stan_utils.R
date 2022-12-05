@@ -194,7 +194,12 @@ get_dist_args <- function(dist, language = "Stan") {
     return (c("alpha", "beta"))
   }
 
-  if(dist == "exponential") return (c("beta"))
+  if(dist == "exponential") {
+
+    if(language == "R") return (c("rate"))
+
+    return (c("beta"))
+  }
 
   if(dist == "lognormal") {
 
@@ -202,7 +207,6 @@ get_dist_args <- function(dist, language = "Stan") {
 
     return (c("mu", "sigma"))
   }
-
 
 
   if(dist == "normal") {
@@ -239,10 +243,34 @@ decompose_meas <- function(meas_obj) {
 Stan_to_R <- function(dist_name) {
 
   translation_db <- list(beta           = "rbeta",
+                         exponential    = "rexp",
                          lognormal      = "rlnorm",
                          normal         = "rnorm",
                          neg_binomial_2 = "rnbinom",
                          poisson        = "rpois")
 
   translation_db[[dist_name]]
+}
+
+get_meas_params <- function(meas_mdl, estimated_params) {
+
+  pars_names    <- get_names(estimated_params, "par_name")
+
+  extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  extra_params <- extra_params[!duplicated(extra_params)]
+
+  if(length(extra_params) > 0) {
+
+    for(extra_par_obj in extra_params) {
+
+      extra_par_name <- extra_par_obj$par_name
+
+      if(!extra_par_name %in% pars_names) {
+
+        estimated_params <- c(estimated_params, list(extra_par_obj))
+      }
+    }
+  }
+
+  estimated_params
 }

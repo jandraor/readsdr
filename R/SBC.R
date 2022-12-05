@@ -19,9 +19,12 @@ sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
                                   timestep     = NULL,
                                   integ_method = "euler") {
 
+  pars_names    <- get_names(estimated_params, "par_name")
+
+  estimated_params <- get_meas_params(meas_mdl, estimated_params)
+
   prior_fun_list <- prior_fun_factory(estimated_params)
 
-  pars_names    <- get_names(estimated_params, "par_name")
   mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
   ds_inputs     <- get_deSolve_elems(mdl_structure)
 
@@ -31,21 +34,45 @@ sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
 
   n_stocks <- length(ds_inputs$stocks)
 
-  unk_types <- sapply(estimated_params, function(prior_obj) prior_obj$type)
-  n_consts  <- sum(unk_types == "constant")
+  unk_types  <- sapply(estimated_params, function(prior_obj) prior_obj$type)
+  n_consts   <- sum(unk_types == "constant")
+
+  idx_meas   <- which(unk_types == "meas_par")
+  n_meas_par <- length(idx_meas)
 
   data_fun <- function() {
 
-    prior_vals <- lapply(prior_fun_list, \(prior_fun) prior_fun())
+    prior_vals <- lapply(prior_fun_list, function(prior_fun) prior_fun())
 
     for(param in pars_names) ds_inputs$consts[[param]] <- prior_vals[[param]]
 
-    readsd_env <- list2env(prior_vals)
+    readsdr_env <- list2env(prior_vals)
 
-    ds_inputs$stocks <- purrr::map_dbl(ds_inputs$stocks, \(x) {
+    ds_inputs$stocks <- purrr::map_dbl(ds_inputs$stocks, function(x) {
 
-      eval(parse(text = x), envir = readsd_env)
+      eval(parse(text = x), envir = readsdr_env)
     })
+
+    if(n_meas_par > 0) {
+
+      meas_params <- estimated_params[idx_meas]
+
+      for(meas_par_obj in meas_params) {
+
+        # Parameter's name before the transformation
+        before_name <- stringr::str_remove(meas_par_obj$par_name,
+                                            paste0(meas_par_obj$par_trans, "_"))
+
+        trans_value <- execute_trans(prior_vals[[meas_par_obj$par_name]],
+                                     meas_par_obj$par_trans)
+
+        meas_mdl <- lapply(meas_mdl, function(meas_obj) {
+
+          stringr::str_replace(meas_obj, before_name,
+                               as.character(trans_value))
+        })
+      }
+    }
 
     measurement_df <- sd_measurements(1, meas_mdl, ds_inputs,
                                       start_time   = start_time,

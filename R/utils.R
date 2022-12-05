@@ -11,3 +11,5 @@ get_names <- function(obj_list, name_var = "name") {
 }
 
 as_row_list <- function(df) do.call(function(...) Map(list,...), df)
+
+execute_trans <- function(val, trans_type) if(trans_type == "inv") return(1/val)
