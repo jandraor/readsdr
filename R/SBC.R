@@ -1,36 +1,67 @@
-sd_data_generator_fun <- function(estimated_params, meas_mdl) {
+#' Function factory for SBC
+#' @return A function.
+#' @export
+
+#' @inheritParams read_xmile
+#' @inheritParams sd_Bayes
+#' @inheritParams sd_simulate
+#' @examples
+#'   filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
+#'   meas_mdl <- list("y ~ poisson(net_flow(C))")
+#'   estimated_params <- list(
+#'     sd_prior("par_beta", "lognormal", c(0, 1)),
+#'     sd_prior("par_rho", "beta", c(2, 2)),
+#'     sd_prior("I0", "lognormal", c(0, 1), "init"))
+#'   sd_data_generator_fun(filepath, estimated_params, meas_mdl)
+sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
+                                  start_time   = NULL,
+                                  stop_time    = NULL,
+                                  timestep     = NULL,
+                                  integ_method = "euler") {
 
   prior_fun_list <- prior_fun_factory(estimated_params)
 
+  pars_names    <- get_names(estimated_params, "par_name")
+  mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
+  ds_inputs     <- get_deSolve_elems(mdl_structure)
+
+  if(!(integ_method %in% c("euler", "rk4"))) stop("Invalid integration method")
+
+  ds_inputs <- update_sim_params(ds_inputs, start_time, stop_time, timestep)
+
+  n_stocks <- length(ds_inputs$stocks)
+
+  unk_types <- sapply(estimated_params, function(prior_obj) prior_obj$type)
+  n_consts  <- sum(unk_types == "constant")
+
   data_fun <- function() {
 
-    par_beta <- prior_fun_list$par_beta()
-    par_rho  <- prior_fun_list$par_rho()
-    I0       <- prior_fun_list$I0()
+    prior_vals <- lapply(prior_fun_list, \(prior_fun) prior_fun())
 
-    ds_inputs$consts[["par_beta"]] <- par_beta
-    ds_inputs$consts[["par_rho"]]    <- par_rho
+    for(param in pars_names) ds_inputs$consts[[param]] <- prior_vals[[param]]
 
-    N_val  <- ds_inputs$consts[["N"]]
+    readsd_env <- list2env(prior_vals)
 
-    ds_inputs$stocks[["S"]] <- N_val - par_I0
-    ds_inputs$stocks[["I"]] <- par_I0
+    ds_inputs$stocks <- purrr::map_dbl(ds_inputs$stocks, \(x) {
 
-    measurement_df <- sd_measurements(1, meas_mdl, ds_inputs, 0, 80,
-                                      timestep = 1/32, integ_method = "rk4")
+      eval(parse(text = x), envir = readsd_env)
+    })
+
+    measurement_df <- sd_measurements(1, meas_mdl, ds_inputs,
+                                      start_time   = start_time,
+                                      stop_time    = stop_time,
+                                      timestep     = timestep,
+                                      integ_method = integ_method)
 
     n_obs <- nrow(measurement_df)
 
     list(
-      variables = list(
-        par_beta   = par_beta,
-        par_rho    = par_rho,
-        I0         = par_I0),
-      generated =   list(
+      variables = prior_vals,
+      generated = list(
         n_obs    = n_obs,
         y        = measurement_df$measurement,
-        n_params = 2,
-        n_difeq  = 5,
+        n_params = n_consts,
+        n_difeq  = n_stocks,
         t0       = 0,
         ts       = 1:n_obs))
   }
