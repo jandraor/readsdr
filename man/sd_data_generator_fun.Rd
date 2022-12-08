@@ -4,7 +4,15 @@
 \alias{sd_data_generator_fun}
 \title{Function factory for SBC}
 \usage{
-sd_data_generator_fun(filepath, estimated_params, meas_mdl)
+sd_data_generator_fun(
+  filepath,
+  estimated_params,
+  meas_mdl,
+  start_time = NULL,
+  stop_time = NULL,
+  timestep = NULL,
+  integ_method = "euler"
+)
 }
 \arguments{
 \item{filepath}{A string that indicates a path to a file with extension .stmx
@@ -17,6 +25,14 @@ description, the user can avail of the function `sd_prior`.}
 
 \item{meas_mdl}{A list of strings. Each string corresponds to a sampling
 statement written in Stan language.}
+
+\item{start_time}{A number}
+
+\item{stop_time}{A number}
+
+\item{timestep}{A number}
+
+\item{integ_method}{A string. Either "euler" or "rk4"}
 }
 \value{
 A function.
