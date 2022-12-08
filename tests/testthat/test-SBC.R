@@ -22,8 +22,8 @@ test_that("sd_data_generator_fun() returns the expected function", {
       par_rho    = 0.5636847,
       I0         = 1.541193),
     generated =   list(
-      n_obs    = 10,
       y        = c(0, 0, 0, 0, 1, 1, 0, 2, 2, 2),
+      n_obs    = 10,
       n_params = 2,
       n_difeq  = 5,
       t0       = 0,
@@ -53,14 +53,53 @@ test_that("sd_data_generator_fun() returns the expected function", {
       I0         = 1.605586,
       inv_phi    = 0.1033722),
     generated =   list(
-      n_obs    = 10,
       y        = c(3, 3, 15, 19, 71, 155, 332, 193, 803, 2453),
+      n_obs    = 10,
       n_params = 2,
       n_difeq  = 5,
       t0       = 0,
       ts       = 1:10))
 
   expect_equal(actual_list, expected, tolerance = 1e-6)
+})
+
+test_that("sd_data_generator_fun() returns the expected function for a vectorised model", {
+
+  filepath <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
+
+  ag <- c("A", "B", "C", "D") # age_groups
+
+  measurements <- stringr::str_glue("y_{ag} ~ poisson(net_flow(C_{ag}))")
+  meas_mdl     <- as.list(measurements)
+
+  estimated_params <- list(
+    sd_prior("k_AA", "normal", c(0, 10), min_0 = TRUE),
+    sd_prior("par_rho", "beta", c(2, 2)))
+
+  actual_fun  <- sd_data_generator_fun(filepath, estimated_params, meas_mdl,
+                                       start_time = 0, stop_time = 10,
+                                       timestep = 1/32, integ_method = "rk4")
+
+  set.seed(111)
+  actual_list <- actual_fun()
+
+  expected <- list(
+    variables = list(
+      k_AA    = 2.352207,
+      par_rho = 0.4073203),
+    generated =   list(
+      y_A      = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      y_B      = c(0, 0, 0, 1, 0, 0, 0, 0, 0, 0),
+      y_C      = c(1, 0, 0, 0, 1, 0, 0, 0, 0, 1),
+      y_D      = c(0, 0, 0, 0, 0, 1, 0, 0, 1, 2),
+      n_obs    = 10,
+      n_params = 2,
+      n_difeq  = 20,
+      t0       = 0,
+      ts       = 1:10))
+
+  expect_equal(actual_list, expected, tolerance = 1e-6)
+
 })
 
 test_that("prior_fun_factory() returns the expected list of functions", {

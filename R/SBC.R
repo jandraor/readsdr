@@ -80,17 +80,21 @@ sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
                                       timestep     = timestep,
                                       integ_method = integ_method)
 
-    n_obs <- nrow(measurement_df)
+    n_obs <- length(unique(measurement_df$time))
 
-    list(
-      variables = prior_vals,
-      generated = list(
-        n_obs    = n_obs,
-        y        = measurement_df$measurement,
-        n_params = n_consts,
-        n_difeq  = n_stocks,
-        t0       = 0,
-        ts       = 1:n_obs))
+    split_df         <- split(measurement_df, measurement_df$var_name)
+    meas_list        <- lapply(split_df, function(df) df$measurement)
+    names(meas_list) <- unique(measurement_df$var_name)
+
+    specs_list <- list(
+      n_obs    = n_obs,
+      n_params = n_consts,
+      n_difeq  = n_stocks,
+      t0       = 0,
+      ts       = 1:n_obs)
+
+    list(variables = prior_vals,
+         generated = c(meas_list, specs_list))
   }
 }
 

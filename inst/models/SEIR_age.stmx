@@ -110,7 +110,18 @@
 				<dimensions>
 					<dim name="Age"/>
 				</dimensions>
-				<eqn>10000</eqn>
+				<element subscript="A">
+					<eqn>264132</eqn>
+				</element>
+				<element subscript="B">
+					<eqn>614909</eqn>
+				</element>
+				<element subscript="C">
+					<eqn>2020683</eqn>
+				</element>
+				<element subscript="D">
+					<eqn>2640994</eqn>
+				</element>
 			</aux>
 			<aux name="total N">
 				<eqn>N[A] + N[B] + N[C] + N[D]</eqn>
@@ -136,7 +147,36 @@
 				<dimensions>
 					<dim name="Contacts"/>
 				</dimensions>
-				<eqn>0</eqn>
+				<element subscript="AA">
+					<eqn>4.1262607</eqn>
+				</element>
+				<element subscript="AB">
+					<eqn>1.5451053</eqn>
+				</element>
+				<element subscript="AC">
+					<eqn>1.0079616</eqn>
+				</element>
+				<element subscript="AD">
+					<eqn>0.4403311</eqn>
+				</element>
+				<element subscript="BB">
+					<eqn>7.2500922</eqn>
+				</element>
+				<element subscript="BC">
+					<eqn>1.0689326</eqn>
+				</element>
+				<element subscript="BD">
+					<eqn>0.4042651</eqn>
+				</element>
+				<element subscript="CC">
+					<eqn>1.9051576</eqn>
+				</element>
+				<element subscript="CD">
+					<eqn>0.8288393</eqn>
+				</element>
+				<element subscript="DD">
+					<eqn>0.9137116</eqn>
+				</element>
 			</aux>
 			<stock name="C">
 				<dimensions>
