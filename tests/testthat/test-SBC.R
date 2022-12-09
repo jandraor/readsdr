@@ -109,7 +109,7 @@ test_that("prior_fun_factory() returns the expected list of functions", {
     sd_prior("par_rho", "beta", c(2, 2)),
     sd_prior("I0", "lognormal", c(0, 1), "init"))
 
-  fun_list <- prior_fun_factory(estimated_params)
+  fun_list <- prior_fun_factory(estimated_params, 1)
 
   set.seed(123)
 
