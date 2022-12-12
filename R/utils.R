@@ -12,4 +12,12 @@ get_names <- function(obj_list, name_var = "name") {
 
 as_row_list <- function(df) do.call(function(...) Map(list,...), df)
 
-execute_trans <- function(val, trans_type) if(trans_type == "inv") return(1/val)
+execute_trans <- function(val, trans_type, return_type = "numeric") {
+
+  if(trans_type == "inv" & return_type == "numeric") return(1/val)
+
+  if(trans_type == "inv" & return_type == "text") return(paste0("1/", val))
+}
+
+is_string_numeric <- function(x) suppressWarnings(ifelse(!is.na(as.numeric(x)),
+                                                         TRUE, FALSE))
