@@ -68,23 +68,17 @@ test_that("assign_pars_text() returns the expected text", {
 # get_model_run_text() ---------------------------------------------------------
 
 test_that("get_model_run_text returns the expected text", {
-  sim_controls <- list(start        = 0,
-                       stop         = 10,
-                       step         = 0.25,
-                       integ_method = "rk4")
 
-  actual_text <- get_model_run_text(sim_controls)
+  actual_text <- get_model_run_text("rk4")
 
-  expected_text <- paste("simtime <- seq(0, 10, 0.25)",
-                         paste("o <- deSolve::ode(",
-                               "  y      = init_stocks,",
-                               "  times  = simtime,",
-                               "  func   = deSolve_components$func,",
-                               "  parms  = consts,",
-                               '  method = "rk4")',
-                               "o_df <- data.frame(o)",
-                               sep = "\n"),
-                         sep = "\n")
+  expected_text <- paste(
+    "  readsdr_env <- list2env(as.list(ds_inputs$consts))",
+    "  ds_inputs$stocks <- purrr::map_dbl(ds_inputs$stocks, function(x) {",
+    "    eval(parse(text = x), envir = readsdr_env)",
+    "  })",
+    '  o    <- sd_simulate(ds_inputs, integ_method = "rk4")',
+    "  o_df <- data.frame(o)",
+    sep = "\n")
 
   expect_equal(actual_text, expected_text)
 })
@@ -92,6 +86,28 @@ test_that("get_model_run_text returns the expected text", {
 # get_meas_model_text() --------------------------------------------------------
 
 test_that("get_meas_model_text() returns the expected text", {
+
+  # As-is measurement
+
+  meas_data_mdl <- list(list(formula      = "y ~ poisson(C)",
+                             measurements = 1:10))
+
+  n_consts <- 1
+
+  unknown_pars <- list(list(par_name = "par_beta", min = 0))
+
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars,
+                                     FALSE)
+
+  expected_text <- paste(
+    'sim_data_1 <- dplyr::filter(o_df, time - trunc(time) == 0)',
+    "loglik_1   <- sum(dpois(data_1, lambda = sim_data_1[, 'C'] + 1e-05, log = TRUE))",
+    "loglik     <- loglik_1",
+    "loglik", sep = "\n")
+
+  expect_equal(actual_text, expected_text)
+
+  # Net flow
 
   meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
                              measurements = 1:10))
@@ -101,7 +117,8 @@ test_that("get_meas_model_text() returns the expected text", {
   unknown_pars <- list(list(par_name = "par_beta", min = 0),
                        list(par_name = "inv_phi", min = 0, par_trans = "inv"))
 
-  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars, FALSE)
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars,
+                                     FALSE)
 
   expected_text <- paste(
     'sim_data_1 <- sd_net_change(o_df, "C")',
@@ -111,37 +128,34 @@ test_that("get_meas_model_text() returns the expected text", {
     sep = "\n")
 
   expect_equal(actual_text, expected_text)
-})
 
-test_that("get_meas_model_text() returns a positive loglik", {
-  mm1 <- list(stock_name = "S", stock_fit_type = "actual",
-                      dist = list(name     = "dpois",
-                                  sim_data = "lambda",
-                                  dist_offset = "1e-5"))
+  # Reflect log-lik
 
-  actual_text <- get_meas_model_text(list(mm1), TRUE)
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars, TRUE)
 
   expected_text <- paste(
-    "sim_data_1 <- dplyr::filter(o_df, time - trunc(time) == 0)",
-    "loglik_1   <- sum(dpois(data_1, lambda = sim_data_1[, 'S'] + 1e-5, log = TRUE))",
+    'sim_data_1 <- sd_net_change(o_df, "C")',
+    "loglik_1   <- sum(dnbinom(data_1, mu = sim_data_1[, 'value'] + 1e-05, size = 1/pars[[2]], log = TRUE))",
     "loglik     <- loglik_1",
     "-loglik",
     sep = "\n")
-
-  expect_equal(actual_text, expected_text)
 })
 
 test_that("get_meas_model_text() handles a known par in the measurement model", {
-  mm1 <- list(stock_name = "S", stock_fit_type = "actual",
-                      dist = list(name     = "dnorm",
-                                  sim_data = "mean",
-                                  known_par = list(sd = 1)))
 
-  actual_text <- get_meas_model_text(list(mm1), FALSE)
+  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), 10)",
+                             measurements = 1:10))
+
+  n_consts <- 1
+
+  unknown_pars <- list(list(par_name = "par_beta", min = 0))
+
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars,
+                                     FALSE)
 
   expected_text <- paste(
-    "sim_data_1 <- dplyr::filter(o_df, time - trunc(time) == 0)",
-    "loglik_1   <- sum(dnorm(data_1, mean = sim_data_1[, 'S'], sd = 1, log = TRUE))",
+    'sim_data_1 <- sd_net_change(o_df, "C")',
+    "loglik_1   <- sum(dnbinom(data_1, mu = sim_data_1[, 'value'] + 1e-05, size = 10, log = TRUE))",
     "loglik     <- loglik_1",
     "loglik",
     sep = "\n")
@@ -149,73 +163,27 @@ test_that("get_meas_model_text() handles a known par in the measurement model", 
   expect_equal(actual_text, expected_text)
 })
 
-test_that("get_meas_model_text() returns the expected text for the net change of a stock", {
-
-  mm1 <- list(stock_name = "S", stock_fit_type = "net_change",
-                      dist = list(name     = "dpois",
-                                  sim_data = "lambda",
-                                  dist_offset = "1e-5"))
-
-  actual_text <- get_meas_model_text(list(mm1), FALSE)
-
-  expected_text <- paste(
-    'sim_data_1 <- sd_net_change(o_df, "S")',
-    "loglik_1   <- sum(dpois(data_1, lambda = sim_data_1[, 'value'] + 1e-5, log = TRUE))",
-    "loglik     <- loglik_1",
-    "loglik", sep = "\n")
-
-  expect_equal(actual_text, expected_text)
-
-})
-
-test_that("get_meas_model_text() returns the expected text for the net change of a stock", {
-
-  mm1 <- list(stock_name = "S", stock_fit_type = "net_change",
-                      dist = list(name     = "dnorm",
-                                  sim_data = "mean",
-                                  unknown  = list(name      = "sd",
-                                                  par_trans = "log")))
-
-  actual_text <- get_meas_model_text(fit_options = list(mm1),
-                                     neg_log     = FALSE,
-                                     n_unk_proc  = 1)
-
-  expected_text <- paste(
-    'sim_data_1 <- sd_net_change(o_df, "S")',
-    "loglik_1   <- sum(dnorm(data_1, mean = sim_data_1[, 'value'], sd = pars[[2]], log = TRUE))",
-    "loglik     <- loglik_1",
-    "loglik", sep = "\n")
-
-  expect_equal(actual_text, expected_text)
-
-})
-
 test_that("get_meas_model_text() handles multiple measurements", {
 
-  mm1 <- list(stock_name = "Infected",
-              stock_fit_type = "net_change",
-              dist = list(name     = "dpois",
-                          sim_data = "lambda",
-                          dist_offset = "1e-5"),
-              data = 1:10)
+  n_consts <- 1
 
-  mm2 <- list(stock_name = "Recovered",
-              stock_fit_type = "net_change",
-              dist = list(name     = "dpois",
-                          sim_data = "lambda",
-                          dist_offset = "1e-5"),
-              data = 1:10)
+  meas_data_mdl <- list(list(formula      = "y_A ~ neg_binomial_2(net_flow(C_A), phi)",
+                             measurements = 1:10),
+                        list(formula      = "y_B ~ neg_binomial_2(net_flow(C_B), phi)",
+                             measurements = 10:20))
 
-  fit_options <- list(mm1, mm2)
-  neg_log     <- FALSE
+  unknown_pars <- list(list(par_name = "par_beta", min = 0),
+                       list(par_name = "inv_phi", min = 0, par_trans = "inv"))
 
-  actual_text <- get_meas_model_text(fit_options, neg_log)
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars,
+                                     FALSE)
+
 
   expected_text <-      paste(
-    'sim_data_1 <- sd_net_change(o_df, "Infected")',
-    "loglik_1   <- sum(dpois(data_1, lambda = sim_data_1[, 'value'] + 1e-5, log = TRUE))",
-    'sim_data_2 <- sd_net_change(o_df, "Recovered")',
-    "loglik_2   <- sum(dpois(data_2, lambda = sim_data_2[, 'value'] + 1e-5, log = TRUE))",
+    'sim_data_1 <- sd_net_change(o_df, "C_A")',
+    "loglik_1   <- sum(dnbinom(data_1, mu = sim_data_1[, 'value'] + 1e-05, size = 1/pars[[2]], log = TRUE))",
+    'sim_data_2 <- sd_net_change(o_df, "C_B")',
+    "loglik_2   <- sum(dnbinom(data_2, mu = sim_data_2[, 'value'] + 1e-05, size = 1/pars[[2]], log = TRUE))",
     'loglik     <- loglik_1 + loglik_2',
     'loglik', sep = "\n")
 
@@ -255,57 +223,27 @@ test_that("sd_loglik_fun() returns the expected function", {
 
 # Multiple meas------------------------------------------------------------------
 test_that("sd_loglik_fun() handles multiple measurements", {
-  pars_df <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
 
-  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
-  mdl                <- read_xmile(filepath)
-  deSolve_components <- mdl$deSolve_components
+  filepath <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
 
-  sim_controls       <- list(start = 0, stop = 10, step = 0.25,
-                             integ_method ="rk4")
+  unknown_pars  <- list(list(par_name = "k_AA", min = 0),
+                        list(par_name = "par_rho", min = 0, max = 1))
 
-  fit_options <- list(list(stock_name = "Infected",
-                      stock_fit_type = "net_change",
-                      dist = list(name     = "dpois",
-                                  sim_data = "lambda",
-                                  dist_offset = "1e-5"),
-                      data = 1:10),
-                      list(stock_name = "Recovered",
-                           stock_fit_type = "net_change",
-                           dist = list(name     = "dpois",
-                                       sim_data = "lambda",
-                                       dist_offset = "1e-5"),
-                           data = 1:10))
+  meas_data_mdl <- list(list(formula      = "y_A ~ neg_binomial_2(net_flow(C_A), phi)",
+                             measurements = 1:10),
+                        list(formula      = "y_B ~ neg_binomial_2(net_flow(C_B), phi)",
+                             measurements = 11:20),
+                        list(formula      = "y_C ~ neg_binomial_2(net_flow(C_C), phi)",
+                             measurements = 21:30),
+                        list(formula      = "y_D ~ neg_binomial_2(net_flow(C_D), phi)",
+                             measurements = 31:40))
 
-  fun_obj  <- sd_loglik_fun(pars_df, deSolve_components,
-                            sim_controls, fit_options)
+  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+                           start_time = 0, stop_time = 10, timestep = 1/32)
 
-  actual_fun <- fun_obj$fun
+  actual_val <- fun_obj$fun(c(4, 0.5,0.1))
 
-  test_gen <- function(deSolve_components, data) {
-    init_stocks <- deSolve_components$stocks
-    consts      <- deSolve_components$consts
+  expected_val <- -1294.143
 
-    function(pars)
-    {
-      pars[[1]] <- exp(pars[[1]])
-      consts["beta_var"] <- pars[[1]]
-      simtime <- seq(0, 10, 0.25)
-      o <- deSolve::ode(y = init_stocks, times = simtime, func = deSolve_components$func, parms = consts, method = "rk4")
-      o_df <- data.frame(o)
-      sim_data_1 <- sd_net_change(o_df, "Infected")
-      loglik_1   <- sum(dpois(data_1, lambda = sim_data_1[, "value"] + 1e-05, log = TRUE))
-      sim_data_2 <- sd_net_change(o_df, "Recovered")
-      loglik_2   <- sum(dpois(data_2, lambda = sim_data_2[, "value"] + 1e-05, log = TRUE))
-      loglik     <- loglik_1 + loglik_2
-      loglik
-    }
-  }
-
-  expected_fun <- test_gen(deSolve_components, fit_options$data)
-
-  comparison_result <- all.equal(actual_fun, expected_fun,
-                                 check.environment = FALSE)
-
-  expect_equal(comparison_result, TRUE)
+  expect_equal(actual_val, expected_val, tolerance = 1e-4)
 })

@@ -1,29 +1,22 @@
 #' Generate a log-likelihood function for an SD model
 #'
-#' @param pars_df A data frame of three columns (\code{name}, \code{type},
-#' \code{par_trans}). Each row in this data frame corresponds to an unknown
-#' parameter. The column \code{name} must correspond to exactly the parameter's
-#' name in the SD model. The entries in column \code{type} can be either
-#' \code{"constant"} or \code{"stock"}. Lastly, column \code{par_trans} supports
-#' the following transformations: \code{"log"} for strictly positive values
-#' & \code{"logit"} for unknowns in the interval (0,1).
-#' @param deSolve_components A list
-#' @param sim_controls A list
+#' @param unknown_pars A list of lists. Each second-level list contains at least
+#'  the element name \code{name}, which corresponds to the parameter's name
+#'  subject to estimation. In addition to the element \code{name}, users can
+#'  incorporate in the sub-list the elements \code{min} and \code{max}. The
+#'  value of \code{min} can only be \code{0}, whereas the value of \code{max}
+#'   can only be \code{1}.
 #' @param meas_data_mdl A list of lists. Each second-level list corresponds to
-#'  a measurement model. Here is an example: \cr
-#'  \code{list(stock_name = "Infected", stock_fit_type = "net_change",
-#'             dist = list(name     = "dpois", sim_data = "lambda"),
-#'             data = 1:10)}
-#' @param extra_stocks An optional list of lists. Every sublist has two
-#'   elements. The first element corresponds to \code{name}, which is a string
-#'   that indicates the name of the stock whose initial value depends upon
-#'   another stock. The second element corresponds to \code{init}, whose value
-#'   (string) is an equation that expresses a constraint.
-#' @param extra_constraints An optional list
+#'  a sampling statement along with its measurements. Here is an example: \cr
+#'  \code{list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+#'             measurements = 1:10))}
 #' @param neg_log A boolean that indicates whether the log-likelihood function
 #'        returns a positive or negative value. If \code{TRUE}, the function
 #'        returns a positive value (for minimisation optimisers). If
 #'        \code{FALSE}, the function returns the original log-likelihood.
+#'
+#' @inheritParams read_xmile
+#' @inheritParams sd_simulate
 #'
 #' @return A list of two elements. The first element \code{fun} corresponds to
 #' the log likelihood function. The second element \code{par_names} indicates
@@ -31,16 +24,12 @@
 #' @export
 #'
 #' @examples
-#'   pars_df            <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
-#'   filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
-#'   mdl                <- read_xmile(filepath)
-#'   deSolve_components <- mdl$deSolve_components
-#'   sim_controls       <- list(start = 0, stop = 10, step = 0.25, integ_method ="rk4")
-#'   mm1 <- list(stock_name = "Infected", stock_fit_type = "net_change",
-#'               dist       = list(name     = "dpois", sim_data = "lambda", dist_offset = "1e-5"),
-#'               data       = 1:10)
-#'   sd_loglik_fun(pars_df, deSolve_components, sim_controls, list(mm1))
-
+#'  filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+#'  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+#'  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+#'                             measurements = 1:10))
+#'  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+#'                           start_time = 0, stop_time = 10, timestep = 1/32)
 sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
                           start_time = NULL, stop_time = NULL, timestep = NULL,
                           integ_method = "euler") {
@@ -55,6 +44,7 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
 
   meas_mdl  <- lapply(meas_data_mdl, function(meas_obj) meas_obj$formula)
   meas_pars <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  meas_pars <- meas_pars[!duplicated(meas_pars)]
 
   if(length(meas_pars) > 0) unknown_pars <- c(unknown_pars, meas_pars)
 
@@ -81,12 +71,11 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
 
   rlang::fn_env(model_func)$ds_inputs <- ds_inputs
 
-  for(i in length(meas_data_mdl)) {
+  for(i in seq_along(meas_data_mdl)) {
 
     meas_model <- meas_data_mdl[[i]]
     data_id <- paste0("data_", i)
     rlang::fn_env(model_func)[[data_id]] <- meas_model$measurements
-
   }
 
   list(fun = model_func, par_names = NULL)
@@ -146,6 +135,8 @@ get_model_run_text <- function(im) {
 
 get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) {
 
+  par_names <- get_raw_names(unknown_pars, "par_name")
+
   pos  <- n_consts
   n_mm <- length(meas_data_mdl) # number of measurements
 
@@ -161,13 +152,9 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
     nf_pattern <- get_pattern_regex("net_flow")
     is_nf      <- stringr::str_detect(dist_obj[[2]], nf_pattern) # Is net flow?
 
-    if(is_nf) stock_name <- stringr::str_match(dist_obj[[2]],
-                                               "net_flow\\((.+?)\\)")[[2]]
+   if(!is_nf) {
 
-    if(!is_nf) stock_name <- dist_obj[[2]]
-
-
-    if(!is_nf) {
+      stock_name <- dist_obj[[2]]
       lhs <- paste0("sim_data_", i)
       rhs <- "dplyr::filter(o_df, time - trunc(time) == 0)"
       sim_data_line <- stringr::str_glue("{lhs} <- {rhs}")
@@ -175,6 +162,9 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
     }
 
     if(is_nf) {
+
+      stock_name <- stringr::str_match(dist_obj[[2]],
+                                       "net_flow\\((.+?)\\)")[[2]]
       sim_data_line <- stringr::str_glue('sim_data_{i} <- sd_net_change(o_df, "{stock_name}")')
       sim_data_text <- stringr::str_glue("sim_data_{i}[, 'value']")
     }
@@ -190,13 +180,13 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
 
     if(length(dist_args) == 2) {
 
-      dist_par_known <- is_string_numeric(dist_obj[[3]])
+      par_name   <- dist_args[[2]]
+      second_par <- dist_obj[[3]]
+      dist_par_known <- is_string_numeric(second_par)
 
       if(!dist_par_known) {
 
-        unknown_obj <- dist_obj[[3]]
-        pos         <- pos + 1
-        par_name    <- dist_args[[2]]
+        pos         <- which(second_par == par_names)
         rhs         <- stringr::str_glue("pars[[{pos}]]")
 
         if("par_trans" %in% names(unknown_pars[[pos]])) {
@@ -209,18 +199,14 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
       }
 
       if(dist_par_known) {
-        par_name  <- names(meas_mdl$dist$known_par)
-        known_par <- stringr::str_glue("{par_name} = {meas_mdl$dist$known_par}")
+
+        known_par <- stringr::str_glue("{par_name} = {second_par}")
         par_assignment <- paste(par_assignment, known_par, sep = ", ")
       }
     }
 
-
-
     log_lik_line <- stringr::str_glue(
       "loglik_{i}   <- sum({distr}(data_{i}, {par_assignment}, log = TRUE))")
-
-
 
     text_output[[i]] <- paste(sim_data_line, log_lik_line, sep = "\n")
   }
