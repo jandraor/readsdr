@@ -48,6 +48,8 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
 
   if(length(meas_pars) > 0) unknown_pars <- c(unknown_pars, meas_pars)
 
+  par_list <- get_par_list(unknown_pars)
+
   pars_trans_text  <- transform_pars(unknown_pars)
   pars_assign_text <- assign_pars_text(unk_constants)
   model_exe_text   <- get_model_run_text(integ_method)
@@ -78,7 +80,34 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
     rlang::fn_env(model_func)[[data_id]] <- meas_model$measurements
   }
 
-  list(fun = model_func, par_names = NULL)
+  list(fun = model_func, par_list = par_list)
+}
+
+get_par_list <- function(unknown_pars) {
+
+  lapply(unknown_pars, function(par_obj) {
+
+    par_name <- par_obj$par_name
+
+    obj_names <- names(par_obj)
+
+    has_a_lb  <- ifelse("min" %in% obj_names, TRUE, FALSE) # Lower bound(lb)
+    has_an_ub <- ifelse("max" %in% obj_names, TRUE, FALSE) # Upper bound(ub)
+
+    par_trans <- "I"
+
+    if(has_a_lb & !has_an_ub) par_trans <- "exp"
+    if(has_a_lb & has_an_ub) par_trans  <- "expit"
+
+    if("par_trans" %in% obj_names) {
+
+      par_name <- stringr::str_remove(par_name, paste0(par_obj$par_trans, "_"))
+      par_trans <- c(par_trans, par_obj$par_trans)
+    }
+
+    list(par_name  = par_name,
+         par_trans = par_trans)
+  })
 }
 
 

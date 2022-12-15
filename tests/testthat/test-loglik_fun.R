@@ -1,3 +1,17 @@
+test_that("get_par_list() returns the expected list", {
+
+  unknown_pars <- list(list(par_name = "par_beta", min = 0),
+                       list(par_name = "inv_phi", min = 0, type = "meas_par",
+                            par_trans = "inv"))
+
+  actual <- get_par_list(unknown_pars)
+
+  expected <- list(list(par_name = "par_beta", par_trans = "exp"),
+                   list(par_name = "phi", par_trans = c("exp", "inv")))
+
+  expect_equal(actual, expected)
+})
+
 test_that("transform_pars() returns the expected text", {
 
   unknown_pars <- list(list(par_name = "par_beta", min = 0),
@@ -192,7 +206,7 @@ test_that("get_meas_model_text() handles multiple measurements", {
 
 # sd_loglik_fun() --------------------------------------------------------------
 
-test_that("sd_loglik_fun() returns the expected function", {
+test_that("sd_loglik_fun() returns the expected object", {
 
   filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
 
@@ -210,6 +224,14 @@ test_that("sd_loglik_fun() returns the expected function", {
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 
+  actual_list <- fun_obj$par_list
+
+  expected_list <- list(list(par_name = "par_beta", par_trans = "exp"),
+                        list(par_name = "phi", par_trans = c("exp", "inv")))
+
+  expect_equal(actual_list, expected_list)
+
+  # Test negative loglik
   fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl,
                            neg_log = TRUE, start_time = 0, stop_time = 10,
                            timestep = 1/32)
