@@ -177,6 +177,30 @@ test_that("get_meas_model_text() handles a known par in the measurement model", 
   expect_equal(actual_text, expected_text)
 })
 
+test_that("get_meas_model_text() handles fixed pars", {
+
+  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+                             measurements = 1:10))
+
+  n_consts      <- 1
+
+  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+
+  supplied_pars <- "phi"
+
+  actual_text <- get_meas_model_text(meas_data_mdl, n_consts, unknown_pars,
+                                     FALSE, supplied_pars)
+
+  expected_text <- paste(
+    'sim_data_1 <- sd_net_change(o_df, "C")',
+    "loglik_1   <- sum(dnbinom(data_1, mu = sim_data_1[, 'value'] + 1e-05, size = phi, log = TRUE))",
+    "loglik     <- loglik_1",
+    "loglik",
+    sep = "\n")
+
+  expect_equal(actual_text, expected_text)
+})
+
 test_that("get_meas_model_text() handles multiple measurements", {
 
   n_consts <- 1
@@ -243,7 +267,7 @@ test_that("sd_loglik_fun() returns the expected object", {
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 })
 
-# Multiple meas------------------------------------------------------------------
+# Multiple meas
 test_that("sd_loglik_fun() handles multiple measurements", {
 
   filepath <- system.file("models/", "SEIR_age.stmx", package = "readsdr")
@@ -268,4 +292,35 @@ test_that("sd_loglik_fun() handles multiple measurements", {
   expected_val <- -1294.143
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
+})
+
+# Fixed pars
+
+test_that("sd_loglik_fun() handles fixed pars", {
+
+  filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+
+  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+
+  supplied_pars    <- c("par_rho", "I0", "phi")
+
+  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+                             measurements = 1:10))
+
+  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+                           supplied_pars = supplied_pars, start_time = 0,
+                           stop_time = 10, timestep = 1/32)
+
+  actual_val <- fun_obj$fun(c(1), list(par_rho = 0.75,
+                                       I0 = 1,
+                                       inv_phi = exp(0.1)))
+
+  expected_val <- -2315.852
+
+  expect_equal(actual_val, expected_val, tolerance = 1e-4)
+
+  actual_list <- fun_obj$par_list
+
+  expected_list <- list(list(par_name = "par_beta", par_trans = "exp"),
+                        list(par_name = "phi", par_trans = c("exp", "inv")))
 })

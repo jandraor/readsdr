@@ -14,6 +14,10 @@
 #'        returns a positive or negative value. If \code{TRUE}, the function
 #'        returns a positive value (for minimisation optimisers). If
 #'        \code{FALSE}, the function returns the original log-likelihood.
+#' @param supplied_pars A string vector indicating the name of parameters whose
+#' values will be supplied to the function. These values will not be subject to
+#' optimisation.
+#'
 #'
 #' @inheritParams read_xmile
 #' @inheritParams sd_simulate
@@ -30,7 +34,9 @@
 #'                             measurements = 1:10))
 #'  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
 #'                           start_time = 0, stop_time = 10, timestep = 1/32)
-sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
+                          neg_log    = FALSE,
+                          supplied_pars = NULL,
                           start_time = NULL, stop_time = NULL, timestep = NULL,
                           integ_method = "euler") {
 
@@ -41,10 +47,15 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
 
   mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
   ds_inputs     <- get_deSolve_elems(mdl_structure)
+  const_names   <- names(ds_inputs$consts)
 
   meas_mdl  <- lapply(meas_data_mdl, function(meas_obj) meas_obj$formula)
-  meas_pars <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
-  meas_pars <- meas_pars[!duplicated(meas_pars)]
+
+  detected_mp <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  detected_mp <- detected_mp[!duplicated(detected_mp)]
+  #measurement parameters (mp)
+  mp_names  <- get_raw_names(detected_mp, "par_name")
+  meas_pars <- detected_mp[!mp_names %in% supplied_pars]
 
   if(length(meas_pars) > 0) unknown_pars <- c(unknown_pars, meas_pars)
 
@@ -55,21 +66,75 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE
   model_exe_text   <- get_model_run_text(integ_method)
 
   meas_model_text  <- get_meas_model_text(meas_data_mdl, n_consts,
-                                          unknown_pars, neg_log)
+                                          unknown_pars, neg_log, supplied_pars)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
                     model_exe_text,
                     meas_model_text)
 
+  if(!is.null(supplied_pars)) {
+
+    supplied_pars_text <- "# These parameters are fixed during the optimisation"
+
+    supplied_consts <- supplied_pars[supplied_pars %in% const_names]
+
+    if(length(supplied_consts) > 0L) {
+
+      sc_lines <- paste(stringr::str_glue('ds_inputs$consts["{supplied_consts}"]'),
+                        stringr::str_glue('supplied_pars${supplied_consts}'),
+                        sep = " <- ")
+
+      sc_text            <- paste(sc_lines, collapse = "\n")
+      supplied_pars_text <- paste(supplied_pars_text, sc_text, sep = "\n")
+    }
+
+    supplied_mp <- supplied_pars[supplied_pars %in% mp_names]
+
+    if(length(supplied_mp) > 0L) {
+
+      mp_lines <- vector(mode = "character", length = length(supplied_mp))
+
+      for(i in seq_along(supplied_mp)) {
+
+        smp <- supplied_mp[[i]]
+
+        lhs <- stringr::str_glue('{smp}')
+
+        par_obj <- detected_mp[[which(smp == mp_names)]]
+
+        rhs <- stringr::str_glue('supplied_pars${supplied_mp}')
+
+        if("par_trans" %in% names(par_obj)) {
+
+          pt  <- par_obj$par_trans
+          pn  <- par_obj$par_name
+          rhs <- stringr::str_glue('{pt}(supplied_pars${pn})')
+        }
+
+        mp_lines[[i]] <- paste(lhs, rhs, sep = " <- ")
+
+        mp_text <- paste(mp_lines, collapse = "\n")
+
+        supplied_pars_text <- paste(supplied_pars_text, mp_text,
+                                    sep = "\n")
+      }
+    }
+    body_list <- c(supplied_pars_text, body_list)
+ }
+
+
   body_text <- paste(body_list, collapse = "\n")
 
   body_func <- paste("{", body_text, "}", sep = "\n")
 
-  model_func <- rlang::new_function(
-    args = rlang::exprs(pars = ),
-    body = rlang::parse_expr(body_func)
-  )
+  func_args <- rlang::exprs(pars = )
+
+  if(!is.null(supplied_pars)) func_args <- rlang::pairlist2(pars = ,
+                                                            supplied_pars = )
+
+  model_func <- rlang::new_function(args = func_args,
+                                    body = rlang::parse_expr(body_func))
 
   rlang::fn_env(model_func)$ds_inputs <- ds_inputs
 
@@ -162,7 +227,8 @@ get_model_run_text <- function(im) {
         sep = "\n")
 }
 
-get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) {
+get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log,
+                                supplied_pars) {
 
   par_names <- get_raw_names(unknown_pars, "par_name")
 
@@ -203,7 +269,7 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
     distr          <- Stan_to_R(dist_obj$dist_name, "d")
     dist_args      <- get_dist_args(dist_obj$dist_name, language = "R")
     dist_args_Stan <- get_dist_args(dist_obj$dist_name)
-    par_sim_data <- dist_args[[1]]
+    par_sim_data   <- dist_args[[1]]
 
     par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
 
@@ -215,15 +281,9 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
 
       if(!dist_par_known) {
 
-        pos         <- which(second_par == par_names)
-        rhs         <- stringr::str_glue("pars[[{pos}]]")
-
-        if("par_trans" %in% names(unknown_pars[[pos]])) {
-
-          rhs <- execute_trans(rhs, unknown_pars[[pos]]$par_trans, "text")
-        }
-
-        unknown_par <- stringr::str_glue("{par_name} = {rhs}")
+        rhs            <- meas_mdl_rhs(second_par, unknown_pars, par_names,
+                                       supplied_pars)
+        unknown_par    <- stringr::str_glue("{par_name} = {rhs}")
         par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
       }
 
@@ -252,6 +312,31 @@ get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log) 
   if(neg_log) return_line <- paste0("-", return_line)
 
   paste(loglik_defs, loglik_sum_line, return_line, sep = "\n")
+}
+
+meas_mdl_rhs <- function(second_par, unknown_pars, par_names, supplied_pars) {
+
+  pos         <- which(second_par == par_names)
+
+  if(length(pos) == 0L) {
+
+    if(second_par %in% supplied_pars) return(second_par)
+
+    if(!second_par %in% supplied_pars) {
+
+      stop(paste0("Param '", second_par, "' is not defined."),
+           call. = FALSE)
+    }
+  }
+
+  rhs         <- stringr::str_glue("pars[[{pos}]]")
+
+  if("par_trans" %in% names(unknown_pars[[pos]])) {
+
+    rhs <- execute_trans(rhs, unknown_pars[[pos]]$par_trans, "text")
+  }
+
+  rhs
 }
 
 get_constraint_text <- function(extra_constraints, pars_df) {

@@ -9,6 +9,7 @@ sd_loglik_fun(
   unknown_pars,
   meas_data_mdl,
   neg_log = FALSE,
+  supplied_pars = NULL,
   start_time = NULL,
   stop_time = NULL,
   timestep = NULL,
@@ -36,6 +37,10 @@ a sampling statement along with its measurements. Here is an example: \cr
 returns a positive or negative value. If \code{TRUE}, the function
 returns a positive value (for minimisation optimisers). If
 \code{FALSE}, the function returns the original log-likelihood.}
+
+\item{supplied_pars}{A string vector indicating the name of parameters whose
+values will be supplied to the function. These values will not be subject to
+optimisation.}
 
 \item{start_time}{A number}
 
