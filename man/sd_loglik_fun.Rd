@@ -5,46 +5,50 @@
 \title{Generate a log-likelihood function for an SD model}
 \usage{
 sd_loglik_fun(
-  pars_df,
-  deSolve_components,
-  sim_controls,
-  meas_model_list,
-  extra_stocks = NULL,
-  extra_constraints = NULL,
-  neg_log = FALSE
+  filepath,
+  unknown_pars,
+  meas_data_mdl,
+  neg_log = FALSE,
+  supplied_pars = NULL,
+  start_time = NULL,
+  stop_time = NULL,
+  timestep = NULL,
+  integ_method = "euler"
 )
 }
 \arguments{
-\item{pars_df}{A data frame of three columns (\code{name}, \code{type},
-\code{par_trans}). Each row in this data frame corresponds to an unknown
-parameter. The column \code{name} must correspond to exactly the parameter's
-name in the SD model. The entries in column \code{type} can be either
-\code{"constant"} or \code{"stock"}. Lastly, column \code{par_trans} supports
-the following transformations: \code{"log"} for strictly positive values
-& \code{"logit"} for unknowns in the interval (0,1).}
+\item{filepath}{A string that indicates a path to a file with extension .stmx
+or .xmile. Vensim files (.mdl) are not xmile files. They must be exported
+from Vensim with extension .xmile}
 
-\item{deSolve_components}{A list}
+\item{unknown_pars}{A list of lists. Each second-level list contains at least
+the element name \code{name}, which corresponds to the parameter's name
+subject to estimation. In addition to the element \code{name}, users can
+incorporate in the sub-list the elements \code{min} and \code{max}. The
+value of \code{min} can only be \code{0}, whereas the value of \code{max}
+ can only be \code{1}.}
 
-\item{sim_controls}{A list}
-
-\item{meas_model_list}{A list of lists. Each second-level list corresponds to
-a measurement model. Here is an example: \cr
-\code{list(stock_name = "Infected", stock_fit_type = "net_change",
-           dist = list(name     = "dpois", sim_data = "lambda"),
-           data = 1:10)}}
-
-\item{extra_stocks}{An optional list of lists. Every sublist has two
-elements. The first element corresponds to \code{name}, which is a string
-that indicates the name of the stock whose initial value depends upon
-another stock. The second element corresponds to \code{init}, whose value
-(string) is an equation that expresses a constraint.}
-
-\item{extra_constraints}{An optional list}
+\item{meas_data_mdl}{A list of lists. Each second-level list corresponds to
+a sampling statement along with its measurements. Here is an example: \cr
+\code{list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+           measurements = 1:10))}}
 
 \item{neg_log}{A boolean that indicates whether the log-likelihood function
 returns a positive or negative value. If \code{TRUE}, the function
 returns a positive value (for minimisation optimisers). If
 \code{FALSE}, the function returns the original log-likelihood.}
+
+\item{supplied_pars}{A string vector indicating the name of parameters whose
+values will be supplied to the function. These values will not be subject to
+optimisation.}
+
+\item{start_time}{A number}
+
+\item{stop_time}{A number}
+
+\item{timestep}{A number}
+
+\item{integ_method}{A string. Either "euler" or "rk4"}
 }
 \value{
 A list of two elements. The first element \code{fun} corresponds to
@@ -55,13 +59,10 @@ the order in which the unknowns are returned.
 Generate a log-likelihood function for an SD model
 }
 \examples{
-  pars_df            <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
-  filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
-  mdl                <- read_xmile(filepath)
-  deSolve_components <- mdl$deSolve_components
-  sim_controls       <- list(start = 0, stop = 10, step = 0.25, integ_method ="rk4")
-  mm1 <- list(stock_name = "Infected", stock_fit_type = "net_change",
-              dist       = list(name     = "dpois", sim_data = "lambda", dist_offset = "1e-5"),
-              data       = 1:10)
-  sd_loglik_fun(pars_df, deSolve_components, sim_controls, list(mm1))
+ filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+ unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+ meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+                            measurements = 1:10))
+ fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+                          start_time = 0, stop_time = 10, timestep = 1/32)
 }

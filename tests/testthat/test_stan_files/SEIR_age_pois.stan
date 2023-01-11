@@ -113,5 +113,13 @@ model {
 }
 generated quantities {
   real log_lik;
+  array[n_obs] int sim_y_A;
+  array[n_obs] int sim_y_B;
+  array[n_obs] int sim_y_C;
+  array[n_obs] int sim_y_D;
   log_lik = poisson_lpmf(y_A | delta_x_1)+poisson_lpmf(y_B | delta_x_2)+poisson_lpmf(y_C | delta_x_3)+poisson_lpmf(y_D | delta_x_4);
+  sim_y_A = poisson_rng(delta_x_1);
+  sim_y_B = poisson_rng(delta_x_2);
+  sim_y_C = poisson_rng(delta_x_3);
+  sim_y_D = poisson_rng(delta_x_4);
 }

@@ -1,29 +1,26 @@
 #' Generate a log-likelihood function for an SD model
 #'
-#' @param pars_df A data frame of three columns (\code{name}, \code{type},
-#' \code{par_trans}). Each row in this data frame corresponds to an unknown
-#' parameter. The column \code{name} must correspond to exactly the parameter's
-#' name in the SD model. The entries in column \code{type} can be either
-#' \code{"constant"} or \code{"stock"}. Lastly, column \code{par_trans} supports
-#' the following transformations: \code{"log"} for strictly positive values
-#' & \code{"logit"} for unknowns in the interval (0,1).
-#' @param deSolve_components A list
-#' @param sim_controls A list
-#' @param meas_model_list A list of lists. Each second-level list corresponds to
-#'  a measurement model. Here is an example: \cr
-#'  \code{list(stock_name = "Infected", stock_fit_type = "net_change",
-#'             dist = list(name     = "dpois", sim_data = "lambda"),
-#'             data = 1:10)}
-#' @param extra_stocks An optional list of lists. Every sublist has two
-#'   elements. The first element corresponds to \code{name}, which is a string
-#'   that indicates the name of the stock whose initial value depends upon
-#'   another stock. The second element corresponds to \code{init}, whose value
-#'   (string) is an equation that expresses a constraint.
-#' @param extra_constraints An optional list
+#' @param unknown_pars A list of lists. Each second-level list contains at least
+#'  the element name \code{name}, which corresponds to the parameter's name
+#'  subject to estimation. In addition to the element \code{name}, users can
+#'  incorporate in the sub-list the elements \code{min} and \code{max}. The
+#'  value of \code{min} can only be \code{0}, whereas the value of \code{max}
+#'   can only be \code{1}.
+#' @param meas_data_mdl A list of lists. Each second-level list corresponds to
+#'  a sampling statement along with its measurements. Here is an example: \cr
+#'  \code{list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+#'             measurements = 1:10))}
 #' @param neg_log A boolean that indicates whether the log-likelihood function
 #'        returns a positive or negative value. If \code{TRUE}, the function
 #'        returns a positive value (for minimisation optimisers). If
 #'        \code{FALSE}, the function returns the original log-likelihood.
+#' @param supplied_pars A string vector indicating the name of parameters whose
+#' values will be supplied to the function. These values will not be subject to
+#' optimisation.
+#'
+#'
+#' @inheritParams read_xmile
+#' @inheritParams sd_simulate
 #'
 #' @return A list of two elements. The first element \code{fun} corresponds to
 #' the log likelihood function. The second element \code{par_names} indicates
@@ -31,233 +28,274 @@
 #' @export
 #'
 #' @examples
-#'   pars_df            <- data.frame(name = "beta_var", type = "constant", par_trans = "log")
-#'   filepath           <- system.file("models/", "SIR.stmx", package = "readsdr")
-#'   mdl                <- read_xmile(filepath)
-#'   deSolve_components <- mdl$deSolve_components
-#'   sim_controls       <- list(start = 0, stop = 10, step = 0.25, integ_method ="rk4")
-#'   mm1 <- list(stock_name = "Infected", stock_fit_type = "net_change",
-#'               dist       = list(name     = "dpois", sim_data = "lambda", dist_offset = "1e-5"),
-#'               data       = 1:10)
-#'   sd_loglik_fun(pars_df, deSolve_components, sim_controls, list(mm1))
+#'  filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+#'  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+#'  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+#'                             measurements = 1:10))
+#'  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl, neg_log = FALSE,
+#'                           start_time = 0, stop_time = 10, timestep = 1/32)
+sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
+                          neg_log    = FALSE,
+                          supplied_pars = NULL,
+                          start_time = NULL, stop_time = NULL, timestep = NULL,
+                          integ_method = "euler") {
 
-sd_loglik_fun <- function(pars_df, deSolve_components, sim_controls,
-                          meas_model_list, extra_stocks = NULL,
-                          extra_constraints = NULL,
-                          neg_log = FALSE) {
+  unk_constants <- unknown_pars
+  n_consts      <- length(unk_constants)
 
-  # ----------------------validations-------------------------------------------
-  check_measurement_models(meas_model_list)
-  # ----------------------------------------------------------------------------
+  pars_names <- get_names(unknown_pars, "par_name")
 
-  n_unk_proc <- nrow(pars_df)
+  mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
+  ds_inputs     <- get_deSolve_elems(mdl_structure)
+  const_names   <- names(ds_inputs$consts)
 
-  pars_df <- arrange_pars(pars_df, meas_model_list)
+  meas_mdl  <- lapply(meas_data_mdl, function(meas_obj) meas_obj$formula)
 
-  pars_trans_text  <- transform_pars(pars_df)
-  pars_assign_text <- assign_pars_text(pars_df, extra_stocks)
-  model_exe_text   <- get_model_run_text(sim_controls)
+  detected_mp <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  detected_mp <- detected_mp[!duplicated(detected_mp)]
+  #measurement parameters (mp)
+  mp_names  <- get_raw_names(detected_mp, "par_name")
+  meas_pars <- detected_mp[!mp_names %in% supplied_pars]
 
-  par_measure_df   <- pars_df[pars_df$type == "par_measure", ]
+  if(length(meas_pars) > 0) unknown_pars <- c(unknown_pars, meas_pars)
 
-  meas_model_text  <- get_meas_model_text(meas_model_list, neg_log, n_unk_proc)
+  par_list <- get_par_list(unknown_pars)
+
+  pars_trans_text  <- transform_pars(unknown_pars)
+  pars_assign_text <- assign_pars_text(unk_constants)
+  model_exe_text   <- get_model_run_text(integ_method)
+
+  meas_model_text  <- get_meas_model_text(meas_data_mdl, n_consts,
+                                          unknown_pars, neg_log, supplied_pars)
 
   body_list <- list(pars_trans_text,
                     pars_assign_text,
                     model_exe_text,
                     meas_model_text)
 
-  if(!is.null(extra_constraints)) {
-    extra_constraints_text <- get_constraint_text(extra_constraints, pars_df)
-    body_list              <- append(body_list, extra_constraints_text, 1)
-  }
+  if(!is.null(supplied_pars)) {
+
+    supplied_pars_text <- "# These parameters are fixed during the optimisation"
+
+    supplied_consts <- supplied_pars[supplied_pars %in% const_names]
+
+    if(length(supplied_consts) > 0L) {
+
+      sc_lines <- paste(stringr::str_glue('ds_inputs$consts["{supplied_consts}"]'),
+                        stringr::str_glue('supplied_pars${supplied_consts}'),
+                        sep = " <- ")
+
+      sc_text            <- paste(sc_lines, collapse = "\n")
+      supplied_pars_text <- paste(supplied_pars_text, sc_text, sep = "\n")
+    }
+
+    supplied_mp <- supplied_pars[supplied_pars %in% mp_names]
+
+    if(length(supplied_mp) > 0L) {
+
+      mp_lines <- vector(mode = "character", length = length(supplied_mp))
+
+      for(i in seq_along(supplied_mp)) {
+
+        smp <- supplied_mp[[i]]
+
+        lhs <- stringr::str_glue('{smp}')
+
+        par_obj <- detected_mp[[which(smp == mp_names)]]
+
+        rhs <- stringr::str_glue('supplied_pars${supplied_mp}')
+
+        if("par_trans" %in% names(par_obj)) {
+
+          pt  <- par_obj$par_trans
+          pn  <- par_obj$par_name
+          rhs <- stringr::str_glue('{pt}(supplied_pars${pn})')
+        }
+
+        mp_lines[[i]] <- paste(lhs, rhs, sep = " <- ")
+
+        mp_text <- paste(mp_lines, collapse = "\n")
+
+        supplied_pars_text <- paste(supplied_pars_text, mp_text,
+                                    sep = "\n")
+      }
+    }
+    body_list <- c(supplied_pars_text, body_list)
+ }
+
 
   body_text <- paste(body_list, collapse = "\n")
 
   body_func <- paste("{", body_text, "}", sep = "\n")
 
-  model_func <- rlang::new_function(
-    args = rlang::exprs(pars = ),
-    body = rlang::parse_expr(body_func)
-  )
+  func_args <- rlang::exprs(pars = )
 
-  rlang::fn_env(model_func)$consts      <- deSolve_components$consts
-  rlang::fn_env(model_func)$init_stocks <- deSolve_components$stocks
+  if(!is.null(supplied_pars)) func_args <- rlang::pairlist2(pars = ,
+                                                            supplied_pars = )
 
-  for(i in length(meas_model_list)) {
+  model_func <- rlang::new_function(args = func_args,
+                                    body = rlang::parse_expr(body_func))
 
-    meas_model <- meas_model_list[[i]]
+  rlang::fn_env(model_func)$ds_inputs <- ds_inputs
+
+  for(i in seq_along(meas_data_mdl)) {
+
+    meas_model <- meas_data_mdl[[i]]
     data_id <- paste0("data_", i)
-    rlang::fn_env(model_func)[[data_id]] <- meas_model$data
-
+    rlang::fn_env(model_func)[[data_id]] <- meas_model$measurements
   }
 
-  list(fun = model_func, par_names = pars_df$name)
+  list(fun = model_func, par_list = par_list)
+}
+
+get_par_list <- function(unknown_pars) {
+
+  lapply(unknown_pars, function(par_obj) {
+
+    par_name <- par_obj$par_name
+
+    obj_names <- names(par_obj)
+
+    has_a_lb  <- ifelse("min" %in% obj_names, TRUE, FALSE) # Lower bound(lb)
+    has_an_ub <- ifelse("max" %in% obj_names, TRUE, FALSE) # Upper bound(ub)
+
+    par_trans <- "I"
+
+    if(has_a_lb & !has_an_ub) par_trans <- "exp"
+    if(has_a_lb & has_an_ub) par_trans  <- "expit"
+
+    if("par_trans" %in% obj_names) {
+
+      par_name <- stringr::str_remove(par_name, paste0(par_obj$par_trans, "_"))
+      par_trans <- c(par_trans, par_obj$par_trans)
+    }
+
+    list(par_name  = par_name,
+         par_trans = par_trans)
+  })
 }
 
 
-transform_pars <- function(pars_df) {
-  pars_lines <- vector(mode = "character", length = nrow(pars_df))
+transform_pars <- function(unknown_pars) {
 
-  if(!"par_trans" %in% colnames(pars_df)) {
-    pars_df[["par_trans"]] <- ""
-  }
+  pars_lines <- lapply(seq_along(unknown_pars), function(i) {
 
-  par_names <- pars_df$name
-  par_trans <- pars_df$par_trans
+    par_obj <- unknown_pars[[i]]
+    lhs     <- stringr::str_glue("  pars[[{i}]]")
+    rhs     <- stringr::str_glue("pars[[{i}]]")
 
-  for(i in seq_along(par_names)) {
-    lhs             <- stringr::str_glue("pars[[{i}]]")
-    rhs             <- stringr::str_glue("pars[[{i}]]")
+    obj_names <- names(par_obj)
 
-    if(par_trans[i] == "log") {
-      rhs <- stringr::str_glue("exp(pars[[{i}]])")
-    }
+    has_a_lb  <- ifelse("min" %in% obj_names, TRUE, FALSE) # Lower bound(lb)
+    has_an_ub <- ifelse("max" %in% obj_names, TRUE, FALSE) # Upper bound(ub)
 
-    if(par_trans[i] == "logit") {
-      rhs <- stringr::str_glue("expit(pars[[{i}]])")
-    }
+    if(has_a_lb & !has_an_ub) rhs <- paste0("exp", "(", rhs, ")")
+
+    if(has_a_lb & has_an_ub)  rhs <- paste0("expit", "(", rhs, ")")
 
     par_line        <- paste(lhs, rhs, sep = " <- ")
-    pars_lines[[i]] <- par_line
-  }
+  })
 
   paste(pars_lines, collapse = "\n")
 }
 
-assign_pars_text <- function(pars_df, extra_stocks = NULL) {
+assign_pars_text <- function(unk_constants) {
 
-  pars_df <- pars_df[pars_df$type != "par_measure", ]
+  assign_lines <- lapply(seq_along(unk_constants), function(i) {
 
-  n_rows  <- nrow(pars_df)
-  n_extra <- 0
-
-  if(!is.null(extra_stocks)) {
-    n_extra <- length(extra_stocks)
-  }
-
-  assign_lines <- vector(mode = "character", length = n_rows + n_extra)
-
-  for(i in seq_len(n_rows)) {
-
-    par_name <- pars_df[i, "name"]
-
-    if(pars_df[i, "type"] == "constant") {
-      lhs <- stringr::str_glue('consts["{par_name}"]')
-    }
-
-    if(pars_df[i, "type"] == "stock") {
-      lhs <- stringr::str_glue('init_stocks["{par_name}"]')
-    }
-
+    unk_obj <- unk_constants[[i]]
+    lhs <- stringr::str_glue('  ds_inputs$consts["{unk_obj$par_name}"]')
     rhs <- stringr::str_glue('pars[[{i}]]')
 
     assign_line       <- paste(lhs, rhs, sep = " <- ")
-    assign_lines[[i]] <- assign_line
-  }
-
-  stocks_df <- pars_df[pars_df$type == "stock", ]
-  n_stocks  <- nrow(stocks_df)
-
-  for(i in seq_len(n_extra)) {
-
-    stock_obj <- extra_stocks[[i]]
-    sn        <- stock_obj$name
-
-    lhs <- stringr::str_glue('init_stocks["{sn}"]')
-
-    rhs <- stock_obj$init
-
-    for(j in seq_len(n_stocks)) {
-      pattern     <- paste0("\\b", stocks_df[[j, "name"]], "\\b")
-      idx         <- stocks_df[[j, "pos"]]
-      replacement <- stringr::str_glue("pars[[{idx}]]")
-      rhs         <- stringr::str_replace_all(rhs, pattern, replacement)
-    }
-
-    assign_line                <- paste(lhs, rhs, sep = " <- ")
-    assign_lines[[i + n_rows]] <- assign_line
-  }
+  })
 
   paste(assign_lines, collapse = "\n")
 }
 
-get_model_run_text <- function(sim_controls) {
-  start_time <- sim_controls$start
-  stop_time  <- sim_controls$stop
-  step       <- sim_controls$step
-  im         <- sim_controls$integ_method
+get_model_run_text <- function(im) {
 
-  simtime_line <- stringr::str_glue(
-    "simtime <- seq({start_time}, {stop_time}, {step})")
+  stocks_assing_lines <- paste(
+    "  readsdr_env <- list2env(as.list(ds_inputs$consts))",
+    "  ds_inputs$stocks <- purrr::map_dbl(ds_inputs$stocks, function(x) {",
+    "    eval(parse(text = x), envir = readsdr_env)",
+    "  })", sep = "\n")
 
-  call_ode_line <- paste("o <- deSolve::ode(",
-                         "  y      = init_stocks,",
-                         "  times  = simtime,",
-                         "  func   = deSolve_components$func,",
-                         "  parms  = consts,",
-                         stringr::str_glue('  method = "{im}")'),
-                         sep = "\n")
+  sd_simulate_line <- stringr::str_glue('  o    <- sd_simulate(ds_inputs, integ_method = "{im}")')
 
-  paste(simtime_line,
-        call_ode_line,
-        "o_df <- data.frame(o)",
+  paste(stocks_assing_lines, sd_simulate_line, "  o_df <- data.frame(o)",
         sep = "\n")
 }
 
-get_meas_model_text <- function(fit_options, neg_log, n_unk_proc = NA) {
+get_meas_model_text <- function(meas_data_mdl, n_consts, unknown_pars, neg_log,
+                                supplied_pars) {
 
-  pos  <- n_unk_proc
-  n_mm <- length(fit_options) # number of measurement models
+  par_names <- get_raw_names(unknown_pars, "par_name")
+
+  pos  <- n_consts
+  n_mm <- length(meas_data_mdl) # number of measurements
 
   text_output <- vector(mode = "character", length = n_mm)
 
   for(i in seq_len(n_mm)) {
 
-    meas_mdl   <- fit_options[[i]]
-    stock_name <- meas_mdl$stock_name
-    fit_type   <- meas_mdl$stock_fit_type
+    meas_data_obj <- meas_data_mdl[[i]]
 
-    if(fit_type == "actual") {
+    decomposed_meas <- decompose_meas(meas_data_obj$formula)
+    dist_obj        <- get_dist_obj(decomposed_meas$rhs)
+
+    nf_pattern <- get_pattern_regex("net_flow")
+    is_nf      <- stringr::str_detect(dist_obj[[2]], nf_pattern) # Is net flow?
+
+   if(!is_nf) {
+
+      stock_name <- dist_obj[[2]]
       lhs <- paste0("sim_data_", i)
       rhs <- "dplyr::filter(o_df, time - trunc(time) == 0)"
       sim_data_line <- stringr::str_glue("{lhs} <- {rhs}")
       sim_data_text <- stringr::str_glue("sim_data_{i}[, '{stock_name}']")
     }
 
-    if(fit_type == "net_change") {
+    if(is_nf) {
+
+      stock_name <- stringr::str_match(dist_obj[[2]],
+                                       "net_flow\\((.+?)\\)")[[2]]
       sim_data_line <- stringr::str_glue('sim_data_{i} <- sd_net_change(o_df, "{stock_name}")')
       sim_data_text <- stringr::str_glue("sim_data_{i}[, 'value']")
     }
 
-    if(!is.null(meas_mdl$dist$dist_offset)) {
-      sim_data_text <- paste(sim_data_text, meas_mdl$dist$dist_offset,
-                             sep = " + ")
-    }
+    sim_data_text <- paste(sim_data_text, "1e-05", sep = " + ")
 
-    distr        <- meas_mdl$dist$name
-    par_sim_data <- meas_mdl$dist$sim_data
+    distr          <- Stan_to_R(dist_obj$dist_name, "d")
+    dist_args      <- get_dist_args(dist_obj$dist_name, language = "R")
+    dist_args_Stan <- get_dist_args(dist_obj$dist_name)
+    par_sim_data   <- dist_args[[1]]
 
     par_assignment <- stringr::str_glue("{par_sim_data} = {sim_data_text}")
 
-    if(!is.null(meas_mdl$dist$unknown)) {
-      unknown_obj <- meas_mdl$dist$unknown
-      pos         <- pos + 1
-      par_name    <- unknown_obj$name
-      unknown_par <- stringr::str_glue("{par_name} = pars[[{pos}]]")
-      par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
-    }
+    if(length(dist_args) == 2) {
 
-    if(!is.null(meas_mdl$dist$known_par)) {
-      par_name  <- names(meas_mdl$dist$known_par)
-      known_par <- stringr::str_glue("{par_name} = {meas_mdl$dist$known_par}")
-      par_assignment <- paste(par_assignment, known_par, sep = ", ")
+      par_name   <- dist_args[[2]]
+      second_par <- dist_obj[[3]]
+      dist_par_known <- is_string_numeric(second_par)
+
+      if(!dist_par_known) {
+
+        rhs            <- meas_mdl_rhs(second_par, unknown_pars, par_names,
+                                       supplied_pars)
+        unknown_par    <- stringr::str_glue("{par_name} = {rhs}")
+        par_assignment <- paste(par_assignment, unknown_par, sep = ", ")
+      }
+
+      if(dist_par_known) {
+
+        known_par <- stringr::str_glue("{par_name} = {second_par}")
+        par_assignment <- paste(par_assignment, known_par, sep = ", ")
+      }
     }
 
     log_lik_line <- stringr::str_glue(
       "loglik_{i}   <- sum({distr}(data_{i}, {par_assignment}, log = TRUE))")
-
-
 
     text_output[[i]] <- paste(sim_data_line, log_lik_line, sep = "\n")
   }
@@ -274,6 +312,31 @@ get_meas_model_text <- function(fit_options, neg_log, n_unk_proc = NA) {
   if(neg_log) return_line <- paste0("-", return_line)
 
   paste(loglik_defs, loglik_sum_line, return_line, sep = "\n")
+}
+
+meas_mdl_rhs <- function(second_par, unknown_pars, par_names, supplied_pars) {
+
+  pos         <- which(second_par == par_names)
+
+  if(length(pos) == 0L) {
+
+    if(second_par %in% supplied_pars) return(second_par)
+
+    if(!second_par %in% supplied_pars) {
+
+      stop(paste0("Param '", second_par, "' is not defined."),
+           call. = FALSE)
+    }
+  }
+
+  rhs         <- stringr::str_glue("pars[[{pos}]]")
+
+  if("par_trans" %in% names(unknown_pars[[pos]])) {
+
+    rhs <- execute_trans(rhs, unknown_pars[[pos]]$par_trans, "text")
+  }
+
+  rhs
 }
 
 get_constraint_text <- function(extra_constraints, pars_df) {
@@ -301,62 +364,4 @@ identify_pars <- function(equation, pars_df) {
   }
 
   equation
-}
-
-arrange_pars <- function(pars_df, meas_model_list) {
-
-  n_mm <- length(meas_model_list) # number of measurement models
-
-  lapply(meas_model_list, function(meas_mdl) {
-
-    if(!is.null(meas_mdl$dist$unknown)) {
-      unknown_obj <- meas_mdl$dist$unknown
-      par_name    <- unknown_obj$name
-      par_trans   <- ""
-
-      if(!is.null(unknown_obj$par_trans)) {
-        par_trans <- unknown_obj$par_trans
-      }
-
-      meas_row <- data.frame(name      = par_name,
-                             type      = "par_measure",
-                             par_trans = par_trans)
-
-    }
-  }) -> meas_pars
-
-  meas_pars <- remove_NULL(meas_pars)
-
-  if(length(meas_pars) > 0) {
-    meas_pars_df <- dplyr::bind_rows(meas_pars)
-    pars_df      <- rbind(pars_df, meas_pars_df)
-  }
-
-  pars_df <- dplyr::mutate(pars_df,
-                           type_num = dplyr::case_when(
-                             type == "constant" ~ 1,
-                             type == "stock" ~ 2,
-                             type == "par_measure" ~ 3,
-                             TRUE ~ NA_real_))
-
-  pars_df <- pars_df[order(pars_df$type_num), ]
-  pars_df <- dplyr::select(pars_df, -"type_num")
-
-  dplyr::mutate(pars_df, pos = dplyr::row_number())
-}
-
-check_measurement_models <- function(meas_model_list) {
-
-  vals <- lapply(meas_model_list, function(mm) {
-    actual_names   <- names(mm)
-    required_names <- c("stock_name", "stock_fit_type", "dist", "data")
-
-    missing <- required_names[!required_names %in% actual_names]
-
-    if(length(missing) > 0) {
-      elems <- paste(missing, collapse = ", ")
-      msg   <- paste0("'",elems, "' is (are) required in each element of 'meas_model_list'")
-      stop(msg, call. = FALSE)
-    }
-  })
 }

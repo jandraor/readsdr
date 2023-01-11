@@ -62,5 +62,7 @@ model {
 }
 generated quantities {
   real log_lik;
+  array[n_obs] int sim_y;
   log_lik = neg_binomial_2_lpmf(y | delta_x_1, phi);
+  sim_y = neg_binomial_2_rng(delta_x_1, phi);
 }

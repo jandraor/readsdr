@@ -7,9 +7,7 @@
 #'
 #' @examples
 #' expit(-3)
-expit <- function(x) {
-  1 / (1 + exp(-x))
-}
+expit <- function(x) 1 / (1 + exp(-x))
 
 
 #' Logit transformation
@@ -21,6 +19,16 @@ expit <- function(x) {
 #'
 #' @examples
 #' logit(0.5)
-logit <- function(p) {
-  log(p / (1 - p))
-}
+logit <- function(p) log(p / (1 - p))
+
+
+#' Inverse of a number
+#'
+#' @param x A real number
+#'
+#' @return A real number
+#' @export
+#'
+#' @examples
+#' inv(0.5) # Should return 2
+inv <- function(x) 1/x

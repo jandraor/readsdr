@@ -2,6 +2,8 @@ stan_gc <- function(meas_mdl, LFO_CV, lvl_names) {
 
   decl <- "  real log_lik;"
 
+  sim_data_obj <- generate_sim_data_lines(meas_mdl, lvl_names)
+
   if(LFO_CV) decl <- paste(decl, "  real log_lik_pred;", sep = "\n")
 
   rhs         <- get_log_lik_statement(meas_mdl, FALSE, lvl_names)
@@ -14,7 +16,11 @@ stan_gc <- function(meas_mdl, LFO_CV, lvl_names) {
     log_lik_asg <- paste(log_lik_asg, pred_asg, sep = "\n")
   }
 
-  block_body <- paste(decl, log_lik_asg, sep = "\n")
+  block_body <- paste(decl,
+                      sim_data_obj$decl,
+                      log_lik_asg,
+                      sim_data_obj$assign,
+                      sep = "\n")
 
   paste("generated quantities {",
         block_body,
@@ -112,5 +118,51 @@ get_density_statement <- function(dist_obj) {
 
   msg <- stringr::str_glue("get_density_statement() does not support the '{dist_obj$dist_name}' distribution.")
   stop(msg, call. = FALSE)
+}
+
+generate_sim_data_lines <- function(meas_mdl, lvl_names) {
+
+  n_meas <- length(meas_mdl)
+
+  decl_lines   <- vector(mode = "character", length = n_meas)
+  assign_lines <- vector(mode = "character", length = n_meas)
+
+  delta_counter <- 1
+
+  for(i in seq_along(meas_mdl)) {
+
+    meas_obj        <- meas_mdl[[i]]
+    decomposed_meas <- decompose_meas(meas_obj)
+
+    lhs             <- decomposed_meas$lhs
+    type            <- get_dist_type(decomposed_meas$rhs)
+    decl_lines[[i]] <- stringr::str_glue("  array[n_obs] {type} sim_{lhs};")
+
+    dist_obj          <- get_dist_obj(decomposed_meas$rhs)
+    dname             <- dist_obj$dist_name
+
+    nf_pattern <- get_pattern_regex("net_flow")
+    is_nf      <- stringr::str_detect(dist_obj[[2]], nf_pattern)
+
+    if(is_nf) {
+
+      pars <- stringr::str_glue("delta_x_{delta_counter}")
+      delta_counter <- delta_counter + 1
+    }
+
+    if(!is_nf) pars <- translate_stock(dist_obj[[2]], lvl_names)
+
+    if(length(dist_obj) == 3L) pars <- paste(pars, dist_obj[[3]], sep = ", ")
+
+    assign_lines[[i]] <- stringr::str_glue("  sim_{lhs} = {dname}_rng({pars});")
+  }
+
+
+  decl   <- paste(decl_lines, collapse = "\n")
+  assign <- paste(assign_lines, collapse = "\n")
+
+
+  list(decl   = decl,
+       assign = assign)
 }
 

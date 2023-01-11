@@ -10,6 +10,31 @@ get_names <- function(obj_list, name_var = "name") {
   sapply(obj_list, function(obj) obj[[name_var]])
 }
 
+get_raw_names <- function(obj_list, name_var) {
+
+  purrr::map_chr(obj_list, function(obj) {
+
+    name <- obj[[name_var]]
+
+    if("par_trans" %in% names(obj)) {
+
+      name <- stringr::str_remove(name, paste0(obj$par_trans, "_"))
+    }
+
+    name
+  })
+}
+
 as_row_list <- function(df) do.call(function(...) Map(list,...), df)
 
-execute_trans <- function(val, trans_type) if(trans_type == "inv") return(1/val)
+execute_trans <- function(val, trans_type, return_type = "numeric") {
+
+  if(trans_type == "inv" & return_type == "numeric") return(1/val)
+
+  if(trans_type == "inv" & return_type == "text") return(paste0("1/", val))
+}
+
+is_string_numeric <- function(x) suppressWarnings(ifelse(!is.na(as.numeric(x)),
+                                                         TRUE, FALSE))
+
+

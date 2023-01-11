@@ -58,5 +58,7 @@ model {
 }
 generated quantities {
   real log_lik;
+  array[n_obs] real sim_y;
   log_lik = normal_lpdf(y | delta_x_1, tau);
+  sim_y = normal_rng(delta_x_1, tau);
 }

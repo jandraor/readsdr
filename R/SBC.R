@@ -23,7 +23,7 @@ sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
 
   estimated_params <- get_meas_params(meas_mdl, estimated_params)
 
-  prior_fun_list <- prior_fun_factory(estimated_params)
+  prior_fun_list <- prior_fun_factory(estimated_params, 1)
 
   mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
   ds_inputs     <- get_deSolve_elems(mdl_structure)
@@ -98,7 +98,7 @@ sd_data_generator_fun <- function(filepath, estimated_params, meas_mdl,
   }
 }
 
-prior_fun_factory <- function(estimated_params) {
+prior_fun_factory <- function(estimated_params, n_draws) {
 
   n_params <- length(estimated_params)
 
@@ -116,17 +116,17 @@ prior_fun_factory <- function(estimated_params) {
 
     fun_name  <- Stan_to_R(dist_name)
 
-    fun_list[[i]]      <- fun_factory(fun_name, arg_names_R, arg_list)
+    fun_list[[i]]      <- fun_factory(fun_name, arg_names_R, arg_list, n_draws)
     names(fun_list)[i] <- par_obj$par_name
   }
 
   fun_list
 }
 
-fun_factory <- function(fun_name, arg_names_R, arg_list) {
+fun_factory <- function(fun_name, arg_names_R, arg_list, n_draws) {
 
   dist_args_txt <- paste(arg_names_R, arg_list, sep = " = ")
-  n_arg         <- "n = 1"
+  n_arg         <- paste0("n = ", n_draws)
   args_txt      <- paste(c(n_arg, dist_args_txt), collapse = ", ")
   body_fun      <- stringr::str_glue("{fun_name}({args_txt })")
 

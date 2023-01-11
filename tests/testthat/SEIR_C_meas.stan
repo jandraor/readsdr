@@ -51,5 +51,7 @@ model {
 }
 generated quantities {
   real log_lik;
+  array[n_obs] int sim_y;
   log_lik = poisson_lpmf(y | x[:, 5]);
+  sim_y = poisson_rng(x[:, 5]);
 }

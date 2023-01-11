@@ -240,16 +240,16 @@ decompose_meas <- function(meas_obj) {
        rhs = rhs)
 }
 
-Stan_to_R <- function(dist_name) {
+Stan_to_R <- function(dist_name, type = "r") {
 
-  translation_db <- list(beta           = "rbeta",
-                         exponential    = "rexp",
-                         lognormal      = "rlnorm",
-                         normal         = "rnorm",
-                         neg_binomial_2 = "rnbinom",
-                         poisson        = "rpois")
+  translation_db <- list(beta           = "beta",
+                         exponential    = "exp",
+                         lognormal      = "lnorm",
+                         normal         = "norm",
+                         neg_binomial_2 = "nbinom",
+                         poisson        = "pois")
 
-  translation_db[[dist_name]]
+  paste0(type, translation_db[[dist_name]])
 }
 
 get_meas_params <- function(meas_mdl, estimated_params) {
