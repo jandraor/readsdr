@@ -535,3 +535,36 @@ test_that("xml_to_elem_list() handles a 2 dimensional arrayed constant from Vens
   expect_equal(actual, expected)
 
 })
+
+test_that("xml_to_elem_list() handles DELAYN from Stella", {
+
+  filepath      <- system.file("models/", "SEjIkR.stmx", package = "readsdr")
+  raw_xml       <- safe_read(filepath)
+  vendor        <- which_vendor(raw_xml)
+  variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  auxs_xml      <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
+  aux_xml       <- auxs_xml[[7]]
+
+  actual          <- xml_to_elem_list(aux_xml,
+                                      vendor = vendor,
+                                      dims_obj = NULL)
+
+  expected <- list(
+    vars = list(
+      list(name     = "E_to_I",
+           equation = "dly_S_to_E_2_out"),
+      list(name     = "dly_S_to_E_1_out",
+           equation = "dly_S_to_E_1/((2)/2)"),
+      list(name     = "dly_S_to_E_2_out",
+           equation = "dly_S_to_E_2/((2)/2)")),
+    consts = list(),
+    builtin_stocks = list(
+      list(name      = "dly_S_to_E_1",
+           equation  = "S_to_E - dly_S_to_E_1_out",
+           initValue = 0),
+      list(name      = "dly_S_to_E_2",
+           equation  = "dly_S_to_E_1_out - dly_S_to_E_2_out",
+           initValue = 0)))
+
+  expect_equal(actual, expected)
+})

@@ -137,6 +137,7 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
   non_const_list <- unname(non_const_list)
 
   if(vendor == "isee") {
+
     output_isee    <- lapply(non_const_list, interpret_equations_isee, aux_xml)
     vars           <- lapply(output_isee, function(obj) obj$vars)
     vars           <- unlist(vars, recursive = FALSE)
@@ -145,6 +146,7 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
   }
 
   if(vendor == "Vensim") {
+
     output_isee    <- lapply(non_const_list, interpret_equations_vensim)
     vars           <- lapply(output_isee, function(obj) obj$vars)
     vars           <- unlist(vars, recursive = FALSE)
@@ -168,10 +170,21 @@ tidy_consts <- function(const_obj) {
 }
 
 interpret_equations_isee <- function(non_const_obj, aux_xml) {
+
   var_name <- non_const_obj[[1]]
   equation <- non_const_obj[[2]]
 
-  stl_smooth1 <- stringr::str_detect(equation, "SMTH1")
+  stl_delayn <- stringr::str_detect(equation, "\\bDELAYN\\b")
+
+  if(stl_delayn) {
+
+    DELAYN_translation <- translate_DELAYN(var_name, equation, "isee")
+
+    return(list(vars           = DELAYN_translation$variable_list,
+                builtin_stocks = DELAYN_translation$stock_list))
+  }
+
+  stl_smooth1 <- stringr::str_detect(equation, "\\bSMTH1\\b")
 
   if(stl_smooth1) {
 
@@ -182,7 +195,7 @@ interpret_equations_isee <- function(non_const_obj, aux_xml) {
                 builtin_stocks = list(S1_translation$stock)))
   }
 
-  stl_smooth3 <- stringr::str_detect(equation, "SMTH3")
+  stl_smooth3 <- stringr::str_detect(equation, "\\bSMTH3\\b")
 
   if(stl_smooth3) {
 

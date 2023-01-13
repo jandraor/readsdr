@@ -1,3 +1,72 @@
+translate_DELAYN <- function(name, eq, vendor) {
+
+  if(vendor == "isee") {
+
+    pat1         <- "DELAYN\\((.+?),(.+?),(.+?),(.+?)\\)"
+
+    if(stringr::str_detect(eq, pat1)) {
+
+      reg_pat      <- stringr::regex(pat1, dotall = TRUE)
+      string_match <- stringr::str_match(eq, reg_pat)
+      input        <- trimws(string_match[[2]])
+      duration     <- trimws(string_match[[3]])
+      duration     <- suppressWarnings(as.numeric(duration))
+      delay_order  <- trimws(string_match[[4]])
+      delay_order  <- suppressWarnings(as.numeric(delay_order))
+      init         <- trimws(string_match[[5]])
+      init         <- suppressWarnings(as.numeric(init))
+
+      return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
+    }
+
+  }
+
+}
+
+stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
+
+  variable_list <- vector(mode = "list", length = delay_order + 1)
+  stock_list    <- vector(mode = "list", length = delay_order)
+
+  v1_eq <- stringr::str_glue("dly_{input}_{delay_order}_out")
+
+  variable_list[[1]] <- list(name     = name,
+                             equation = as.character(v1_eq))
+
+  for(i in seq_len(delay_order)) {
+
+    var_name <- stringr::str_glue("dly_{input}_{i}_out")
+    var_eq   <- stringr::str_glue("dly_{input}_{i}/(({duration})/{delay_order})")
+
+    variable_list[[i + 1]] <- list(name     = as.character(var_name),
+                                   equation = as.character(var_eq))
+
+    stk_name <- stringr::str_glue("dly_{input}_{i}")
+
+    stk_init <- (init * delay_order) / duration
+
+    if(i == 1) {
+
+      stk_eq <- stringr::str_glue("{input} - {var_name}")
+    }
+
+    if(i != 1) {
+
+      var_name2 <- stringr::str_glue("dly_{input}_{i - 1}_out")
+
+      stk_eq <- stringr::str_glue("{var_name2} - {var_name}")
+    }
+
+    stock_list[[i]] <- list(name      = as.character(stk_name),
+                            equation  = as.character(stk_eq),
+                            initValue = stk_init)
+  }
+
+  list(variable_list = variable_list,
+       stock_list    = stock_list,
+       delay_order   = delay_order)
+}
+
 translate_delay <- function(equation, vendor) {
 
   if(vendor == "Vensim") {
