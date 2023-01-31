@@ -63,8 +63,6 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
   consts         <- list()
   builtin_stocks <- list()
 
-  n_dims <- 0
-
   dim_xml     <- xml2::xml_find_all(aux_xml, ".//d1:dimensions")
   dimensions  <- xml2::xml_find_all(aux_xml, ".//d1:dim")
   n_dims     <- length(dimensions)
