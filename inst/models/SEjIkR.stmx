@@ -39,7 +39,7 @@
 				<outflow>I_to_R</outflow>
 			</stock>
 			<flow name="I to R">
-				<eqn>DELAYN(E_to_I,  2,  2, 0.5)</eqn>
+				<eqn>DELAYN(E_to_I,  2,  k, 0.5)</eqn>
 			</flow>
 			<stock name="R">
 				<eqn>0</eqn>
@@ -62,10 +62,16 @@
 				<eqn>0.75</eqn>
 			</aux>
 			<flow name="E to I">
-				<eqn>DELAYN(S_to_E,  2,  2, 0)</eqn>
+				<eqn>DELAYN(S_to_E,  2,  j, 0)</eqn>
 			</flow>
 			<aux name="I0">
 				<eqn>1</eqn>
+			</aux>
+			<aux name="j">
+				<eqn>2</eqn>
+			</aux>
+			<aux name="k">
+				<eqn>2</eqn>
 			</aux>
 		</variables>
 		<views>
@@ -114,7 +120,7 @@
 				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
 				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" hide_border="false" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
 			</style>
-			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="2" isee:page_rows="2" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+			<view isee:show_pages="false" background="white" page_width="808" page_height="561" isee:page_cols="2" isee:page_rows="2" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
 				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
 					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
 						<shape type="rectangle" width="45" height="35"/>
@@ -204,17 +210,17 @@
 						</plot>
 					</graph>
 				</stacked_container>
-				<flow x="360.5" y="185" name="E to I">
+				<flow x="360.5" y="184" name="E to I">
 					<pts>
-						<pt x="317.5" y="185"/>
-						<pt x="403.5" y="185"/>
+						<pt x="317.5" y="184"/>
+						<pt x="403.5" y="184"/>
 					</pts>
 				</flow>
 				<connector uid="11" angle="320.281">
 					<from>E_to_I</from>
 					<to>I_to_R</to>
 				</connector>
-				<connector uid="9" angle="269.105">
+				<connector uid="9" angle="272.295">
 					<from>E_to_I</from>
 					<to>C_in</to>
 				</connector>
@@ -223,6 +229,16 @@
 					<to>E_to_I</to>
 				</connector>
 				<aux x="440.5" y="118" name="I0"/>
+				<aux x="394.5" y="231" name="j"/>
+				<connector uid="15" angle="125.882">
+					<from>j</from>
+					<to>E_to_I</to>
+				</connector>
+				<aux x="529.5" y="228" name="k"/>
+				<connector uid="16" angle="129.289">
+					<from>k</from>
+					<to>I_to_R</to>
+				</connector>
 			</view>
 		</views>
 	</model>

@@ -1,4 +1,4 @@
-translate_DELAYN <- function(name, eq, vendor) {
+translate_DELAYN <- function(name, eq, vendor, consts) {
 
   if(vendor == "isee") {
 
@@ -11,10 +11,19 @@ translate_DELAYN <- function(name, eq, vendor) {
       input        <- trimws(string_match[[2]])
       duration     <- trimws(string_match[[3]])
       duration     <- suppressWarnings(as.numeric(duration))
-      delay_order  <- trimws(string_match[[4]])
-      delay_order  <- suppressWarnings(as.numeric(delay_order))
-      init         <- trimws(string_match[[5]])
-      init         <- suppressWarnings(as.numeric(init))
+
+      raw_delay_order <- trimws(string_match[[4]])
+      delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
+
+      if(is.na(delay_order)) {
+
+        const_names <- get_names(consts)
+        idx         <- which(raw_delay_order == const_names)
+        delay_order <- consts[[idx]]$value
+      }
+
+      init <- trimws(string_match[[5]])
+      init <- suppressWarnings(as.numeric(init))
 
       return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
     }

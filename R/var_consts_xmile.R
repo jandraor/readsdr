@@ -31,19 +31,30 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
     return(list(variables = vars, constants = consts))
   }
 
-  elem_list      <- lapply(auxs_xml, xml_to_elem_list, vendor = vendor,
-                           dims_obj = dims_obj)
-
-  vars           <- lapply(elem_list, function(obj) obj$vars)
-  vars           <- remove_NULL(vars)
-  vars           <- unlist(vars, recursive = FALSE)
+  elem_list <- lapply(auxs_xml, classify_elems, vendor = vendor,
+                      dims_obj = dims_obj)
 
   consts         <- lapply(elem_list, function(obj) obj$consts)
   consts         <- remove_NULL(consts)
   if(length(consts) > 0) consts <- unlist(consts, recursive = FALSE)
 
+  non_consts <- lapply(elem_list, function(obj) {
 
-  builtin_stocks <- lapply(elem_list, function(obj) obj$builtin_stocks)
+    if(length(obj$non_consts$elems) == 0) return(NULL)
+    obj$non_consts
+  })
+
+  non_consts <- remove_NULL(non_consts)
+
+  # interpreted non-consts
+  interpreted_nc <- lapply(non_consts, interpret_non_consts, vendor, consts,
+                           auxs_xml)
+
+  vars           <- lapply(interpreted_nc, function(obj) obj$vars)
+  vars           <- remove_NULL(vars)
+  vars           <- unlist(vars, recursive = FALSE)
+
+  builtin_stocks <- lapply(interpreted_nc, function(obj) obj$builtin_stocks)
   builtin_stocks <- unlist(builtin_stocks, recursive = FALSE)
   builtin_stocks <- remove_NULL(builtin_stocks)
 
@@ -57,19 +68,19 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
   vars_consts_obj
 }
 
-xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
+classify_elems <- function(aux_xml, vendor, dims_obj) {
 
-  vars           <- list()
   consts         <- list()
-  builtin_stocks <- list()
 
   dim_xml     <- xml2::xml_find_all(aux_xml, ".//d1:dimensions")
   dimensions  <- xml2::xml_find_all(aux_xml, ".//d1:dim")
-  n_dims     <- length(dimensions)
+  n_dims      <- length(dimensions)
 
   raw_var_names <- xml2::xml_attr(aux_xml, "name")
   var_names     <- sanitise_elem_name(raw_var_names)
   var_names     <- check_elem_name(var_names)
+
+  aux_name <- var_names
 
   is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
@@ -131,12 +142,33 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
     consts <- lapply(const_list, tidy_consts)
   }
 
-  non_const_list <- Map(list, var_names[!are_const], equations[!are_const])
-  non_const_list <- unname(non_const_list)
+  non_const_list      <- Map(list, var_names[!are_const], equations[!are_const])
+  non_const_list      <- unname(non_const_list)
+
+  list(consts     = consts,
+       non_consts = list(elems    = non_const_list,
+                         aux_name = aux_name))
+}
+
+
+tidy_consts <- function(const_obj) {
+  list(name  = const_obj[[1]],
+       value = as.numeric(const_obj[[2]]))
+}
+
+interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml) {
+
+  aux_name       <- non_const_obj$aux_name
+  non_const_list <- non_const_obj$elems
+
+  aux_names <- get_auxs_names(auxs_xml)
+  idx       <- which(aux_name == aux_names)
+  aux_xml   <-  auxs_xml[[idx]]
 
   if(vendor == "isee") {
 
-    output_isee    <- lapply(non_const_list, interpret_equations_isee, aux_xml)
+    output_isee    <- lapply(non_const_list, interpret_equations_isee, consts,
+                             aux_xml)
     vars           <- lapply(output_isee, function(obj) obj$vars)
     vars           <- unlist(vars, recursive = FALSE)
     builtin_stocks <- lapply(output_isee, function(obj) obj$builtin_stocks)
@@ -152,8 +184,7 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
     builtin_stocks <- unlist(builtin_stocks, recursive = FALSE)
   }
 
-  output_list <- list(vars   = vars,
-                      consts = consts)
+  output_list <- list(vars   = vars)
 
   if(length(builtin_stocks) > 0) {
     output_list$builtin_stocks <- builtin_stocks
@@ -162,12 +193,8 @@ xml_to_elem_list <- function(aux_xml, vendor, dims_obj) {
   output_list
 }
 
-tidy_consts <- function(const_obj) {
-  list(name  = const_obj[[1]],
-       value = as.numeric(const_obj[[2]]))
-}
 
-interpret_equations_isee <- function(non_const_obj, aux_xml) {
+interpret_equations_isee <- function(non_const_obj, consts, aux_xml) {
 
   var_name <- non_const_obj[[1]]
   equation <- non_const_obj[[2]]
@@ -176,7 +203,7 @@ interpret_equations_isee <- function(non_const_obj, aux_xml) {
 
   if(stl_delayn) {
 
-    DELAYN_translation <- translate_DELAYN(var_name, equation, "isee")
+    DELAYN_translation <- translate_DELAYN(var_name, equation, "isee", consts)
 
     return(list(vars           = DELAYN_translation$variable_list,
                 builtin_stocks = DELAYN_translation$stock_list))
@@ -291,6 +318,7 @@ interpret_equations_vensim <- function(non_const_obj) {
   there_is_graph_fun <- FALSE
 
   if(stringr::str_detect(equation, "WITHLOOKUP")) {
+
     there_is_graph_fun <- TRUE
     translation        <- translate_Vensim_graph_func(equation)
     fun_name           <- paste0("f_", var_name)
@@ -300,11 +328,21 @@ interpret_equations_vensim <- function(non_const_obj) {
   }
 
   var_obj <- list(name     = var_name,
-       equation = equation)
+                  equation = equation)
 
   if(there_is_graph_fun) {
     var_obj$graph_fun <- graph_fun
   }
 
   list(vars = list(var_obj))
+}
+
+get_auxs_names <- function(auxs_xml) {
+
+  lapply(auxs_xml, function(aux_xml) {
+
+    raw_var_name <- xml2::xml_attr(aux_xml, "name")
+    var_name     <- sanitise_elem_name(raw_var_name)
+    var_name     <- check_elem_name(var_name)
+  })
 }

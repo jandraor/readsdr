@@ -149,7 +149,7 @@ test_that("create_vars_consts_obj_xmile() ignores aux Time from Vensim", {
 test_that("create_vars_consts_obj_xmile() creates the var object for a variable
           with a graphical function, and the XMILE was producted by VENSIM", {
 
-  test_var_xml <- xml2::read_xml('
+            test_var_xml <- xml2::read_xml('
   <root>
     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
       <variables>
@@ -442,9 +442,41 @@ test_that("create_vars_consts_obj_xmile() handles Stella's apply all for equatio
   expect_equal(actual_obj, expected_obj)
 })
 
-#-------xml_to_elem_list--------------------------------------------------------
 
-test_that("xml_to_elem_list() handles a arrayed variable", {
+
+test_that("classify_elems() handles a 2 dimensional arrayed constant from Vensim", {
+
+
+  filepath      <- "./2d_pop.xmile"
+  raw_xml       <- safe_read(filepath)
+  vendor        <- which_vendor(raw_xml)
+  variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
+  dims_obj      <- create_dims_obj(raw_xml)
+  auxs_xml      <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
+
+  elem_list     <- lapply(auxs_xml, classify_elems, vendor = vendor,
+                          dims_obj = dims_obj)
+
+  actual <- elem_list[[2]]$consts
+
+  expected <- list(
+    list(name     = "Growth_rate_Westeros_Young",
+         value    = 0.01),
+    list(name     = "Growth_rate_Westeros_Old",
+         value    = 0.1),
+    list(name     = "Growth_rate_Essos_Young",
+         value    = 0.05),
+    list(name     = "Growth_rate_Essos_Old",
+         value    = 0.05))
+
+  expect_equal(actual, expected)
+
+})
+
+#-------interpret_non_consts----------------------------------------------------
+
+test_that("interpret_non_consts() handles a arrayed variable", {
+
   test_var_xml <- xml2::read_xml('
   <root>
     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -466,30 +498,48 @@ test_that("xml_to_elem_list() handles a arrayed variable", {
 
   auxs_xml <- xml2::xml_find_all(test_var_xml, ".//d1:flow|.//d1:aux")
 
+  non_const_obj <- list(
+    elems = list(
+      list("growth_A",
+           "Population_A*growth_rate_A"),
+      list("growth_B",
+           "Population_B*growth_rate_B")),
+    aux_name = "growth")
+
+  actual_obj <- interpret_non_consts(non_const_obj, "isee", list(), auxs_xml)
+
   expected_obj <- list(
     vars = list(
       list(name     = "growth_A",
            equation = "Population_A*growth_rate_A"),
       list(name     = "growth_B",
-           equation = "Population_B*growth_rate_B")),
-    consts = list())
-
-  actual_obj   <- xml_to_elem_list(auxs_xml[[1]], "isee")
+           equation = "Population_B*growth_rate_B")))
 
   expect_equal(actual_obj, expected_obj)
 })
 
-test_that("xml_to_elem_list() handles a 2 dimensional arrayed variable from Vensim", {
+test_that("interpret_non_consts() handles a 2 dimensional arrayed variable from Vensim", {
 
   filepath        <- "./2d_pop.xmile"
-  raw_xml         <- xml2::read_xml(filepath)
+  raw_xml         <- safe_read(filepath)
+  vendor          <- which_vendor(raw_xml)
   variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
   dims_obj        <- create_dims_obj(raw_xml)
   auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
 
-  actual          <- xml_to_elem_list(auxs_xml[[1]],
-                                      vendor = "Vensim",
-                                      dims_obj = dims_obj)
+  non_const_obj <- list(
+    elems = list(
+      list("Net_growth_Westeros_Young",
+           "Population_Westeros_Young*Growth_rate_Westeros_Young"),
+      list("Net_growth_Westeros_Old",
+           "Population_Westeros_Old*Growth_rate_Westeros_Old"),
+      list("Net_growth_Essos_Young",
+           "Population_Essos_Young*Growth_rate_Essos_Young"),
+      list("Net_growth_Essos_Old",
+           "Population_Essos_Old*Growth_rate_Essos_Old")),
+    aux_name = "Net_growth")
+
+  actual <- interpret_non_consts(non_const_obj, vendor, list(), auxs_xml)
 
   expected <- list(
     vars = list(
@@ -500,54 +550,28 @@ test_that("xml_to_elem_list() handles a 2 dimensional arrayed variable from Vens
       list(name     = "Net_growth_Essos_Young",
            equation = "Population_Essos_Young*Growth_rate_Essos_Young"),
       list(name     = "Net_growth_Essos_Old",
-           equation = "Population_Essos_Old*Growth_rate_Essos_Old")),
-    consts = list())
+           equation = "Population_Essos_Old*Growth_rate_Essos_Old")))
 
   expect_equal(actual, expected)
 
 })
 
-test_that("xml_to_elem_list() handles a 2 dimensional arrayed constant from Vensim", {
-
-
-  filepath        <- "./2d_pop.xmile"
-  raw_xml         <- xml2::read_xml(filepath)
-  variables_xml   <- xml2::xml_find_first(raw_xml, ".//d1:variables")
-  dims_obj        <- create_dims_obj(raw_xml)
-  auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
-
-  actual          <- xml_to_elem_list(auxs_xml[[2]],
-                                      vendor = "Vensim",
-                                      dims_obj = dims_obj)
-
-  expected <- list(
-    vars   = NULL,
-    consts = list(
-      list(name     = "Growth_rate_Westeros_Young",
-           value    = 0.01),
-      list(name     = "Growth_rate_Westeros_Old",
-           value    = 0.1),
-      list(name     = "Growth_rate_Essos_Young",
-           value    = 0.05),
-      list(name     = "Growth_rate_Essos_Old",
-           value    = 0.05)))
-
-  expect_equal(actual, expected)
-
-})
-
-test_that("xml_to_elem_list() handles DELAYN from Stella", {
+test_that("interpret_non_consts() handles DELAYN from Stella", {
 
   filepath      <- system.file("models/", "SEjIkR.stmx", package = "readsdr")
   raw_xml       <- safe_read(filepath)
   vendor        <- which_vendor(raw_xml)
   variables_xml <- xml2::xml_find_first(raw_xml, ".//d1:variables")
   auxs_xml      <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
-  aux_xml       <- auxs_xml[[7]]
 
-  actual          <- xml_to_elem_list(aux_xml,
-                                      vendor = vendor,
-                                      dims_obj = NULL)
+  consts <- list(list(name  = "j",
+                      value = 2))
+
+  non_const_obj <- list(elems = list(list("E_to_I",
+                                          "DELAYN(S_to_E,2,j,0)")),
+                        aux_name = "E_to_I")
+
+  actual <- interpret_non_consts(non_const_obj, vendor, consts, auxs_xml)
 
   expected <- list(
     vars = list(
@@ -557,7 +581,6 @@ test_that("xml_to_elem_list() handles DELAYN from Stella", {
            equation = "dly_S_to_E_1/((2)/2)"),
       list(name     = "dly_S_to_E_2_out",
            equation = "dly_S_to_E_2/((2)/2)")),
-    consts = list(),
     builtin_stocks = list(
       list(name      = "dly_S_to_E_1",
            equation  = "S_to_E - dly_S_to_E_1_out",
