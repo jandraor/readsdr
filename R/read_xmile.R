@@ -33,7 +33,8 @@
 read_xmile <- function(filepath, stock_list = NULL, const_list = NULL,
                        graph = FALSE) {
 
-  model_structure    <- extract_structure_from_XMILE(filepath)
+  model_structure    <- extract_structure_from_XMILE(filepath,
+                                                     const_list = const_list)
 
   if(!is.null(stock_list)) {
     stocks_override <- names(stock_list)
@@ -45,10 +46,6 @@ read_xmile <- function(filepath, stock_list = NULL, const_list = NULL,
       pos_stk                               <- which(stk == lvl_names)
       model_structure$levels[[pos_stk]]$initValue <- stock_list[[stk]]
     }
-  }
-
-  if(!is.null(const_list)) {
-    model_structure <- override_consts(model_structure, const_list)
   }
 
   deSolve_components <- get_deSolve_elems(model_structure)
@@ -101,24 +98,4 @@ read_xmile <- function(filepath, stock_list = NULL, const_list = NULL,
 xmile_to_deSolve <- function(filepath) {
   model_structure    <- extract_structure_from_XMILE(filepath)
   deSolve_components <- get_deSolve_elems(model_structure)
-}
-
-override_consts <- function(mdl_structure, const_list) {
-  consts_override <- names(const_list)
-  const_names     <- sapply(mdl_structure$constants,
-                            function(const_obj) const_obj$name)
-
-  for(i in seq_len(length(const_list))) {
-    cst     <- consts_override[[i]]
-    pos_cst <- which(cst == const_names)
-
-    if(length(pos_cst) == 0) {
-      msg <- paste0("Can't find constant: ", cst)
-      stop(msg, call. = FALSE)
-    }
-
-    mdl_structure$constants[[pos_cst]]$value <- const_list[[cst]]
-  }
-
-  mdl_structure
 }

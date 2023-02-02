@@ -88,7 +88,8 @@ constants", {
   vars_consts <- xml2::read_xml(test_model) %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-  output <- create_vars_consts_obj_xmile(vars_consts, "isee")
+  output <- create_vars_consts_obj_xmile(vars_consts, "isee",
+                                         const_list = NULL)
 
   expect_equal(output$variables,
                list(list(name     = "net_growth",
@@ -250,7 +251,8 @@ test_that("create_vars_consts_obj_xmile() sanitises constant expressions", {
   </root>') %>%
     xml2::xml_find_all(".//d1:flow|.//d1:aux")
 
-  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "Vensim")
+  actual_obj   <- create_vars_consts_obj_xmile(test_var_xml, "Vensim",
+                                               const_list = NULL)
 
   expected_obj <- list(
     variables = list(
@@ -393,7 +395,8 @@ test_that("create_vars_consts_obj_xmile() handles apply all for constant vector"
 
   dims_obj <- list(global_dims = list(Region = c("A", "B")))
 
-  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee", dims_obj)
+  actual_obj   <- create_vars_consts_obj_xmile(auxs_xml, "isee", dims_obj,
+                                               const_list = NULL)
 
   expected_obj <- list(
     variables = NULL,
@@ -591,3 +594,38 @@ test_that("interpret_non_consts() handles DELAYN from Stella", {
 
   expect_equal(actual, expected)
 })
+
+
+#override_consts()--------------------------------------------------------------
+
+test_that("override_consts() works for a single change in multiple options", {
+
+  actual_consts <- list(list(name  = "growth_rate2",
+                             value = 0.1),
+                        list(name  = "growth_rate1",
+                             value = 0.1),
+                        list(name  = "growth_rate3",
+                             value = 0.1))
+
+  const_list <- list(growth_rate1 = 0.2)
+
+
+  actual_obj <- override_consts(actual_consts, const_list)
+
+  expected_obj <- actual_consts
+  expected_obj[[2]]$value <- 0.2
+
+  expect_equal(actual_obj, expected_obj)
+})
+
+test_that("override_consts throws an error when the constant doesn't exist", {
+  mdl_structure <- list(constants =
+                          list(list(name  = "growth_rate1",
+                                    value = 0.1)))
+
+  const_list <- list(growth_rate2 = 0.2)
+
+  expect_error(override_consts(mdl_structure, const_list),
+               "Can't find constant: growth_rate2")
+})
+

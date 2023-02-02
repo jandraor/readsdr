@@ -1,5 +1,6 @@
 # inits_vector is only used for sd_bayes()
-extract_structure_from_XMILE <- function(filepath, inits_vector = NULL) {
+extract_structure_from_XMILE <- function(filepath, inits_vector = NULL,
+                                         const_list = NULL) {
 
   raw_xml <- safe_read(filepath)
   vendor  <- which_vendor(raw_xml)
@@ -27,7 +28,8 @@ extract_structure_from_XMILE <- function(filepath, inits_vector = NULL) {
   auxs_xml        <- xml2::xml_find_all(variables_xml, ".//d1:flow|.//d1:aux")
   stocks_xml      <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
 
-  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj)
+  vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj,
+                                                  const_list)
 
   if(vendor == "Vensim") {
     vars_and_consts <- extract_vars_in_stocks(stocks_xml, vars_and_consts)

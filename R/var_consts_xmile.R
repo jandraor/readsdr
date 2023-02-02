@@ -4,13 +4,15 @@
 #' @param auxs_xml An xml object.
 #' @param vendor A string that indicates the model's origin.
 #' @param dims_obj A list.
+#' @param const_list A list to override constant values from the XMILE file.
 #'
 #' @return A list of three elements: \code{variables}, \code{constants},
 #'   \code{builtin_stocks}. The element \code{variables} corresponds a list of
 #'    lists. Each sublist contains two elements: \code{name} & \code{equation}.
 #'
 #' @noRd
-create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
+create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL,
+                                         const_list) {
 
   #-----------------------------------------------------------------------------
   # Exception for Vensim PRO that adds the variable 'Time'
@@ -36,7 +38,13 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL) {
 
   consts         <- lapply(elem_list, function(obj) obj$consts)
   consts         <- remove_NULL(consts)
-  if(length(consts) > 0) consts <- unlist(consts, recursive = FALSE)
+
+  if(length(consts) > 0) {
+
+    consts <- unlist(consts, recursive = FALSE)
+
+    if(!is.null(const_list)) consts <- override_consts(consts, const_list)
+  }
 
   non_consts <- lapply(elem_list, function(obj) {
 
@@ -345,4 +353,25 @@ get_auxs_names <- function(auxs_xml) {
     var_name     <- sanitise_elem_name(raw_var_name)
     var_name     <- check_elem_name(var_name)
   })
+}
+
+override_consts <- function(actual_consts, const_list) {
+
+  consts_override <- names(const_list)
+  const_names     <- get_names(actual_consts)
+
+  for(i in seq_along(const_list)) {
+
+    cst     <- consts_override[[i]]
+    pos_cst <- which(cst == const_names)
+
+    if(length(pos_cst) == 0) {
+      msg <- paste0("Can't find constant: ", cst)
+      stop(msg, call. = FALSE)
+    }
+
+    actual_consts[[pos_cst]]$value <- const_list[[cst]]
+  }
+
+  actual_consts
 }
