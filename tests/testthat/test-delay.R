@@ -73,3 +73,45 @@ test_that("identify_delayed_vars() works", {
   expect_equal(actual_obj, expected_obj)
 
 })
+
+# stc_vars_DELAY ---------------------------------------------------------------
+
+test_that("stc_vars_DELAYN() returns the expected list", {
+
+  name        <- "I_to_R"
+  input       <- "E_to_I"
+  duration    <- 2
+  delay_order <- 5
+  init        <- 0.5
+  eq          <- "DELAYN(E_to_I,2,k,0.5)"
+
+  actual <- stc_vars_DELAYN(name, input, duration, delay_order, init, eq)
+
+  expected <-   list(
+    variable_list = list(
+      list(name = "I_to_R", equation = "dly_E_to_I_5_out"),
+      list(name = "dly_E_to_I_1_out", equation = "dly_E_to_I_1/((2)/5)"),
+      list(name = "dly_E_to_I_2_out", equation = "dly_E_to_I_2/((2)/5)"),
+      list(name = "dly_E_to_I_3_out", equation = "dly_E_to_I_3/((2)/5)"),
+      list(name = "dly_E_to_I_4_out", equation = "dly_E_to_I_4/((2)/5)"),
+      list(name = "dly_E_to_I_5_out", equation = "dly_E_to_I_5/((2)/5)")),
+    stock_list    = list(
+      list(name = "dly_E_to_I_1",
+           equation = "E_to_I - dly_E_to_I_1_out",
+           initValue = 0.2),
+      list(name = "dly_E_to_I_2",
+           equation = "dly_E_to_I_1_out - dly_E_to_I_2_out",
+           initValue = 0.2),
+      list(name = "dly_E_to_I_3",
+           equation = "dly_E_to_I_2_out - dly_E_to_I_3_out",
+           initValue = 0.2),
+      list(name = "dly_E_to_I_4",
+           equation = "dly_E_to_I_3_out - dly_E_to_I_4_out",
+           initValue = 0.2),
+      list(name = "dly_E_to_I_5",
+           equation = "dly_E_to_I_4_out - dly_E_to_I_5_out",
+           initValue = 0.2)),
+    delay_order   = 5)
+
+  expect_equal(actual, expected)
+})

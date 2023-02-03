@@ -52,7 +52,7 @@ stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
 
     stk_name <- stringr::str_glue("dly_{input}_{i}")
 
-    stk_init <- (init * delay_order) / duration
+    stk_init <- (init * duration) / delay_order
 
     if(i == 1) {
 
