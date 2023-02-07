@@ -56,6 +56,38 @@ test_that("sd_fixed_delay() works", {
    expect_equal(actual, expected)
 })
 
+test_that("translate_DELAYN() returns the expected list", {
+
+  actual <- translate_DELAYN(name = "I_to_R",
+                             eq   = "DELAYN(E_to_I,1/par_gamma,k,par_gamma*I0)",
+                             vendor = "isee",
+                             consts = list(list(name  = "I0",
+                                                value = 1),
+                                           list(name  = "par_gamma",
+                                                value = 0.5),
+                                           list(name  = "k",
+                                                value = 2)))
+
+  expected <- list(
+    variable_list = list(
+      list(name     = "I_to_R",
+           equation = "dly_E_to_I_2_out"),
+      list(name = "dly_E_to_I_1_out",
+           equation = "dly_E_to_I_1/((2)/2)"),
+      list(name     = "dly_E_to_I_2_out",
+           equation = "dly_E_to_I_2/((2)/2)")),
+    stock_list = list(
+      list(name      = "dly_E_to_I_1",
+           equation  = "E_to_I - dly_E_to_I_1_out",
+           initValue = 0.5),
+      list(name      = "dly_E_to_I_2",
+           equation  = "dly_E_to_I_1_out - dly_E_to_I_2_out",
+           initValue = 0.5)),
+    delay_order = 2)
+
+  expect_equal(actual, expected)
+})
+
 # identify_delayed_vars------------------------------------------------------------
 
 test_that("identify_delayed_vars() works", {

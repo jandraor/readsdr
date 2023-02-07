@@ -39,7 +39,7 @@
 				<outflow>I_to_R</outflow>
 			</stock>
 			<flow name="I to R">
-				<eqn>DELAYN(E_to_I,  2,  k, 0.5)</eqn>
+				<eqn>DELAYN(E_to_I,  1/par_gamma,  k, par_gamma *I0)</eqn>
 			</flow>
 			<stock name="R">
 				<eqn>0</eqn>
@@ -62,7 +62,7 @@
 				<eqn>0.75</eqn>
 			</aux>
 			<flow name="E to I">
-				<eqn>DELAYN(S_to_E,  2,  j, 0)</eqn>
+				<eqn>DELAYN(S_to_E,  1/par_sigma,  j, 0)</eqn>
 			</flow>
 			<aux name="I0">
 				<eqn>1</eqn>
@@ -72,6 +72,12 @@
 			</aux>
 			<aux name="k">
 				<eqn>2</eqn>
+			</aux>
+			<aux name="par gamma">
+				<eqn>0.5</eqn>
+			</aux>
+			<aux name="par sigma">
+				<eqn>0.5</eqn>
 			</aux>
 		</variables>
 		<views>
@@ -120,7 +126,7 @@
 				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
 				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" hide_border="false" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
 			</style>
-			<view isee:show_pages="false" background="white" page_width="808" page_height="561" isee:page_cols="2" isee:page_rows="2" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="2" isee:page_rows="2" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
 				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
 					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
 						<shape type="rectangle" width="45" height="35"/>
@@ -191,14 +197,14 @@
 					<from>N</from>
 					<to>S_to_E</to>
 				</connector>
-				<stock label_side="center" x="431" y="315" name="C"/>
-				<flow x="365.75" y="315" name="C in">
+				<stock label_side="center" x="433" y="399" name="C"/>
+				<flow x="367.75" y="399" name="C in">
 					<pts>
-						<pt x="311" y="315"/>
-						<pt x="408.5" y="315"/>
+						<pt x="313" y="399"/>
+						<pt x="410.5" y="399"/>
 					</pts>
 				</flow>
-				<aux x="311" y="259" name="par rho"/>
+				<aux x="313" y="343" name="par rho"/>
 				<connector uid="8" angle="321.147">
 					<from>par_rho</from>
 					<to>C_in</to>
@@ -220,7 +226,7 @@
 					<from>E_to_I</from>
 					<to>I_to_R</to>
 				</connector>
-				<connector uid="9" angle="272.295">
+				<connector uid="9" angle="271.931">
 					<from>E_to_I</from>
 					<to>C_in</to>
 				</connector>
@@ -237,6 +243,20 @@
 				<aux x="529.5" y="228" name="k"/>
 				<connector uid="16" angle="129.289">
 					<from>k</from>
+					<to>I_to_R</to>
+				</connector>
+				<connector uid="17" angle="312.94">
+					<from>I0</from>
+					<to>I_to_R</to>
+				</connector>
+				<aux x="524.5" y="113" name="par gamma"/>
+				<aux x="319" y="249" name="par sigma"/>
+				<connector uid="18" angle="60.9454">
+					<from>par_sigma</from>
+					<to>E_to_I</to>
+				</connector>
+				<connector uid="19" angle="246.413">
+					<from>par_gamma</from>
 					<to>I_to_R</to>
 				</connector>
 			</view>

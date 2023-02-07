@@ -9,8 +9,17 @@ translate_DELAYN <- function(name, eq, vendor, consts) {
       reg_pat      <- stringr::regex(pat1, dotall = TRUE)
       string_match <- stringr::str_match(eq, reg_pat)
       input        <- trimws(string_match[[2]])
-      duration     <- trimws(string_match[[3]])
-      duration     <- suppressWarnings(as.numeric(duration))
+
+      raw_duration <- trimws(string_match[[3]])
+      duration     <- suppressWarnings(as.numeric(raw_duration))
+
+      if(is.na(duration)) {
+
+        val_list        <- as.list(purrr::map_dbl(consts, "value"))
+        c_names         <- get_names(consts)
+        names(val_list) <- c_names
+        duration        <- eval(parse(text = raw_duration), envir = val_list)
+      }
 
       raw_delay_order <- trimws(string_match[[4]])
       delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
@@ -22,8 +31,16 @@ translate_DELAYN <- function(name, eq, vendor, consts) {
         delay_order <- consts[[idx]]$value
       }
 
-      init <- trimws(string_match[[5]])
-      init <- suppressWarnings(as.numeric(init))
+      raw_init <- trimws(string_match[[5]])
+      init     <- suppressWarnings(as.numeric(raw_init))
+
+      if(is.na(init)) {
+
+        val_list        <- as.list(purrr::map_dbl(consts, "value"))
+        c_names         <- get_names(consts)
+        names(val_list) <- c_names
+        init            <- eval(parse(text = raw_init), envir = val_list)
+      }
 
       return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
     }
