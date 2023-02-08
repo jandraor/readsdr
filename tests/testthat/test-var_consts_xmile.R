@@ -581,9 +581,9 @@ test_that("interpret_non_consts() handles DELAYN from Stella", {
       list(name     = "E_to_I",
            equation = "dly_S_to_E_2_out"),
       list(name     = "dly_S_to_E_1_out",
-           equation = "dly_S_to_E_1/((2)/2)"),
+           equation = "dly_S_to_E_1/((2)/2.0)"),
       list(name     = "dly_S_to_E_2_out",
-           equation = "dly_S_to_E_2/((2)/2)")),
+           equation = "dly_S_to_E_2/((2)/2.0)")),
     builtin_stocks = list(
       list(name      = "dly_S_to_E_1",
            equation  = "S_to_E - dly_S_to_E_1_out",

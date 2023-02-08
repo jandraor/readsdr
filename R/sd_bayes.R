@@ -54,7 +54,8 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   params <- c(est_params_names, data_params, data_inits)
 
-  mdl_structure <- extract_structure_from_XMILE(filepath, params)
+  mdl_structure <- extract_structure_from_XMILE(filepath, params,
+                                                const_list = const_list)
   lvl_obj       <- mdl_structure$levels
   lvl_names     <- get_names(mdl_structure$levels)
 

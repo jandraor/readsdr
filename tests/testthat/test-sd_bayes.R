@@ -142,6 +142,28 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
   expect_equal(actual, expected)
 })
 
+test_that("sd_Bayes allows users to override delay metaparameters", {
+
+  filepath <- system.file("models/", "SEjIkR.stmx", package = "readsdr")
+
+  meas_mdl   <- list("y ~ poisson(net_flow(C))")
+
+  estimated_params <- list(sd_prior("par_beta", "lognormal", c(0, 1)),
+                           sd_prior("par_rho", "beta", c(2,2)),
+                           sd_prior("I0", "lognormal", c(0, 1)))
+
+  const_list <- list(j = 3, k = 3)
+
+  actual <- sd_Bayes(filepath, meas_mdl, estimated_params,
+                     const_list = const_list)
+
+  fileName <- "./test_stan_files/SE3I3R_pois.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
+})
+
 test_that("extract_extra_params() returns the expected list", {
 
   meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"

@@ -29,10 +29,6 @@ stan_ode_function <- function(filepath, func_name, pars = NULL,
   }
   else XMILE_structure  <- extract_structure_from_XMILE(filepath)
 
-  if(!is.null(const_list)) {
-    XMILE_structure <- override_consts(XMILE_structure, const_list)
-  }
-
   levels           <- XMILE_structure$levels
   variables        <- XMILE_structure$variables
   constants        <- XMILE_structure$constants

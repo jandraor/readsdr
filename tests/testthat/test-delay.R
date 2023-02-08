@@ -73,9 +73,9 @@ test_that("translate_DELAYN() returns the expected list", {
       list(name     = "I_to_R",
            equation = "dly_E_to_I_2_out"),
       list(name = "dly_E_to_I_1_out",
-           equation = "dly_E_to_I_1/((2)/2)"),
+           equation = "dly_E_to_I_1/((2)/2.0)"),
       list(name     = "dly_E_to_I_2_out",
-           equation = "dly_E_to_I_2/((2)/2)")),
+           equation = "dly_E_to_I_2/((2)/2.0)")),
     stock_list = list(
       list(name      = "dly_E_to_I_1",
            equation  = "E_to_I - dly_E_to_I_1_out",
@@ -122,11 +122,11 @@ test_that("stc_vars_DELAYN() returns the expected list", {
   expected <-   list(
     variable_list = list(
       list(name = "I_to_R", equation = "dly_E_to_I_5_out"),
-      list(name = "dly_E_to_I_1_out", equation = "dly_E_to_I_1/((2)/5)"),
-      list(name = "dly_E_to_I_2_out", equation = "dly_E_to_I_2/((2)/5)"),
-      list(name = "dly_E_to_I_3_out", equation = "dly_E_to_I_3/((2)/5)"),
-      list(name = "dly_E_to_I_4_out", equation = "dly_E_to_I_4/((2)/5)"),
-      list(name = "dly_E_to_I_5_out", equation = "dly_E_to_I_5/((2)/5)")),
+      list(name = "dly_E_to_I_1_out", equation = "dly_E_to_I_1/((2)/5.0)"),
+      list(name = "dly_E_to_I_2_out", equation = "dly_E_to_I_2/((2)/5.0)"),
+      list(name = "dly_E_to_I_3_out", equation = "dly_E_to_I_3/((2)/5.0)"),
+      list(name = "dly_E_to_I_4_out", equation = "dly_E_to_I_4/((2)/5.0)"),
+      list(name = "dly_E_to_I_5_out", equation = "dly_E_to_I_5/((2)/5.0)")),
     stock_list    = list(
       list(name = "dly_E_to_I_1",
            equation = "E_to_I - dly_E_to_I_1_out",

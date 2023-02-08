@@ -62,7 +62,7 @@ stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
   for(i in seq_len(delay_order)) {
 
     var_name <- stringr::str_glue("dly_{input}_{i}_out")
-    var_eq   <- stringr::str_glue("dly_{input}_{i}/(({duration})/{delay_order})")
+    var_eq   <- stringr::str_glue("dly_{input}_{i}/(({duration})/{delay_order}.0)")
 
     variable_list[[i + 1]] <- list(name     = as.character(var_name),
                                    equation = as.character(var_eq))
