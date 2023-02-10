@@ -173,26 +173,20 @@ interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml) {
   idx       <- which(aux_name == aux_names)
   aux_xml   <-  auxs_xml[[idx]]
 
-  if(vendor == "isee") {
+  if(vendor == "isee") output <- lapply(non_const_list,
+                                        interpret_equations_isee, consts,
+                                        aux_xml)
 
-    output_isee    <- lapply(non_const_list, interpret_equations_isee, consts,
-                             aux_xml)
-    vars           <- lapply(output_isee, function(obj) obj$vars)
-    vars           <- unlist(vars, recursive = FALSE)
-    builtin_stocks <- lapply(output_isee, function(obj) obj$builtin_stocks)
-    builtin_stocks <- unlist(builtin_stocks, recursive = FALSE)
-  }
 
-  if(vendor == "Vensim") {
+  if(vendor == "Vensim") output <- lapply(non_const_list,
+                                          interpret_equations_vensim, consts)
 
-    output_isee    <- lapply(non_const_list, interpret_equations_vensim)
-    vars           <- lapply(output_isee, function(obj) obj$vars)
-    vars           <- unlist(vars, recursive = FALSE)
-    builtin_stocks <- lapply(output_isee, function(obj) obj$builtin_stocks)
-    builtin_stocks <- unlist(builtin_stocks, recursive = FALSE)
-  }
+  vars           <- lapply(output, function(obj) obj$vars)
+  vars           <- unlist(vars, recursive = FALSE)
+  builtin_stocks <- lapply(output, function(obj) obj$builtin_stocks)
+  builtin_stocks <- unlist(builtin_stocks, recursive = FALSE)
 
-  output_list <- list(vars   = vars)
+  output_list <- list(vars = vars)
 
   if(length(builtin_stocks) > 0) {
     output_list$builtin_stocks <- builtin_stocks
@@ -272,12 +266,25 @@ interpret_equations_isee <- function(non_const_obj, consts, aux_xml) {
 
 
 
-interpret_equations_vensim <- function(non_const_obj) {
+interpret_equations_vensim <- function(non_const_obj, consts) {
 
   vendor <- "Vensim"
 
   var_name <- non_const_obj[[1]]
   equation <- non_const_obj[[2]]
+
+
+  # This will be on hold until Ventana fix the problem
+  # stl_delayn <- stringr::str_detect(equation, "\\bDELAY_N\\b")
+  #
+  # if(stl_delayn) {
+  #
+  #   DELAYN_translation <- translate_DELAYN(var_name, equation, "isee", consts)
+  #
+  #   return(list(vars           = DELAYN_translation$variable_list,
+  #               builtin_stocks = DELAYN_translation$stock_list))
+  # }
+
 
   vns_smooth <- stringr::str_detect(equation, "\\bSMOOTH\\b")
 

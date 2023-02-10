@@ -13,38 +13,50 @@ translate_DELAYN <- function(name, eq, vendor, consts) {
       raw_duration <- trimws(string_match[[3]])
       duration     <- suppressWarnings(as.numeric(raw_duration))
 
-      if(is.na(duration)) {
-
-        val_list        <- as.list(purrr::map_dbl(consts, "value"))
-        c_names         <- get_names(consts)
-        names(val_list) <- c_names
-        duration        <- eval(parse(text = raw_duration), envir = val_list)
-      }
+      if(is.na(duration)) duration <- eval_eq(raw_duration, consts)
 
       raw_delay_order <- trimws(string_match[[4]])
       delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
 
-      if(is.na(delay_order)) {
-
-        const_names <- get_names(consts)
-        idx         <- which(raw_delay_order == const_names)
-        delay_order <- consts[[idx]]$value
-      }
+      if(is.na(delay_order)) delay_order <- eval_eq(raw_delay_order, consts)
 
       raw_init <- trimws(string_match[[5]])
       init     <- suppressWarnings(as.numeric(raw_init))
 
-      if(is.na(init)) {
-
-        val_list        <- as.list(purrr::map_dbl(consts, "value"))
-        c_names         <- get_names(consts)
-        names(val_list) <- c_names
-        init            <- eval(parse(text = raw_init), envir = val_list)
-      }
+      if(is.na(init)) init <- eval_eq(raw_init, consts)
 
       return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
     }
 
+  }
+
+  if(vendor == "Vensim") {
+
+    pat1         <- "DELAY_N\\((.+?),(.+?),(.+?),(.+?)\\)"
+
+    if(stringr::str_detect(eq, pat1)) {
+
+      reg_pat      <- stringr::regex(pat1, dotall = TRUE)
+      string_match <- stringr::str_match(eq, reg_pat)
+      input        <- trimws(string_match[[2]])
+
+      raw_duration <- trimws(string_match[[3]])
+      duration     <- suppressWarnings(as.numeric(raw_duration))
+
+      if(is.na(duration)) duration <- eval_eq(raw_duration, consts)
+
+      raw_init <- trimws(string_match[[4]])
+      init     <- suppressWarnings(as.numeric(raw_init))
+
+      if(is.na(init)) init <- eval_eq(raw_init, consts)
+
+      raw_delay_order <- trimws(string_match[[5]])
+      delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
+
+      if(is.na(delay_order)) delay_order <- eval_eq(raw_delay_order, consts)
+
+      return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
+    }
   }
 
 }
@@ -127,6 +139,14 @@ identify_delayed_vars <- function(variables) {
 
     NULL
   }) %>% remove_NULL() %>% unlist()
+}
+
+eval_eq <- function(eq, consts) {
+
+  val_list        <- as.list(purrr::map_dbl(consts, "value"))
+  c_names         <- get_names(consts)
+  names(val_list) <- c_names
+  eval(parse(text = eq), envir = val_list)
 }
 
 #' Fixed delay
