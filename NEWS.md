@@ -1,5 +1,6 @@
 # Development version
 
+* Support the translation of Vensim's *DELAY_N*.
 * Support the translation of Stella's *DELAYN* with four parameters.
 * Support Stella's *apply all* for uni-dimensional vectors.
 * Add **sd_Bayes()**.

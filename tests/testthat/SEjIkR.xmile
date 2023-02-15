@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+	<header>
+		<product version="1.0" lang="en">Vensim</product>
+		<vendor>Ventana Systems, Inc.</vendor>
+		<created>
+		</created>
+		<modified>
+		</modified>
+		<name>
+		</name>
+		<caption>
+		</caption>
+	</header>
+	<sim_specs method="RK4" time_units="Month">
+		<start>1</start>
+		<stop>100</stop>
+		<dt>0.0078125</dt>
+	</sim_specs>
+	<model>
+		<variables>
+			<stock name="C">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					0
+					</eqn>
+					<inflow>
+					C in
+					</inflow>
+			</stock>
+			<stock name="E">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					0
+					</eqn>
+					<inflow>
+					S to E
+					</inflow>
+					<outflow>
+					E to I
+					</outflow>
+			</stock>
+			<stock name="E_to_I">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					E_to_I= 
+	DELAY_N(S_to_E, 1/par_sigma, 0, j)
+					</eqn>
+			</stock>
+			<stock name="I">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					I0
+					</eqn>
+					<inflow>
+					E to I
+					</inflow>
+					<outflow>
+					I to R
+					</outflow>
+			</stock>
+			<stock name="I_to_R">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					I_to_R=
+	DELAY_N(E_to_I, 1/par_gamma, par_gamma * I0, k)
+					</eqn>
+			</stock>
+			<stock name="R">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					0
+					</eqn>
+					<inflow>
+					I to R
+					</inflow>
+			</stock>
+			<stock name="S">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					N - I0
+					</eqn>
+					<outflow>
+					S to E
+					</outflow>
+			</stock>
+			<aux name="C_in">
+				<units></units>
+				<doc></doc>
+					<eqn>par_rho * E_to_I					</eqn>
+			</aux>
+			<aux name="S_to_E">
+				<units></units>
+				<doc></doc>
+					<eqn>par_beta * S * I / N					</eqn>
+			</aux>
+			<aux name="I0">
+				<units></units>
+				<doc></doc>
+					<eqn>1					</eqn>
+			</aux>
+			<aux name="j">
+				<units></units>
+				<doc></doc>
+					<eqn>2					</eqn>
+			</aux>
+			<aux name="k">
+				<units></units>
+				<doc></doc>
+					<eqn>2					</eqn>
+			</aux>
+			<aux name="N">
+				<units></units>
+				<doc></doc>
+					<eqn>10000					</eqn>
+			</aux>
+			<aux name="par_beta">
+				<units></units>
+				<doc></doc>
+					<eqn>1					</eqn>
+			</aux>
+			<aux name="par_gamma">
+				<units></units>
+				<doc></doc>
+					<eqn>0.5					</eqn>
+			</aux>
+			<aux name="par_rho">
+				<units></units>
+				<doc></doc>
+					<eqn>0.75					</eqn>
+			</aux>
+			<aux name="par_sigma">
+				<units></units>
+				<doc></doc>
+					<eqn>0.5					</eqn>
+			</aux>
+		</variables>
+	</model>
+</xmile>

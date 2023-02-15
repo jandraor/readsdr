@@ -132,13 +132,11 @@ test_that("read_xmile() overrides metaparameter for delay N", {
 
   expect_equal(actual, expected)
 
-  # On hold until Ventana fix the problem
+  filepath <- "./SEjIkR.xmile"
+  mdl      <- read_xmile(filepath, const_list = list(j = 5))
+  actual   <- length(mdl$description$levels)
 
-  # filepath <- "./SEjIkR.xmile"
-  # mdl      <- read_xmile(filepath, const_list = list(j = 5))
-  # actual   <- length(mdl$description$levels)
-  #
-  # expect_equal(actual, expected)
+  expect_equal(actual, expected)
 })
 
 #xmile_to_deSolve()-------------------------------------------------------------

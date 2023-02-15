@@ -111,7 +111,7 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
   # Only God knows why Ventana would treat the FIXED DELAY as a stock
   eq <- xml2::xml_find_all(stock_xml, ".//d1:eqn")
   eq <- xml2::xml_text(eq)
-  if(any(grepl("DELAY_FIXED", eq))) return (NULL)
+  if(any(grepl("DELAY_FIXED|DELAY_N", eq))) return (NULL)
   #-----------------------------------------------------------------------------
 
   dim_xml     <- xml2::xml_find_all(stock_xml, ".//d1:dimensions")

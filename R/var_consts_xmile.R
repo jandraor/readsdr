@@ -274,18 +274,6 @@ interpret_equations_vensim <- function(non_const_obj, consts) {
   equation <- non_const_obj[[2]]
 
 
-  # This will be on hold until Ventana fix the problem
-  # stl_delayn <- stringr::str_detect(equation, "\\bDELAY_N\\b")
-  #
-  # if(stl_delayn) {
-  #
-  #   DELAYN_translation <- translate_DELAYN(var_name, equation, "isee", consts)
-  #
-  #   return(list(vars           = DELAYN_translation$variable_list,
-  #               builtin_stocks = DELAYN_translation$stock_list))
-  # }
-
-
   vns_smooth <- stringr::str_detect(equation, "\\bSMOOTH\\b")
 
   if(vns_smooth) {
