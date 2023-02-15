@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 [![Codecov test
 coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
 [![CRAN status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.org/package=readsdr)
-[![R-CMD-check](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
+[![R-CMD-check](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Overview
@@ -72,6 +72,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     + `Step` ^1^
     + Endogenous table functions
     + Smoothing functions^2^: `SMTH1`, `SMTH3`, `SMTHN`
+    + Delay functions: `DELAYN`
     + Limited support to *uni-dimensional* arrays. *Apply all* translation is restricted to numeric values.
     + Math functions: `ABS`, `SQRT`
     + Stats functions: `NORMAL`^3^
@@ -85,6 +86,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
     + `Step` ^1^
     + Endogenous table functions
     + Smoothing functions^2^: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`, `SMOOTHI` 
+    + Delay functions: `DELAY N`
     + Math functions: `ABS`, `SQRT` 
     + Limited support to *bi-dimensional* arrays.
     + Stats functions: `RANDOM NORMAL`^3^

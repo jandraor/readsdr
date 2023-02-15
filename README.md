@@ -9,7 +9,7 @@
 coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.org/package=readsdr)
-[![R-CMD-check](https://github.com/jandraor/readsdr/workflows/R-CMD-check/badge.svg)](https://github.com/jandraor/readsdr/actions)
+[![R-CMD-check](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 ## Overview
@@ -68,6 +68,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
   - `Step` <sup>1</sup>
   - Endogenous table functions
   - Smoothing functions<sup>2</sup>: `SMTH1`, `SMTH3`, `SMTHN`
+  - Delay functions: `DELAYN`
   - Limited support to *uni-dimensional* arrays. *Apply all* translation
     is restricted to numeric values.
   - Math functions: `ABS`, `SQRT`
@@ -83,6 +84,7 @@ or type `vignette("Introduction_to_readsdr")` in R.
   - Endogenous table functions
   - Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`,
     `SMOOTHI`
+  - Delay functions: `DELAY N`
   - Math functions: `ABS`, `SQRT`
   - Limited support to *bi-dimensional* arrays.
   - Stats functions: `RANDOM NORMAL`<sup>3</sup>
