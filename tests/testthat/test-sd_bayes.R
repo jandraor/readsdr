@@ -150,7 +150,7 @@ test_that("sd_Bayes allows users to override delay metaparameters", {
 
   estimated_params <- list(sd_prior("par_beta", "lognormal", c(0, 1)),
                            sd_prior("par_rho", "beta", c(2,2)),
-                           sd_prior("I0", "lognormal", c(0, 1)))
+                           sd_prior("I0", "lognormal", c(0, 1), "init"))
 
   const_list <- list(j = 3, k = 3)
 

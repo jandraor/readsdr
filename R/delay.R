@@ -1,4 +1,4 @@
-translate_DELAYN <- function(name, eq, vendor, consts) {
+translate_DELAYN <- function(var_name, eq, vendor, consts, inits_vector) {
 
   if(vendor == "isee") {
 
@@ -8,24 +8,19 @@ translate_DELAYN <- function(name, eq, vendor, consts) {
 
       reg_pat      <- stringr::regex(pat1, dotall = TRUE)
       string_match <- stringr::str_match(eq, reg_pat)
-      input        <- trimws(string_match[[2]])
-
-      raw_duration <- trimws(string_match[[3]])
-      duration     <- suppressWarnings(as.numeric(raw_duration))
-
-      if(is.na(duration)) duration <- eval_eq(raw_duration, consts)
-
+      input           <- trimws(string_match[[2]])
+      raw_duration    <- trimws(string_match[[3]])
       raw_delay_order <- trimws(string_match[[4]])
-      delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
+      raw_init        <- trimws(string_match[[5]])
 
-      if(is.na(delay_order)) delay_order <- eval_eq(raw_delay_order, consts)
+      par_list <- eval_delay_N_pars(var_name, raw_duration, raw_delay_order,
+                                    raw_init, consts, inits_vector)
 
-      raw_init <- trimws(string_match[[5]])
-      init     <- suppressWarnings(as.numeric(raw_init))
+      duration    <- par_list$duration
+      delay_order <- par_list$delay_order
+      init        <- par_list$init
 
-      if(is.na(init)) init <- eval_eq(raw_init, consts)
-
-      return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
+      return(stc_vars_DELAYN(var_name, input, duration, delay_order, init, eq))
     }
 
   }
@@ -36,29 +31,57 @@ translate_DELAYN <- function(name, eq, vendor, consts) {
 
     if(stringr::str_detect(eq, pat1)) {
 
-      reg_pat      <- stringr::regex(pat1, dotall = TRUE)
-      string_match <- stringr::str_match(eq, reg_pat)
-      input        <- trimws(string_match[[2]])
-
-      raw_duration <- trimws(string_match[[3]])
-      duration     <- suppressWarnings(as.numeric(raw_duration))
-
-      if(is.na(duration)) duration <- eval_eq(raw_duration, consts)
-
-      raw_init <- trimws(string_match[[4]])
-      init     <- suppressWarnings(as.numeric(raw_init))
-
-      if(is.na(init)) init <- eval_eq(raw_init, consts)
-
+      reg_pat         <- stringr::regex(pat1, dotall = TRUE)
+      string_match    <- stringr::str_match(eq, reg_pat)
+      input           <- trimws(string_match[[2]])
+      raw_duration    <- trimws(string_match[[3]])
+      raw_init        <- trimws(string_match[[4]])
       raw_delay_order <- trimws(string_match[[5]])
-      delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
 
-      if(is.na(delay_order)) delay_order <- eval_eq(raw_delay_order, consts)
 
-      return(stc_vars_DELAYN(name, input, duration, delay_order, init, eq))
+      par_list <- eval_delay_N_pars(var_name, raw_duration, raw_delay_order,
+                                    raw_init, consts, inits_vector)
+
+      duration    <- par_list$duration
+      delay_order <- par_list$delay_order
+      init        <- par_list$init
+
+      return(stc_vars_DELAYN(var_name, input, duration, delay_order, init, eq))
     }
   }
+}
 
+eval_delay_N_pars <- function(var_name, raw_duration, raw_delay_order, raw_init,
+                              consts, inits_vector) {
+
+  duration     <- suppressWarnings(as.numeric(raw_duration))
+  if(is.na(duration)) duration <- eval_eq(raw_duration, consts)
+
+
+  delay_order     <- suppressWarnings(as.numeric(raw_delay_order))
+  if(is.na(delay_order)) delay_order <- eval_eq(raw_delay_order, consts)
+
+
+   aux1 <- list(
+     list(name     = "duration",
+          equation = duration),
+     list(name     = "delay_order",
+          equation = delay_order))
+
+   aux2 <- format_consts_as_vars(consts)
+
+   auxs <- c(aux1, aux2)
+
+   equation <- stringr::str_glue("({raw_init} * {raw_duration}) / delay_order")
+
+   init <- compute_init_value(var_name = var_name,
+                              equation = as.character(equation),
+                              auxs = auxs,
+                              fixed_inits = inits_vector)
+
+  list(duration    = duration,
+       delay_order = delay_order,
+       init        = init)
 }
 
 stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
@@ -81,8 +104,6 @@ stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
 
     stk_name <- stringr::str_glue("dly_{input}_{i}")
 
-    stk_init <- (init * duration) / delay_order
-
     if(i == 1) {
 
       stk_eq <- stringr::str_glue("{input} - {var_name}")
@@ -97,7 +118,7 @@ stc_vars_DELAYN <- function(name, input, duration, delay_order, init, eq) {
 
     stock_list[[i]] <- list(name      = as.character(stk_name),
                             equation  = as.character(stk_eq),
-                            initValue = stk_init)
+                            initValue = init)
   }
 
   list(variable_list = variable_list,

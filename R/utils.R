@@ -37,4 +37,14 @@ execute_trans <- function(val, trans_type, return_type = "numeric") {
 is_string_numeric <- function(x) suppressWarnings(ifelse(!is.na(as.numeric(x)),
                                                          TRUE, FALSE))
 
+# This function makes consts & auxs to have the same properties
+
+format_consts_as_vars <- function(constants) {
+
+  lapply(constants, function(const) {
+    list(name = const$name, equation = const$value)
+  })
+}
+
+
 

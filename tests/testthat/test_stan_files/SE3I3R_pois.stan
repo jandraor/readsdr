@@ -53,9 +53,9 @@ transformed parameters{
   array[n_params] real params;
   vector[n_difeq] x0; // init values
   array[n_obs] real delta_x_1;
-  x0[1] = 0.333333333333333; // dly_E_to_I_1
-  x0[2] = 0.333333333333333; // dly_E_to_I_2
-  x0[3] = 0.333333333333333; // dly_E_to_I_3
+  x0[1] = ((0.5)*I0 * 1/(0.5)) / (3); // dly_E_to_I_1
+  x0[2] = ((0.5)*I0 * 1/(0.5)) / (3); // dly_E_to_I_2
+  x0[3] = ((0.5)*I0 * 1/(0.5)) / (3); // dly_E_to_I_3
   x0[4] = 0; // dly_S_to_E_1
   x0[5] = 0; // dly_S_to_E_2
   x0[6] = 0; // dly_S_to_E_3
@@ -66,7 +66,6 @@ transformed parameters{
   x0[11] = 0; // C
   params[1] = par_beta;
   params[2] = par_rho;
-  params[3] = I0;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 11] - x0[11] + 1e-5;
   for (i in 1:n_obs-1) {

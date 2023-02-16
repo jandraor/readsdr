@@ -58,15 +58,16 @@ test_that("sd_fixed_delay() works", {
 
 test_that("translate_DELAYN() returns the expected list", {
 
-  actual <- translate_DELAYN(name = "I_to_R",
-                             eq   = "DELAYN(E_to_I,1/par_gamma,k,par_gamma*I0)",
+  actual <- translate_DELAYN(var_name = "I_to_R",
+                             eq = "DELAYN(E_to_I,1/par_gamma,k,par_gamma*I0)",
                              vendor = "isee",
                              consts = list(list(name  = "I0",
                                                 value = 1),
                                            list(name  = "par_gamma",
                                                 value = 0.5),
                                            list(name  = "k",
-                                                value = 2)))
+                                                value = 2)),
+                             inits_vector = NULL)
 
   expected <- list(
     variable_list = list(
@@ -114,7 +115,7 @@ test_that("stc_vars_DELAYN() returns the expected list", {
   input       <- "E_to_I"
   duration    <- 2
   delay_order <- 5
-  init        <- 0.5
+  init        <- 0.2
   eq          <- "DELAYN(E_to_I,2,k,0.5)"
 
   actual <- stc_vars_DELAYN(name, input, duration, delay_order, init, eq)

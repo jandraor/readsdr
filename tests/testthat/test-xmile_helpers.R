@@ -26,6 +26,47 @@ unknown init for sd_bayes", {
   expect_equal(actual, expected)
 })
 
+test_that("extract_structure_from_XMILE() returns the expected stock list", {
+
+  filepath <- system.file("models/", "SEjIkR.stmx", package = "readsdr")
+
+  params <- c("par_beta", "par_rho", "I0")
+
+  const_list <- list(j = 1, k = 2)
+
+  mdl_structure <- extract_structure_from_XMILE(filepath, params,
+                                                const_list = const_list)
+
+  actual <- mdl_structure$levels
+
+  expected <- list(list(name     = "dly_E_to_I_1",
+                        equation = "E_to_I - dly_E_to_I_1_out",
+                        initValue = "((0.5)*I0 * 1/(0.5)) / (2)"),
+                   list(name     = "dly_E_to_I_2",
+                        equation = "dly_E_to_I_1_out - dly_E_to_I_2_out",
+                        initValue = "((0.5)*I0 * 1/(0.5)) / (2)"),
+                   list(name     = "dly_S_to_E_1",
+                        equation = "S_to_E - dly_S_to_E_1_out",
+                        initValue = 0),
+                   list(name     = "S",
+                        equation = "-S_to_E",
+                        initValue = "(10000) - I0"),
+                   list(name     = "E",
+                        equation = "S_to_E-E_to_I",
+                        initValue = 0),
+                   list(name     = "I",
+                        equation = "E_to_I-I_to_R",
+                        initValue = "I0"),
+                   list(name     = "R",
+                        equation = "I_to_R",
+                        initValue = 0),
+                   list(name     = "C",
+                        equation = "C_in",
+                        initValue = 0))
+
+  expect_equal(actual, expected)
+})
+
 # compute_init_value()----------------------------------------------------------
 test_that("compute_init_value() extracts the expected initial value when it is
 the defined by a constant", {

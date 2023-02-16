@@ -12,7 +12,7 @@
 #'
 #' @noRd
 create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL,
-                                         const_list) {
+                                         const_list, inits_vector) {
 
   #-----------------------------------------------------------------------------
   # Exception for Vensim PRO that adds the variable 'Time'
@@ -56,7 +56,7 @@ create_vars_consts_obj_xmile <- function(auxs_xml, vendor, dims_obj = NULL,
 
   # interpreted non-consts
   interpreted_nc <- lapply(non_consts, interpret_non_consts, vendor, consts,
-                           auxs_xml)
+                           auxs_xml, inits_vector)
 
   vars           <- lapply(interpreted_nc, function(obj) obj$vars)
   vars           <- remove_NULL(vars)
@@ -164,7 +164,8 @@ tidy_consts <- function(const_obj) {
        value = as.numeric(const_obj[[2]]))
 }
 
-interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml) {
+interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml,
+                                 inits_vector) {
 
   aux_name       <- non_const_obj$aux_name
   non_const_list <- non_const_obj$elems
@@ -175,7 +176,7 @@ interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml) {
 
   if(vendor == "isee") output <- lapply(non_const_list,
                                         interpret_equations_isee, consts,
-                                        aux_xml)
+                                        aux_xml, inits_vector)
 
 
   if(vendor == "Vensim") output <- lapply(non_const_list,
@@ -196,16 +197,19 @@ interpret_non_consts <- function(non_const_obj, vendor, consts, auxs_xml) {
 }
 
 
-interpret_equations_isee <- function(non_const_obj, consts, aux_xml) {
+interpret_equations_isee <- function(non_const_obj, consts, aux_xml,
+                                     inits_vector) {
 
   var_name <- non_const_obj[[1]]
   equation <- non_const_obj[[2]]
 
+   # Stella delayN
   stl_delayn <- stringr::str_detect(equation, "\\bDELAYN\\b")
 
   if(stl_delayn) {
 
-    DELAYN_translation <- translate_DELAYN(var_name, equation, "isee", consts)
+    DELAYN_translation <- translate_DELAYN(var_name, equation, "isee", consts,
+                                           inits_vector)
 
     return(list(vars           = DELAYN_translation$variable_list,
                 builtin_stocks = DELAYN_translation$stock_list))

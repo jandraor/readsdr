@@ -29,10 +29,11 @@ extract_structure_from_XMILE <- function(filepath, inits_vector = NULL,
   stocks_xml      <-  xml2::xml_find_all(variables_xml, ".//d1:stock")
 
   vars_and_consts <- create_vars_consts_obj_xmile(auxs_xml, vendor, dims_obj,
-                                                  const_list)
+                                                  const_list, inits_vector)
 
   if(vendor == "Vensim") {
-    vars_and_consts <- extract_vars_in_stocks(stocks_xml, vars_and_consts)
+    vars_and_consts <- extract_vars_in_stocks(stocks_xml, vars_and_consts,
+                                              inits_vector)
   }
 
   variables       <- arrange_variables(vars_and_consts$variables)
@@ -111,7 +112,7 @@ compute_init_value <- function(var_name, equation, auxs, fixed_inits) {
       }
 
       initValue
-    }
+   }
   )
 }
 

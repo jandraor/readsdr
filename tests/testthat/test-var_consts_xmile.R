@@ -574,7 +574,7 @@ test_that("interpret_non_consts() handles DELAYN from Stella", {
                                           "DELAYN(S_to_E,2,j,0)")),
                         aux_name = "E_to_I")
 
-  actual <- interpret_non_consts(non_const_obj, vendor, consts, auxs_xml)
+  actual <- interpret_non_consts(non_const_obj, vendor, consts, auxs_xml, NULL)
 
   expected <- list(
     vars = list(

@@ -1,9 +1,10 @@
-extract_vars_in_stocks <- function(stocks_xml, vars_and_consts) {
+extract_vars_in_stocks <- function(stocks_xml, vars_and_consts, inits_vector) {
 
   vars      <- vars_and_consts$variables
   consts    <- vars_and_consts$constants
   b_stocks  <- vars_and_consts$builtin_stocks
-  new_elems <- lapply(stocks_xml, extract_delay_vars, consts) %>% remove_NULL()
+  new_elems <- lapply(stocks_xml, extract_delay_vars, consts, inits_vector) %>%
+    remove_NULL()
 
   new_vars <- purrr::map(new_elems, "variable_list") %>%
     unlist(recursive = FALSE)
@@ -21,7 +22,7 @@ extract_vars_in_stocks <- function(stocks_xml, vars_and_consts) {
   vars_and_consts
 }
 
-extract_delay_vars <- function(stock_xml, consts) {
+extract_delay_vars <- function(stock_xml, consts, inits_vector) {
 
   delay_vars <- list(variable_list = NULL,
                      stock_list    = NULL)
@@ -50,7 +51,8 @@ extract_delay_vars <- function(stock_xml, consts) {
     var_name <- stock_xml %>%  xml2::xml_attr("name") %>%
       sanitise_elem_name() %>%  check_elem_name()
 
-    DELAYN_translation <- translate_DELAYN(var_name, eq, "Vensim", consts)
+    DELAYN_translation <- translate_DELAYN(var_name, eq, "Vensim", consts,
+                                           inits_vector)
 
     return(DELAYN_translation)
   }
