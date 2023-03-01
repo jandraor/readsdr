@@ -37,3 +37,5 @@ Imports:
     truncnorm
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
