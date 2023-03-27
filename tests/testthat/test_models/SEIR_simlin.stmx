@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE" xmlns:simlin="https://simlin.com/XMILE/v1.0">
+    <header>
+        <name>SEIR</name>
+        <vendor>Simlin</vendor>
+        <product version="0.1.0" lang="en">Simlin</product>
+    </header>
+    <sim_specs method="euler">
+        <start>0</start>
+        <stop>100</stop>
+        <dt>0.015625</dt>
+    </sim_specs>
+    <model>
+        <variables>
+            <stock name="s">
+                <eqn>9999</eqn>
+                <outflow>s_to_e</outflow>
+            </stock>
+            <stock name="e">
+                <eqn>0</eqn>
+                <inflow>s_to_e</inflow>
+                <outflow>e_to_i</outflow>
+            </stock>
+            <stock name="i">
+                <eqn>1</eqn>
+                <inflow>e_to_i</inflow>
+                <outflow>i_to_r</outflow>
+            </stock>
+            <stock name="r">
+                <eqn>0</eqn>
+                <inflow>i_to_r</inflow>
+            </stock>
+            <flow name="s_to_e">
+                <eqn>par_beta * S * I / N</eqn>
+            </flow>
+            <flow name="e_to_i">
+                <eqn>par_sigma * E</eqn>
+            </flow>
+            <flow name="i_to_r">
+                <eqn>par_gamma * I</eqn>
+            </flow>
+            <aux name="n">
+                <eqn>10000</eqn>
+            </aux>
+            <aux name="par_beta">
+                <eqn>1</eqn>
+            </aux>
+            <aux name="par_gamma">
+                <eqn>0.5</eqn>
+            </aux>
+            <aux name="par_sigma">
+                <eqn>0.5</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view isee:show_pages="false" page_width="800" page_height="600" view_type="stock_flow">
+                <stock name="S" x="338" y="374" label_side="bottom"></stock>
+                <stock name="E" x="451" y="375" label_side="bottom"></stock>
+                <stock name="I" x="563" y="375" label_side="bottom"></stock>
+                <stock name="R" x="670" y="372" label_side="bottom"></stock>
+                <flow name="S to E" x="394.5" y="375" label_side="bottom">
+                    <pts>
+                        <pt x="360.5" y="375"></pt>
+                        <pt x="428.5" y="375"></pt>
+                    </pts>
+                </flow>
+                <flow name="E to I" x="507" y="375" label_side="bottom">
+                    <pts>
+                        <pt x="473.5" y="375"></pt>
+                        <pt x="540.5" y="375"></pt>
+                    </pts>
+                </flow>
+                <flow name="I to R" x="616.5" y="375" label_side="bottom">
+                    <pts>
+                        <pt x="585.5" y="375"></pt>
+                        <pt x="647.5" y="375"></pt>
+                    </pts>
+                </flow>
+                <connector angle="46.956629917173245">
+                    <from>S</from>
+                    <to>S to E</to>
+                </connector>
+                <connector angle="125.79697283810356">
+                    <from>I</from>
+                    <to>S to E</to>
+                </connector>
+                <aux name="N" x="365" y="313" label_side="top"></aux>
+                <connector angle="-59.65006805298145">
+                    <from>N</from>
+                    <to>S to E</to>
+                </connector>
+                <aux name="par beta" x="399" y="283" label_side="right"></aux>
+                <connector angle="-89.22394479304057">
+                    <from>par beta</from>
+                    <to>S to E</to>
+                </connector>
+                <connector angle="39.743034793682966">
+                    <from>E</from>
+                    <to>E to I</to>
+                </connector>
+                <connector angle="33.6665760227807">
+                    <from>I</from>
+                    <to>I to R</to>
+                </connector>
+                <aux name="par gamma" x="637" y="297" label_side="right"></aux>
+                <connector angle="-102.9053976403103">
+                    <from>par gamma</from>
+                    <to>I to R</to>
+                </connector>
+                <aux name="par sigma" x="544" y="311" label_side="top"></aux>
+                <connector angle="-123.87741601228754">
+                    <from>par sigma</from>
+                    <to>E to I</to>
+                </connector>
+            </view>
+        </views>
+    </model>
+</xmile>
