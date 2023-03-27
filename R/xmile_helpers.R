@@ -181,14 +181,17 @@ check_elem_name <- function(elem_name) {
 }
 
 which_vendor <- function(raw_xml) {
+
   vendor_raw <- xml2::xml_find_first(raw_xml, ".//d1:vendor") %>%
     xml2::xml_text()
 
   is_Vensim <- stringr::str_detect(vendor_raw, "Ventana")
   is_isee   <- stringr::str_detect(vendor_raw, "isee")
+  is_Simlin <- stringr::str_detect(vendor_raw, "Simlin")
 
   if(is_Vensim) vendor <- "Vensim"
   if(is_isee)   vendor <- "isee"
+  if(is_Simlin) vendor <- "isee"
 
   vendor
 }
