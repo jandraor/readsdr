@@ -44,11 +44,11 @@ Posterior function
 }
 \examples{
 filepath         <- system.file("models/", "SEIR.stmx", package = "readsdr")
- meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
                             measurements = 1:10))
 estimated_params <- list(
   sd_prior("par_beta", "lognormal", c(0, 1)),
   sd_prior("par_rho", "beta", c(2, 2)),
   sd_prior("I0", "lognormal", c(0, 1), "init"))
-fun <- sd_posterior_fun(filepath, meas_mdl, estimated_params)
+fun <- sd_posterior_fun(filepath, meas_data_mdl, estimated_params)
 }

@@ -244,7 +244,7 @@ test_that("sd_loglik_fun() returns the expected object", {
 
   actual_val <- fun_obj$fun(c(1, 0.1))
 
-  expected_val <- -2315.852
+  expected_val <- -32.47283
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 
@@ -262,7 +262,7 @@ test_that("sd_loglik_fun() returns the expected object", {
 
   actual_val <- fun_obj$fun(c(1, 0.1))
 
-  expected_val <- 2315.852
+  expected_val <- 32.47283
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 })
@@ -289,7 +289,7 @@ test_that("sd_loglik_fun() handles multiple measurements", {
 
   actual_val <- fun_obj$fun(c(4, 0.5,0.1))
 
-  expected_val <- -1294.143
+  expected_val <- -1168.551
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 })
@@ -315,7 +315,7 @@ test_that("sd_loglik_fun() handles fixed pars", {
                                        I0 = 1,
                                        inv_phi = exp(0.1)))
 
-  expected_val <- -2315.852
+  expected_val <- -32.47283
 
   expect_equal(actual_val, expected_val, tolerance = 1e-4)
 
@@ -323,4 +323,23 @@ test_that("sd_loglik_fun() handles fixed pars", {
 
   expected_list <- list(list(par_name = "par_beta", par_trans = "exp"),
                         list(par_name = "phi", par_trans = c("exp", "inv")))
+})
+
+test_that("sd_loglik_fun() overrides sim params", {
+
+  filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+                             measurements = 1:10))
+
+  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl,
+                           start_time = 0, stop_time = 10, timestep = 1/128)
+
+  expect_obj <- list(start = 0,
+                     stop  = 10,
+                     dt    = 1/128)
+
+  actual_obj <- fun_obj$sim_params
+
+  expect_equal(actual_obj, expect_obj)
 })
