@@ -46,5 +46,7 @@ format_consts_as_vars <- function(constants) {
   })
 }
 
+df2list <- function(df) do.call(function(...) Map(list,...), df)
+
 
 

@@ -51,9 +51,11 @@ optimisation.}
 \item{integ_method}{A string. Either "euler" or "rk4"}
 }
 \value{
-A list of two elements. The first element \code{fun} corresponds to
-the log likelihood function. The second element \code{par_names} indicates
-the order in which the unknowns are returned.
+A list of three elements. The first element, \code{fun}, corresponds
+to the log likelihood function. The second element, \code{par_names},
+indicates the order in which the unknowns are returned. The third element,
+\code{sim_params}, corresponds to the simulation parameters (start time,
+stop time, and the integration step or dt) employed by the solver function.
 }
 \description{
 Generate a log-likelihood function for an SD model
