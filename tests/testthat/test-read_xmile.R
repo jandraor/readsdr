@@ -139,6 +139,15 @@ test_that("read_xmile() overrides metaparameter for delay N", {
   expect_equal(actual, expected)
 })
 
+test_that("read_xmile() handles Simlin files", {
+
+  filepath <- "./test_models/SEIR_simlin.stmx"
+
+  mdl <- read_xmile(filepath)
+
+  expect_is(mdl, "list")
+})
+
 #xmile_to_deSolve()-------------------------------------------------------------
 
 test_that("xmile_to_deSolve() returns a list", {

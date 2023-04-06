@@ -59,7 +59,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
   lvl_obj       <- mdl_structure$levels
   lvl_names     <- get_names(mdl_structure$levels)
 
-  init_vals     <- purrr::map_chr(lvl_obj, "initValue")
+  init_vals     <- purrr::map(lvl_obj, "initValue")
   init_vals     <- suppressWarnings(as.numeric(init_vals))
 
   any_unk_inits <- ifelse(any(is.na(init_vals)), TRUE, FALSE)
