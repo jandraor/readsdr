@@ -22,9 +22,11 @@
 #' @inheritParams read_xmile
 #' @inheritParams sd_simulate
 #'
-#' @return A list of two elements. The first element \code{fun} corresponds to
-#' the log likelihood function. The second element \code{par_names} indicates
-#' the order in which the unknowns are returned.
+#' @return A list of three elements. The first element, \code{fun}, corresponds
+#' to the log likelihood function. The second element, \code{par_names},
+#' indicates the order in which the unknowns are returned. The third element,
+#' \code{sim_params}, corresponds to the simulation parameters (start time,
+#' stop time, and the integration step or dt) employed by the solver function.
 #' @export
 #'
 #' @examples
@@ -47,6 +49,7 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
 
   mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
   ds_inputs     <- get_deSolve_elems(mdl_structure)
+  ds_inputs     <- update_sim_params(ds_inputs, start_time, stop_time, timestep)
   const_names   <- names(ds_inputs$consts)
 
   meas_mdl  <- lapply(meas_data_mdl, function(meas_obj) meas_obj$formula)
@@ -145,7 +148,9 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
     rlang::fn_env(model_func)[[data_id]] <- meas_model$measurements
   }
 
-  list(fun = model_func, par_list = par_list)
+  list(fun = model_func,
+       par_list = par_list,
+       sim_params = ds_inputs$sim_params)
 }
 
 get_par_list <- function(unknown_pars) {

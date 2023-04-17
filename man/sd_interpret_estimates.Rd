@@ -4,24 +4,24 @@
 \alias{sd_interpret_estimates}
 \title{Interpret estimates}
 \usage{
-sd_interpret_estimates(estimates_list, par_list)
+sd_interpret_estimates(estimates, par_list)
 }
 \arguments{
-\item{estimates_list}{A list}
+\item{estimates}{A list or data frame}
 
 \item{par_list}{A list}
 }
 \value{
-A list
+A data frame
 }
 \description{
 Interpret estimates
 }
 \examples{
-  estimates_list <- c(par_beta = 0,
-                      par_rho  = 0.8472979,
-                      I0       = 0,
-                      inv_phi  = -2.302585)
+  estimates <- c(par_beta = 0,
+                 par_rho  = 0.8472979,
+                 I0       = 0,
+                 inv_phi  = -2.302585)
 
   par_list <- list(list(par_name  = "par_beta",
                         par_trans = "exp"),
@@ -31,5 +31,5 @@ Interpret estimates
                         par_trans = "exp"),
                    list(par_name  = "phi",
                         par_trans = c("exp", "inv")))
-  sd_interpret_estimates(estimates_list, par_list)
+  sd_interpret_estimates(estimates, par_list)
 }
