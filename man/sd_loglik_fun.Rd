@@ -13,7 +13,8 @@ sd_loglik_fun(
   start_time = NULL,
   stop_time = NULL,
   timestep = NULL,
-  integ_method = "euler"
+  integ_method = "euler",
+  const_list = NULL
 )
 }
 \arguments{
@@ -49,6 +50,9 @@ optimisation.}
 \item{timestep}{A number}
 
 \item{integ_method}{A string. Either "euler" or "rk4"}
+
+\item{const_list}{A list in which each element's name is the name of the
+constant to override and the element's value correspond to the new value.}
 }
 \value{
 A list of three elements. The first element, \code{fun}, corresponds

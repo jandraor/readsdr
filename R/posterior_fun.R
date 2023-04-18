@@ -18,7 +18,8 @@
 #' fun <- sd_posterior_fun(filepath, meas_data_mdl, estimated_params)
 sd_posterior_fun <- function(filepath, meas_data_mdl, estimated_params,
                              start_time = NULL, stop_time = NULL,
-                             timestep = NULL, integ_method = "euler") {
+                             timestep = NULL, integ_method = "euler",
+                             const_list = NULL) {
 
 
   ll_fun_obj <- sd_loglik_fun(filepath      = filepath,
@@ -27,7 +28,8 @@ sd_posterior_fun <- function(filepath, meas_data_mdl, estimated_params,
                               start_time    = start_time,
                               stop_time     = stop_time,
                               timestep      = timestep,
-                              integ_method  = integ_method)
+                              integ_method  = integ_method,
+                              const_list    = const_list)
 
   log_lik_fun <- ll_fun_obj$fun
 

@@ -18,7 +18,6 @@
 #' values will be supplied to the function. These values will not be subject to
 #' optimisation.
 #'
-#'
 #' @inheritParams read_xmile
 #' @inheritParams sd_simulate
 #'
@@ -40,14 +39,18 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
                           neg_log    = FALSE,
                           supplied_pars = NULL,
                           start_time = NULL, stop_time = NULL, timestep = NULL,
-                          integ_method = "euler") {
+                          integ_method = "euler",
+                          const_list = NULL) {
 
   unk_constants <- unknown_pars
   n_consts      <- length(unk_constants)
 
   pars_names <- get_names(unknown_pars, "par_name")
 
-  mdl_structure <- extract_structure_from_XMILE(filepath, pars_names)
+  mdl_structure <- extract_structure_from_XMILE(filepath,
+                                                inits_vector = pars_names,
+                                                const_list   = const_list)
+
   ds_inputs     <- get_deSolve_elems(mdl_structure)
   ds_inputs     <- update_sim_params(ds_inputs, start_time, stop_time, timestep)
   const_names   <- names(ds_inputs$consts)
@@ -148,9 +151,9 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
     rlang::fn_env(model_func)[[data_id]] <- meas_model$measurements
   }
 
-  list(fun = model_func,
-       par_list = par_list,
-       sim_params = ds_inputs$sim_params)
+  list(fun       = model_func,
+       par_list  = par_list,
+       ds_inputs = ds_inputs)
 }
 
 get_par_list <- function(unknown_pars) {
