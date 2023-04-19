@@ -178,17 +178,16 @@ const_sensitivity <- function(const_sensitivity_list, ode_args, multicore,
 
   if(multicore) {
 
-    if(is.null(n_cores)) n_cores <- parallel::detectCores() - 1
+    if(is.null(n_cores)) n_cores <- future::availableCores() - 1
 
     if(n_cores > 1) {
 
-      if(!check_win()) {
+      future::plan(future::multisession, workers = n_cores)
 
-        df_list <- parallel::mclapply(const_sensitivity_list, do_const_sens,
-                                      mc.cores = n_cores,
-                                      ode_args = ode_args)
-        return(df_list)
-      }
+      df_list <- future.apply::future_lapply(const_sensitivity_list,
+                                             do_const_sens,
+                                             ode_args = ode_args)
+      return(df_list)
     }
   }
 
@@ -196,9 +195,11 @@ const_sensitivity <- function(const_sensitivity_list, ode_args, multicore,
 }
 
 do_const_sens <- function(const_list, ode_args) {
+
    ode_args$parms <- unlist(const_list)
    result_matrix  <- do.call(deSolve::ode, ode_args)
    data.frame(result_matrix)
+
 }
 
 stock_sensitivity <- function(stock_sensitivity_list, ode_args, multicore,
@@ -206,16 +207,17 @@ stock_sensitivity <- function(stock_sensitivity_list, ode_args, multicore,
 
   if(multicore) {
 
-    if(is.null(n_cores)) n_cores <- parallel::detectCores() - 1
+    if(is.null(n_cores)) n_cores <- future::availableCores() - 1
 
     if(n_cores > 1) {
 
-      if(!check_win()) {
-        df_list <- parallel::mclapply(stock_sensitivity_list, do_init_sens,
-                                      mc.cores = n_cores,
-                                      ode_args = ode_args)
-        return(df_list)
-      }
+      future::plan(future::multisession, workers = n_cores)
+
+      df_list <- future.apply::future_lapply(stock_sensitivity_list,
+                                             do_init_sens,
+                                             ode_args = ode_args)
+      return(df_list)
+
     }
   }
 
@@ -236,16 +238,15 @@ const_stock_sensitivity <- function(const_sensitivity_list,
 
   if(multicore) {
 
-    if(is.null(n_cores)) n_cores <- parallel::detectCores() - 1
+    if(is.null(n_cores)) n_cores <- future::availableCores() - 1
 
     if(n_cores > 1) {
 
-      if(!check_win()) {
-        df_list <- parallel::mclapply(sens_list, do_const_init_sens,
-                                      mc.cores = n_cores,
-                                      ode_args = ode_args)
+      future::plan(future::multisession, workers = n_cores)
+
+      df_list <- future.apply::future_lapply(sens_list, do_const_init_sens,
+                                             ode_args = ode_args)
         return(df_list)
-      }
     }
   }
 
@@ -270,17 +271,6 @@ fill_df <- function(df, missing, elems) {
   df
 }
 
-check_win <- function() {
-  is_win <- FALSE
-
-  if(.Platform$OS.type == "windows") {
-    warning("This function does not suppport parallelisation in Windows",
-            .call = FALSE)
-    is_win <- TRUE
-  }
-  is_win
-}
-
 update_sim_params <- function(ds_inputs, start_time, stop_time, timestep) {
 
   if(!is.null(start_time)) ds_inputs$sim_params$start <- start_time
@@ -289,5 +279,3 @@ update_sim_params <- function(ds_inputs, start_time, stop_time, timestep) {
 
   ds_inputs
 }
-
-

@@ -1,7 +1,7 @@
 Package: readsdr
 Type: Package
 Title: Translate Models from System Dynamics Software into 'R'
-Version: 0.2.0.9009
+Version: 0.2.0.9010
 Authors@R: person("Jair", "Andrade", email = "jair.albert.andrade@gmail.com", 
                   role = c("aut", "cre"),
                   comment = c(ORCID = "0000-0002-1412-7868"))
@@ -32,9 +32,10 @@ Imports:
     magrittr,
     stats,
     deSolve,
-    parallel,
     utils,
-    truncnorm
+    truncnorm,
+    future,
+    future.apply
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr
 Depends: 
