@@ -339,7 +339,26 @@ test_that("sd_loglik_fun() overrides sim params", {
                      stop  = 10,
                      dt    = 1/128)
 
-  actual_obj <- fun_obj$sim_params
+  actual_obj <- fun_obj$ds_inputs$sim_params
 
   expect_equal(actual_obj, expect_obj)
+})
+
+test_that("sd_loglik_fun() overrides consts", {
+
+  filepath      <- system.file("models/", "SEIR.stmx", package = "readsdr")
+
+  unknown_pars  <- list(list(par_name = "par_beta", min = 0))
+  meas_data_mdl <- list(list(formula      = "y ~ neg_binomial_2(net_flow(C), phi)",
+                             measurements = 1:10))
+
+  N_val <- 5234
+
+  const_list <- list(N = N_val)
+
+  fun_obj <- sd_loglik_fun(filepath, unknown_pars, meas_data_mdl,
+                           start_time = 0, stop_time = 10, timestep = 1/128,
+                           const_list = const_list)
+
+  expect_equal(fun_obj$ds_inputs$consts[["N"]], N_val)
 })

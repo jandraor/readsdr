@@ -1,5 +1,7 @@
 # Development version
 
+* Parallelisation of **sd_sensitivity_run()*** supported in Windows.
+* Add **sd_posterior_fun()**.
 * Support the translation of Vensim's *DELAY_N*.
 * Support the translation of Stella's *DELAYN* with four parameters.
 * Support Stella's *apply all* for uni-dimensional vectors.
