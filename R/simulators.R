@@ -110,7 +110,11 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
 
   #-----------------------------------------------------------------------------
   if(!is.null(consts_df)) {
+
     sens_consts     <- colnames(consts_df)
+
+    validate_consts(sens_consts, consts_names)
+
     missing_consts  <- consts_names[!consts_names %in% sens_consts]
 
     if(length(missing_consts) > 0) {
@@ -264,9 +268,7 @@ do_const_init_sens <- function(sens_list, ode_args) {
 
 fill_df <- function(df, missing, elems) {
 
-  for(ms in missing) {
-    df[ms] <- elems[ms]
-  }
+  for(ms in missing) df[ms] <- elems[ms]
 
   df
 }
@@ -278,4 +280,20 @@ update_sim_params <- function(ds_inputs, start_time, stop_time, timestep) {
   if(!is.null(timestep))   ds_inputs$sim_params$dt    <- timestep
 
   ds_inputs
+}
+
+validate_consts <- function(sens_consts, consts_names) {
+
+  invalid_names <- sens_consts[!sens_consts %in% consts_names]
+
+
+  if(length(invalid_names) > 0L) {
+
+    inv_consts <- paste0("`", invalid_names, "`") # invalid consts
+    inv_consts <- paste(inv_consts, sep = ", ")
+    msg <- stringr::str_glue("{inv_consts} doesn't/don't exist in the model")
+    stop(msg, call. = FALSE)
+  }
+
+  invisible(NULL)
 }

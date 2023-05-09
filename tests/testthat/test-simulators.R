@@ -161,3 +161,12 @@ test_that("sd_sensitivity_run() works with several cores", {
                                   multicore = TRUE, n_cores = 2)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 	10.2015050))
 })
+
+test_that("sd_sensitivity_run() throws an error if supplied an inexistent const", {
+
+  filepath  <- system.file("models/", "SEIR.stmx", package = "readsdr")
+  ds_inputs <- xmile_to_deSolve(filepath)
+
+  expect_error(sd_sensitivity_run(ds_inputs,
+                                  consts_df = data.frame(par_zeta = 1:3)))
+})
