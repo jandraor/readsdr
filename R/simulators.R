@@ -62,13 +62,17 @@ sd_simulate <- function(ds_inputs, start_time = NULL, stop_time = NULL,
 #'
 #' @param consts_df A data frame that contains the values of constants to
 #'   simulate. Each column corresponds to a constant and each row to an
-#'   iteration.
+#'   iteration. If \code{stocks_df} is also supplied, both data frames must have
+#'   the same number of rows.
 #' @param stocks_df A data frame that containts the initial value of stocks to
-#' be explored. Each column corresponds to a stock and each row to an iteration.
-#'
+#'   be explored. Each column corresponds to a stock and each row to an
+#'   iteration. If \code{consts_df} is also supplied, both data frames must have
+#'   the same number of rows.
 #' @param multicore A boolean value that indicates whether the process
-#' is parallelised. This option only works for Unix-based systems.
-#' @param n_cores An integer.
+#' is parallelised.
+#' @param n_cores An integer indicating the number of cores for the parallel run.
+#' @param every_dt A boolean value that indicates whether simulation results at
+#' intermediate time steps are returned. The default is set to \code{FALSE}.
 #' @inheritParams sd_simulate
 #'
 #' @return A data frame
@@ -83,7 +87,8 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
                                start_time = NULL, stop_time = NULL,
                                timestep = NULL, integ_method = "euler",
                                multicore = FALSE,
-                               n_cores = NULL) {
+                               n_cores = NULL,
+                               every_dt = FALSE) {
 
   if(!(integ_method %in% c("euler", "rk4"))) stop("Invalid integration method")
 
@@ -122,14 +127,12 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
     }
 
     const_sensitivity_list <- do.call(function(...) Map(list,...), consts_df)
-
-  }else {
-    ode_args$parms <- ds_inputs$consts
   }
   #-----------------------------------------------------------------------------
 
   #-----------------------------------------------------------------------------
   if(!is.null(stocks_df)) {
+
     sens_stocks     <- colnames(stocks_df)
     missing_stocks  <- stocks_names[!stocks_names %in% sens_stocks]
 
@@ -139,23 +142,25 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
 
     stocks_df              <- stocks_df[, c(stocks_names), drop = FALSE]
     stock_sensitivity_list <- do.call(function(...) Map(list,...), stocks_df)
-
-  } else {
-    ode_args$y <- ds_inputs$stocks
   }
 
   #-----------------------------------------------------------------------------
 
   if(!is.null(consts_df) & is.null(stocks_df)) {
+
     iters   <- nrow(consts_df)
-    df_list <- const_sensitivity(const_sensitivity_list, ode_args, multicore,
-                                 n_cores)
+    df_list <- const_stock_sensitivity(
+      const_sensitivity_list,
+      rep(list(as.list(ds_inputs$stocks)), iters),
+      ode_args, multicore, n_cores, every_dt)
   }
 
   if(is.null(consts_df) & !is.null(stocks_df)) {
+
     iters   <- nrow(stocks_df)
-    df_list <- stock_sensitivity(stock_sensitivity_list, ode_args, multicore,
-                                 n_cores)
+    df_list <- const_stock_sensitivity(
+      rep(list(as.list(ds_inputs$consts)), iters),
+      stock_sensitivity_list, ode_args, multicore, n_cores, every_dt)
   }
 
   if(!is.null(consts_df) & !is.null(stocks_df)) {
@@ -169,74 +174,21 @@ sd_sensitivity_run <- function(ds_inputs, consts_df = NULL, stocks_df = NULL,
     iters   <- nrow(consts_df)
     df_list <- const_stock_sensitivity(const_sensitivity_list,
                                        stock_sensitivity_list,
-                                       ode_args, multicore, n_cores)
+                                       ode_args, multicore, n_cores,
+                                       every_dt = every_dt)
   }
 
-  sensitivity_df       <- do.call("rbind", df_list)
+  sensitivity_df <- do.call("rbind", df_list)
+
+  if(!every_dt) simtime <- simtime[simtime %%1 == 0]
+
   sensitivity_df$iter  <- rep(1:iters, each = length(simtime))
   sensitivity_df
 }
 
-const_sensitivity <- function(const_sensitivity_list, ode_args, multicore,
-                              n_cores) {
-
-  if(multicore) {
-
-    if(is.null(n_cores)) n_cores <- future::availableCores() - 1
-
-    if(n_cores > 1) {
-
-      future::plan(future::multisession, workers = n_cores)
-
-      df_list <- future.apply::future_lapply(const_sensitivity_list,
-                                             do_const_sens,
-                                             ode_args = ode_args)
-      return(df_list)
-    }
-  }
-
-  df_list <- lapply(const_sensitivity_list, do_const_sens, ode_args = ode_args)
-}
-
-do_const_sens <- function(const_list, ode_args) {
-
-   ode_args$parms <- unlist(const_list)
-   result_matrix  <- do.call(deSolve::ode, ode_args)
-   data.frame(result_matrix)
-
-}
-
-stock_sensitivity <- function(stock_sensitivity_list, ode_args, multicore,
-                              n_cores) {
-
-  if(multicore) {
-
-    if(is.null(n_cores)) n_cores <- future::availableCores() - 1
-
-    if(n_cores > 1) {
-
-      future::plan(future::multisession, workers = n_cores)
-
-      df_list <- future.apply::future_lapply(stock_sensitivity_list,
-                                             do_init_sens,
-                                             ode_args = ode_args)
-      return(df_list)
-
-    }
-  }
-
-  df_list <- lapply(stock_sensitivity_list, do_init_sens, ode_args = ode_args)
-}
-
-do_init_sens <- function(stock_list, ode_args) {
-  ode_args$y     <- unlist(stock_list)
-  result_matrix  <- do.call(deSolve::ode, ode_args)
-  data.frame(result_matrix)
-}
-
 const_stock_sensitivity <- function(const_sensitivity_list,
                                     stock_sensitivity_list, ode_args,
-                                    multicore, n_cores) {
+                                    multicore, n_cores, every_dt) {
 
   sens_list <- Map(list, const_sensitivity_list, stock_sensitivity_list)
 
@@ -248,22 +200,42 @@ const_stock_sensitivity <- function(const_sensitivity_list,
 
       future::plan(future::multisession, workers = n_cores)
 
-      df_list <- future.apply::future_lapply(sens_list, do_const_init_sens,
-                                             ode_args = ode_args)
+      progressr::handlers("progress")
+
+      progressr::with_progress({
+
+        p <- progressr::progressor(along = sens_list)
+
+        df_list <- future.apply::future_lapply(sens_list, function(sens_obj,
+                                                                   do_sens) {
+          p()
+          do_sens(sens_obj, ode_args, every_dt)
+        }, do_sens = do_sens)
+      })
+
+
         return(df_list)
     }
   }
 
-  df_list <- lapply(sens_list, do_const_init_sens, ode_args = ode_args)
+  df_list <- lapply(sens_list, do_sens,
+                    ode_args = ode_args, every_dt = every_dt)
 }
 
-do_const_init_sens <- function(sens_list, ode_args) {
-  const_list     <- sens_list[1]
-  stock_list     <- sens_list[2]
-  ode_args$y     <- unlist(stock_list)
+do_sens <- function(sens_obj, ode_args, every_dt) {
+
+  const_list     <- sens_obj[1]
   ode_args$parms <- unlist(const_list)
+
+  stock_list <- sens_obj[2]
+  ode_args$y <- unlist(stock_list)
+
   result_matrix  <- do.call(deSolve::ode, ode_args)
-  data.frame(result_matrix)
+  df             <- data.frame(result_matrix)
+
+  if(!every_dt) df <- df[df$time - trunc(df$time) == 0, ]
+
+  df
 }
 
 fill_df <- function(df, missing, elems) {

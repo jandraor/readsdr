@@ -35,7 +35,8 @@ Imports:
     utils,
     truncnorm,
     future,
-    future.apply
+    future.apply,
+    progressr
 BugReports: https://github.com/jandraor/readsdr/issues
 VignetteBuilder: knitr
 Depends: 

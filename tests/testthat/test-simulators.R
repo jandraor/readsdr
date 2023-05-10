@@ -1,5 +1,3 @@
-context("Simulators")
-
 deSolve_m1 <- list(
   stocks = c(Population = 100),
   consts = c(growth_rate = 0.01),
@@ -79,13 +77,15 @@ test_that("sd_simulate() handles graphical functions", {
 
 test_that("sd_sensitivity_run() returns the expected output for constant sensitivity", {
   consts_df <- data.frame(growth_rate = c(0.01, 0.02))
-  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df)
+  output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
 })
 
 test_that("sd_sensitivity_run() returns the expected output for sensitivity of initial values ", {
   stocks_df <- data.frame(Population = c(10,100))
-  output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df)
+  output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
 })
 
@@ -93,7 +93,7 @@ test_that("sd_sensitivity_run() works for simultaneous sensitivity to stocks and
   consts_df <- data.frame(growth_rate = c(0.01, 0.02))
   stocks_df <- data.frame(Population = c(100, 10))
   output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
-                                  stocks_df = stocks_df)
+                                  stocks_df = stocks_df, every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 	10.2015050))
 })
 
@@ -111,19 +111,22 @@ of unequal size", {
 
 test_that("sd_sensitivity_run() works for models with graph funs", {
   consts_df <- data.frame(growth_rate = c(0.01, 0.02))
-  output    <- sd_sensitivity_run(deSolve_m2, consts_df = consts_df)
+  output    <- sd_sensitivity_run(deSolve_m2, consts_df = consts_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(102.015050, 103.540124))
 })
 
 test_that("sd_sensitivity_run() works for a subset of constants", {
   consts_df <- data.frame(death_rate = c(0, 0.01))
-  output    <- sd_sensitivity_run(deSolve_m3, consts_df = consts_df)
+  output    <- sd_sensitivity_run(deSolve_m3, consts_df = consts_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 100))
 })
 
 test_that("sd_sensitivity_run() works for a subset of stocks", {
   stocks_df <- data.frame(Population = c(10,100))
-  output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df)
+  output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(10, 100))
 })
 
@@ -131,26 +134,30 @@ test_that("sd_sensitivity_run() works for a subset of constants & stocks", {
   stocks_df <- data.frame(Population = c(10, 100))
   consts_df <- data.frame(death_rate = c(0, 0.01))
   output    <- sd_sensitivity_run(deSolve_m3, consts_df = consts_df,
-                                  stocks_df = stocks_df)
+                                  stocks_df = stocks_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(10.1003756, 100))
 })
 
 test_that("sd_sensitivity_run() deals with the order of the stocks", {
   stocks_df <- data.frame(Cumulative_Deaths = c(0, 10))
-  output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df)
+  output    <- sd_sensitivity_run(deSolve_m3, stocks_df = stocks_df,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Cumulative_Deaths"], c(1, 11))
 })
 
 test_that("sd_sensitivity_run() works with several cores", {
   consts_df <- data.frame(growth_rate = c(0.01, 0.02))
   output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
-                                  multicore = TRUE, n_cores = 2)
+                                  multicore = TRUE, n_cores = 2,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 102.015050))
 
 
   stocks_df <- data.frame(Population = c(10,100))
   output    <- sd_sensitivity_run(deSolve_m1, stocks_df = stocks_df,
-                                  multicore = TRUE, n_cores = 2)
+                                  multicore = TRUE, n_cores = 2,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(10.100376, 101.003756))
 
 
@@ -158,7 +165,8 @@ test_that("sd_sensitivity_run() works with several cores", {
   stocks_df <- data.frame(Population = c(100, 10))
   output    <- sd_sensitivity_run(deSolve_m1, consts_df = consts_df,
                                   stocks_df = stocks_df,
-                                  multicore = TRUE, n_cores = 2)
+                                  multicore = TRUE, n_cores = 2,
+                                  every_dt = TRUE)
   expect_equal(output[c(5, 10), "Population"], c(101.003756, 	10.2015050))
 })
 
@@ -169,4 +177,29 @@ test_that("sd_sensitivity_run() throws an error if supplied an inexistent const"
 
   expect_error(sd_sensitivity_run(ds_inputs,
                                   consts_df = data.frame(par_zeta = 1:3)))
+})
+
+test_that("sd_sensitivity_run() filters rows at intermediate steps", {
+
+  filepath  <- system.file("models/", "SEIR.stmx", package = "readsdr")
+  ds_inputs <- xmile_to_deSolve(filepath)
+
+  actual <- sd_sensitivity_run(ds_inputs,
+                               consts_df = data.frame(par_beta = c(0.5, 1, 1.25)),
+                               start_time = 1, stop_time = 3)
+
+  expect_equal(actual$time, rep(1:3, 3))
+
+  actual <- sd_sensitivity_run(ds_inputs,
+                               consts_df = data.frame(par_beta = c(0.5, 1, 1.25)),
+                               stocks_df = data.frame(S = c(1000, 1000, 1000)),
+                               start_time = 1, stop_time = 3)
+
+  expect_equal(actual$time, rep(1:3, 3))
+
+  actual <- sd_sensitivity_run(ds_inputs,
+                               stocks_df = data.frame(S = c(1000, 1000, 1000)),
+                               start_time = 1, stop_time = 3)
+
+  expect_equal(actual$time, rep(1:3, 3))
 })
