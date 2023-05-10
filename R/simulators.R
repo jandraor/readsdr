@@ -207,10 +207,10 @@ const_stock_sensitivity <- function(const_sensitivity_list,
         p <- progressr::progressor(along = sens_list)
 
         df_list <- future.apply::future_lapply(sens_list, function(sens_obj,
-                                                                   do_sens) {
+                                                                   do_sens, p) {
           p()
           do_sens(sens_obj, ode_args, every_dt)
-        }, do_sens = do_sens)
+        }, do_sens = do_sens, p = p)
       })
 
 
