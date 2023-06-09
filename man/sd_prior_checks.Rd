@@ -30,13 +30,15 @@ description, the user can avail of the function `sd_prior`.}
 \item{n_draws}{An integer that indicates how many time-series will be
 returned.}
 
-\item{start_time}{A number}
+\item{start_time}{A number indicating the time at which the simulation begins.}
 
-\item{stop_time}{A number}
+\item{stop_time}{A number indicating the time at which the simulation ends.}
 
-\item{timestep}{A number}
+\item{timestep}{A number indicating the time interval for the simulation.
+Also known as \code{dt}.}
 
-\item{integ_method}{A string. Either "euler" or "rk4"}
+\item{integ_method}{A string indicating the integration method. It can be
+either "euler" or "rk4"}
 }
 \value{
 A list of two data frames.

@@ -29,13 +29,15 @@ a sampling statement along with its measurements. Here is an example: \cr
 parameter that will be estimated in the inference stage. To construct this
 description, the user can avail of the function `sd_prior`.}
 
-\item{start_time}{A number}
+\item{start_time}{A number indicating the time at which the simulation begins.}
 
-\item{stop_time}{A number}
+\item{stop_time}{A number indicating the time at which the simulation ends.}
 
-\item{timestep}{A number}
+\item{timestep}{A number indicating the time interval for the simulation.
+Also known as \code{dt}.}
 
-\item{integ_method}{A string. Either "euler" or "rk4"}
+\item{integ_method}{A string indicating the integration method. It can be
+either "euler" or "rk4"}
 
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
