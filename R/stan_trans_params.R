@@ -2,10 +2,12 @@
 stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, data_params,
                               LFO_CV) {
 
+  n_difeq <- length(lvl_obj)
+
   sim_output_decl <- ifelse(
     LFO_CV,
-    "  array[n_obs + 1] vector[n_difeq] x; // Output from the ODE solver",
-    "  array[n_obs] vector[n_difeq] x; // Output from the ODE solver")
+    stringr::str_glue("  array[n_obs + 1] vector[{n_difeq}] x; // Output from the ODE solver"),
+    stringr::str_glue("  array[n_obs] vector[{n_difeq}] x; // Output from the ODE solver"))
 
   var_decl <- paste(sim_output_decl, "  array[n_params] real params;",
                     sep = "\n")
@@ -13,7 +15,7 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
   if(unk_inits) {
 
     var_decl <- paste(var_decl,
-                      "  vector[n_difeq] x0; // init values", sep = "\n")
+                      stringr::str_glue("  vector[{n_difeq}] x0; // init values"), sep = "\n")
   }
 
   delta_meas <- subset_delta_meas(meas_mdl) %>% remove_NULL()

@@ -71,7 +71,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                                    XMILE_structure = mdl_structure)
 
   stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params,
-                           data_inits)
+                           data_inits, length(lvl_obj))
 
   stan_params <- stan_params(estimated_params)
 

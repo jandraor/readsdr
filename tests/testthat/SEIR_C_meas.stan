@@ -20,7 +20,6 @@ functions {
 data {
   int<lower = 1> n_obs;
   int<lower = 1> n_params;
-  int<lower = 1> n_difeq;
   array[n_obs] int y;
   real t0;
   array[n_obs] real ts;
@@ -31,9 +30,9 @@ parameters {
   real<lower = 0> I0;
 }
 transformed parameters{
-  array[n_obs] vector[n_difeq] x; // Output from the ODE solver
+  array[n_obs] vector[5] x; // Output from the ODE solver
   array[n_params] real params;
-  vector[n_difeq] x0; // init values
+  vector[5] x0; // init values
   x0[1] = (10000) - I0; // S
   x0[2] = 0; // E
   x0[3] = I0; // I
