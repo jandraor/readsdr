@@ -46,7 +46,6 @@ test_that("stan_data() returns the expected string", {
   expected_string <- paste(
     "data {",
     "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;",
     "  array[n_obs] int y;",
     "  real t0;",
     "  array[n_obs] real ts;",
@@ -64,7 +63,6 @@ test_that("stan_data() declares the vector for init values", {
   expected_string <- paste(
     "data {",
     "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;",
     "  array[n_obs] int y;",
     "  real t0;",
     "  array[n_obs] real ts;",
@@ -77,7 +75,6 @@ test_that("stan_data() declares the vector for init values", {
   expected_string <- paste(
     "data {",
     "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;",
     "  array[n_obs] int y;",
     "  int y_ahead;",
     "  real t0;",

@@ -37,7 +37,7 @@ test_that("stan_trans_params() returns the expected string", {
   expected <-  paste(
     "transformed parameters{",
     "  array[n_obs] vector[5] x; // Output from the ODE solver",
-    "  array[n_params] real params;",
+    "  array[2] real params;",
     "  vector[5] x0; // init values",
     "  array[n_obs] real delta_x_1;",
     "  real phi;",
@@ -60,16 +60,15 @@ test_that("stan_trans_params() returns the expected string", {
 
 })
 
-test_that("construct_pars_asg() ignores inits & meas pars", {
+test_that("pars_assigned() ignores inits & meas pars", {
 
   estimated_params <- list(list(par_name = "par_beta", type = "constant"),
                            list(par_name = "par_rho", type = "constant"),
                            list(par_name = "I0", type = "init"),
                            list(par_name = "inv_phi", type = "meas_par"))
 
-  actual   <- construct_pars_asg(estimated_params, NULL)
-  expected <- paste("  params[1] = par_beta;",
-                    "  params[2] = par_rho;", sep = "\n")
+  actual   <- pars_assigned(estimated_params, NULL)
+  expected <- c("par_beta", "par_rho")
 
   expect_equal(actual, expected)
 })

@@ -110,6 +110,11 @@ smoothing function and **nothing else**.
 
 This package has been instrumental in the following works:
 
+- [Andrade & Duggan (2023)](https://doi.org/10.1098/rsos.230515).
+  *Anchoring the mean generation time in the SEIR to mitigate biases in*
+  $\Re_0$ *estimates due to uncertainty in the distribution of the
+  epidemiological delays*. **Royal Society Open Science**.
+
 - [Andrade & Duggan
   (2022)](https://doi.org/10.1371/journal.pcbi.1010206). *Inferring the
   effective reproductive number from deterministic and

@@ -48,6 +48,19 @@ A string
 \description{
 Create Stan file for Bayesian inference
 }
+\section{Negative binomial measurement component}{
+
+
+While this package aims to avoid making decisions for users whenever
+possible, I have taken the liberty to automate the transformation of phi
+(the concentration parameter) when using the Negative Binomial distribution
+(\href{https://mc-stan.org/docs/functions-reference/nbalt.html}{alternative parameterisation})
+as a measurement component. \code{sd_Bayes()} automatically creates an
+inverse phi parameter for computational efficiency, which will be subject to
+inference (instead of phi). Additionally, I have provided a default prior for
+this inv_phi but users can override it as needed.
+}
+
 \examples{
   filepath         <- system.file("models/", "SEIR.stmx", package = "readsdr")
   mm1              <- "y ~ neg_binomial_2(net_flow(C), phi)"

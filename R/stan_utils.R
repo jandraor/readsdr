@@ -90,9 +90,7 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
 
   external_params <- c(data_params, data_inits)
 
-  decl <- paste(
-    "  int<lower = 1> n_obs;",
-    "  int<lower = 1> n_params;", sep = "\n")
+  decl <- "  int<lower = 1> n_obs;"
 
   data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
     paste(collapse = "\n")

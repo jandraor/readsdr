@@ -19,7 +19,6 @@ functions {
 }
 data {
   int<lower = 1> n_obs;
-  int<lower = 1> n_params;
   array[n_obs] int y;
   real t0;
   array[n_obs] real ts;
@@ -32,7 +31,7 @@ parameters {
 }
 transformed parameters{
   array[n_obs] vector[5] x; // Output from the ODE solver
-  array[n_params] real params;
+  array[3] real params;
   vector[5] x0; // init values
   array[n_obs] real delta_x_1;
   x0[1] = N - I0; // S

@@ -110,6 +110,8 @@ or type `vignette("Introduction_to_readsdr")` in R.
 
 This package has been instrumental in the following works:
 
+* [Andrade & Duggan (2023)](https://doi.org/10.1098/rsos.230515). _Anchoring the mean generation time in the SEIR to mitigate biases in_ $\Re_0$ _estimates due to uncertainty in the distribution of the epidemiological delays_. **Royal Society Open Science**.
+
 * [Andrade & Duggan (2022)](https://doi.org/10.1371/journal.pcbi.1010206). _Inferring the effective reproductive number from deterministic and semi-deterministic compartmental models using incidence and mobility data_. **PLOS Computational Biology**.
 
 * [Andrade & Duggan (2021)](https://doi.org/10.1002/sdr.1693). _A Bayesian approach to calibrate system dynamics models using Hamiltonian Monte Carlo_. **System Dynamics Review**.

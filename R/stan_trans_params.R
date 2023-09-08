@@ -1,6 +1,6 @@
 
-stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, data_params,
-                              LFO_CV) {
+stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
+                              data_params, LFO_CV) {
 
   n_difeq <- length(lvl_obj)
 
@@ -9,7 +9,11 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
     stringr::str_glue("  array[n_obs + 1] vector[{n_difeq}] x; // Output from the ODE solver"),
     stringr::str_glue("  array[n_obs] vector[{n_difeq}] x; // Output from the ODE solver"))
 
-  var_decl <- paste(sim_output_decl, "  array[n_params] real params;",
+  par_assigned_names <- pars_assigned(estimated_params, data_params)
+  n_params           <- length(par_assigned_names)
+
+  var_decl <- paste(sim_output_decl,
+                    stringr::str_glue("  array[{n_params}] real params;"),
                     sep = "\n")
 
   if(unk_inits) {
@@ -18,7 +22,7 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
                       stringr::str_glue("  vector[{n_difeq}] x0; // init values"), sep = "\n")
   }
 
-  delta_meas <- subset_delta_meas(meas_mdl) %>% remove_NULL()
+  delta_meas <- subset_delta_meas(meas_mdl) |> remove_NULL()
 
   if(length(delta_meas) > 0) {
 
@@ -27,11 +31,11 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
     var_decl        <- paste(var_decl, delta_decl, sep = "\n")
   }
 
-  par_trans_list <- extract_par_trans(estimated_params) %>% remove_NULL()
+  par_trans_list <- extract_par_trans(estimated_params) |>  remove_NULL()
 
   if(length(par_trans_list) > 0) {
 
-    par_trans_decl <- sapply(par_trans_list, function(pt_obj) pt_obj$decl) %>%
+    par_trans_decl <- sapply(par_trans_list, function(pt_obj) pt_obj$decl) |>
       paste(collapse = "\n")
 
     var_decl <- paste(var_decl, par_trans_decl, sep = "\n")
@@ -43,7 +47,7 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
 
   # Assignments
 
-  pars_asg <- construct_pars_asg(estimated_params, data_params)
+  pars_asg <- construct_pars_asg(par_assigned_names)
   asg      <- pars_asg
 
   if(unk_inits) {
@@ -52,7 +56,7 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits, da
   }
 
   if(length(par_trans_list) > 0) {
-    par_trans_asg <- sapply(par_trans_list, function(pt_obj) pt_obj$trans) %>%
+    par_trans_asg <- sapply(par_trans_list, function(pt_obj) pt_obj$trans) |>
       paste(collapse = "\n")
     asg              <- paste(par_trans_asg, asg, sep = "\n")
   }
@@ -113,22 +117,10 @@ construct_stock_init_lines <- function(stock_list, unk_init_list) {
   paste(lines_list, collapse = "\n")
 }
 
-construct_pars_asg <- function(estimated_params, data_params) {
+construct_pars_asg <- function(par_names) {
 
-  par_names <- sapply(estimated_params, function(prior_obj) {
-
-    if(prior_obj$type == "init" | prior_obj$type == "meas_par") return (NULL)
-
-    prior_obj$par_name
-  }) %>%
-    remove_NULL() %>%
-    as.character()
-
-  if(!is.null(data_params)) par_names <- c(par_names, data_params)
-
-  stringr::str_glue("  params[{seq_along(par_names)}] = {par_names};") %>%
+  stringr::str_glue("  params[{seq_along(par_names)}] = {par_names};") |>
     paste(collapse = "\n")
-
 }
 
 extract_par_trans <- function(estimated_params) {
@@ -148,7 +140,7 @@ extract_par_trans <- function(estimated_params) {
 
     var_name <- stringr::str_remove(par_obj$par_name, pattern)
 
-    list(decl  = stringr::str_glue("  real {var_name};") %>% as.character(),
+    list(decl  = stringr::str_glue("  real {var_name};") |>  as.character(),
          trans = trans_par(var_name, par_obj$par_trans))
 
   })
@@ -157,7 +149,7 @@ extract_par_trans <- function(estimated_params) {
 trans_par <- function(var_name, par_trans) {
 
   if(par_trans == "inv") {
-    return(stringr::str_glue("  {var_name} = 1 / inv_{var_name};") %>%
+    return(stringr::str_glue("  {var_name} = 1 / inv_{var_name};") |>
       as.character())
   }
 
@@ -197,7 +189,7 @@ get_delta_first_asg <- function(meas_mdl, lvl_obj) {
     decomposed_meas <- decompose_meas(meas_obj)
     rhs             <- decomposed_meas$rhs
 
-    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
+    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] |>
       stringr::str_trim()
 
     idx <- which(lvl_name == lvl_names)
@@ -218,13 +210,13 @@ get_for_body <- function(meas_mdl, lvl_obj) {
     decomposed_meas <- decompose_meas(meas_obj)
     rhs             <- decomposed_meas$rhs
 
-    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
+    lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] |>
       stringr::str_trim()
 
     idx <- which(lvl_name == lvl_names)
 
     stringr::str_glue("    delta_x_{i}[i + 1] = x[i + 1, {idx}] - x[i, {idx}] + 1e-5;")
-  }) %>% paste(collapse = "\n")
+  }) |>  paste(collapse = "\n")
 
 }
 
@@ -239,7 +231,7 @@ get_pred_asg <- function(meas_mdl, lvl_names, meas_type) {
 
     if(meas_type == "delta_meas") {
 
-      lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] %>%
+      lvl_name <- stringr::str_match(rhs, "net_flow\\((.+?)\\)")[[2]] |>
         stringr::str_trim()
 
       idx <- which(lvl_name == lvl_names)
@@ -256,5 +248,19 @@ get_pred_asg <- function(meas_mdl, lvl_names, meas_type) {
 
     pred_asg
 
-  }) %>% paste(collapse = "\n")
+  }) |>  paste(collapse = "\n")
+}
+
+pars_assigned <- function(estimated_params, data_params) {
+
+  par_names <- sapply(estimated_params, function(prior_obj) {
+
+    if(prior_obj$type == "init" | prior_obj$type == "meas_par") return (NULL)
+
+    prior_obj$par_name
+  }) |> remove_NULL() |> as.character()
+
+  if(!is.null(data_params)) par_names <- c(par_names, data_params)
+
+  par_names
 }

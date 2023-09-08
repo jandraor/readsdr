@@ -68,7 +68,6 @@ functions {
 }
 data {
   int<lower = 1> n_obs;
-  int<lower = 1> n_params;
   array[n_obs] int y_A;
   array[n_obs] int y_B;
   array[n_obs] int y_C;
@@ -83,7 +82,7 @@ parameters {
 }
 transformed parameters{
   array[n_obs] vector[20] x; // Output from the ODE solver
-  array[n_params] real params;
+  array[2] real params;
   array[n_obs] real delta_x_1;
   array[n_obs] real delta_x_2;
   array[n_obs] real delta_x_3;
