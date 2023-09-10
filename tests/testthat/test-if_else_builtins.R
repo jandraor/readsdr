@@ -78,9 +78,10 @@ test_that("create_pt_statement() deals with intervals equal to 0", {
 context("sd_pulse_s")
 
 test_that("sd_pulse_s() returns 1 in an interval equal to zero", {
-  assign("timestep", function() 0.25, envir = .GlobalEnv)
-  actual_val    <- sd_pulse_s(2, 1, 2, 0)
-  rm("timestep", envir = .GlobalEnv) # clean up
+  e                       <- new.env()
+  e$timestep              <- function() 0.25
+  environment(sd_pulse_s) <- e
+  actual_val              <- sd_pulse_s(2, 1, 2, 0)
   expected_val  <- 4
   expect_equal(actual_val, expected_val)
 })
