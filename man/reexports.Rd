@@ -4,6 +4,7 @@
 \name{reexports}
 \alias{reexports}
 \alias{\%>\%}
+\alias{timestep}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -11,6 +12,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{deSolve}{\code{\link[deSolve:deSolve-internal]{timestep}}}
+
   \item{magrittr}{\code{\link[magrittr:pipe]{\%>\%}}}
 }}
 
