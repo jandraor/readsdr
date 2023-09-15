@@ -27,7 +27,7 @@ extract_variables <- function(lhs, rhs) {
     stringi::stri_remove_empty()
 
   # Elements that start with alphabetical characters
-  elems_alpha <- raw_elements[stringr::str_detect(raw_elements, "[:alpha:]+")]
+  elems_alpha <- raw_elements[stringr::str_detect(raw_elements, "^[A-Za-z].*")]
 
   # Filtering out functions min & max
   detected_vars <- stringr::str_remove_all(elems_alpha, "\\bmin\\b|\\bmax\\b")

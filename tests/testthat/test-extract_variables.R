@@ -71,5 +71,13 @@ test_that("extract_variables() ignores truncnorm words", {
   expected <- c("Mean_of_Demand", "Sd_of_Demand")
 
   expect_equal(actual, expected)
+})
 
+test_that("extract_variables() handles scientific notation", {
+  lhs      <- "St"
+  rhs      <- "(0.28) *((5e+06) - Iu0)"
+  actual   <- extract_variables(lhs, rhs)
+  expected <- "Iu0"
+
+  expect_equal(actual, expected)
 })

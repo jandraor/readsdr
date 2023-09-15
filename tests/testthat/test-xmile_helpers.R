@@ -207,6 +207,24 @@ test_that("compute_init_value() returns the expected value with a fixed init", {
   expected_val  <- "(10000) - I0"
 
   expect_equal(actual_val, expected_val)
+
+  stock_name <- "St"
+  equation   <- "gamma_param *(K - Iu0)"
+
+  auxs       <- list(list(name     = "Iu0",
+                          equation = 100),
+                     list(name     = "K",
+                          equation = 5e+06),
+                     list(name     = "gamma_param",
+                          equation = 0.28))
+
+  fixed_inits   <-  c("Iu0", "inv_phi")
+
+  actual_val    <- compute_init_value(stock_name, equation, auxs, fixed_inits)
+  expected_val  <- "(0.28) *((5e+06) - Iu0)"
+
+  expect_equal(actual_val, expected_val)
+
 })
 
 # sanitise_elem_name()----------------------------------------------------------
