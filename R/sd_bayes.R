@@ -106,6 +106,8 @@ extract_extra_params <- function(meas_obj) {
 
   if(dist_obj$dist_name == "neg_binomial_2") {
 
+    if(is_string_numeric(dist_obj$phi)) return(NULL)
+
     par_name <- as.character(stringr::str_glue("inv_{dist_obj$phi}"))
 
     prior_obj <- list(par_name  = par_name,

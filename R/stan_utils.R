@@ -255,7 +255,7 @@ get_meas_params <- function(meas_mdl, estimated_params) {
 
   pars_names    <- get_names(estimated_params, "par_name")
 
-  extra_params <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  extra_params <- lapply(meas_mdl, extract_extra_params) |> remove_NULL()
   extra_params <- extra_params[!duplicated(extra_params)]
 
   if(length(extra_params) > 0) {

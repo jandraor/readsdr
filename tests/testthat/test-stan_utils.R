@@ -109,3 +109,14 @@ test_that("get_dist_obj() declares the vector for init values", {
 
   expect_equal(actual, expected)
 })
+
+test_that("get_meas_params() deals with a given concentration parameter", {
+
+  meas_mdl         <- list("y ~ neg_binomial_2(net_flow(C), 10)")
+  estimated_params <- list(sd_prior("par_beta", "lognormal", c(0, 1)))
+
+  actual   <- get_meas_params(meas_mdl, estimated_params)
+  expected <- estimated_params
+
+  expect_equal(actual, expected)
+})
