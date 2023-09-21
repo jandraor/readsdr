@@ -57,6 +57,10 @@ For information on how to use this package, see the
 [vignette](https://CRAN.R-project.org/package=readsdr/vignettes/Introduction_to_readsdr.html)
 or type `vignette("Introduction_to_readsdr")` in R.
 
+## Tutorials
+
+- [Inference](https://jandraor.github.io/tutorials/Inference.html)
+
 ## Supported builtins
 
 - **Stella**
