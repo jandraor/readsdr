@@ -11,6 +11,10 @@
 #' inference (instead of phi). Additionally, I have provided a default prior for
 #' this inv_phi but users can override it as needed.
 #'
+#' @section Time:
+#'
+#' Simulation of the ordinary differential equation (ODE) model starts at time 0.
+#'
 #' @param meas_mdl A list of strings. Each string corresponds to a sampling
 #' statement written in Stan language.
 #' @param estimated_params A list of lists. Each sublist describes each

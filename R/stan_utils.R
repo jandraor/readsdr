@@ -95,12 +95,9 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
   data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
     paste(collapse = "\n")
 
-  ts_decl <- ifelse(LFO_CV,
-                    "  array[n_obs + 1] real ts;",
-                    "  array[n_obs] real ts;")
-
-  final_decl <- paste("  real t0;", ts_decl, sep = "\n")
-
+  final_decl <- ifelse(LFO_CV,
+                       "  array[n_obs + 1] real ts;",
+                       "  array[n_obs] real ts;")
 
   body_block <- paste(decl, data_decl, final_decl, sep = "\n")
 

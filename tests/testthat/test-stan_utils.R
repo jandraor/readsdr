@@ -47,7 +47,6 @@ test_that("stan_data() returns the expected string", {
     "data {",
     "  int<lower = 1> n_obs;",
     "  array[n_obs] int y;",
-    "  real t0;",
     "  array[n_obs] real ts;",
     "}", sep = "\n")
 
@@ -64,7 +63,6 @@ test_that("stan_data() declares the vector for init values", {
     "data {",
     "  int<lower = 1> n_obs;",
     "  array[n_obs] int y;",
-    "  real t0;",
     "  array[n_obs] real ts;",
     "  vector[5] x0;",
     "}", sep = "\n")
@@ -77,7 +75,6 @@ test_that("stan_data() declares the vector for init values", {
     "  int<lower = 1> n_obs;",
     "  array[n_obs] int y;",
     "  int y_ahead;",
-    "  real t0;",
     "  array[n_obs + 1] real ts;",
     "  vector[5] x0;",
     "}", sep = "\n")

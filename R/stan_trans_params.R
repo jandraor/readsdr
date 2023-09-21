@@ -61,7 +61,7 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
     asg              <- paste(par_trans_asg, asg, sep = "\n")
   }
 
-  run_model_line <- "  x = ode_rk45(X_model, x0, t0, ts, params);"
+  run_model_line <- "  x = ode_rk45(X_model, x0, 0, ts, params);"
   asg            <- paste(asg, run_model_line, sep = "\n")
 
   lvl_names  <- get_names(lvl_obj)

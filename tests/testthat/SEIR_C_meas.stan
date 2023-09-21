@@ -20,7 +20,6 @@ functions {
 data {
   int<lower = 1> n_obs;
   array[n_obs] int y;
-  real t0;
   array[n_obs] real ts;
 }
 parameters {
@@ -39,7 +38,7 @@ transformed parameters{
   x0[5] = I0; // C
   params[1] = par_beta;
   params[2] = par_rho;
-  x = ode_rk45(X_model, x0, t0, ts, params);
+  x = ode_rk45(X_model, x0, 0, ts, params);
 }
 model {
   par_beta ~ lognormal(0, 1);

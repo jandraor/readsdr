@@ -20,7 +20,6 @@ functions {
 data {
   int<lower = 1> n_obs;
   array[n_obs] real y;
-  real t0;
   array[n_obs] real ts;
 }
 parameters {
@@ -41,7 +40,7 @@ transformed parameters{
   x0[5] = I0; // C
   params[1] = par_beta;
   params[2] = par_rho;
-  x = ode_rk45(X_model, x0, t0, ts, params);
+  x = ode_rk45(X_model, x0, 0, ts, params);
   delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {
     delta_x_1[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;

@@ -72,7 +72,6 @@ data {
   array[n_obs] int y_B;
   array[n_obs] int y_C;
   array[n_obs] int y_D;
-  real t0;
   array[n_obs] real ts;
   vector[20] x0;
 }
@@ -89,7 +88,7 @@ transformed parameters{
   array[n_obs] real delta_x_4;
   params[1] = k_AA;
   params[2] = par_rho;
-  x = ode_rk45(X_model, x0, t0, ts, params);
+  x = ode_rk45(X_model, x0, 0, ts, params);
   delta_x_1[1] =  x[1, 17] - x0[17] + 1e-5;
   delta_x_2[1] =  x[1, 18] - x0[18] + 1e-5;
   delta_x_3[1] =  x[1, 19] - x0[19] + 1e-5;
