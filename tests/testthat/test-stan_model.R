@@ -53,6 +53,26 @@ test_that("stan_model() returns the expected string for a vectorised model", {
   expect_equal(actual, expected)
 })
 
+test_that("stan_model() handles the lognormal distribution", {
+
+  estimated_params  <- list(sd_prior("par_alpha", "normal",
+                                     c(1, 0.5), min_0 = TRUE))
+
+  lvl_names <- c("Hares", "Lynx")
+
+  meas_mdl <- list("y1 ~ lognormal(Lynx, sigma_1)")
+  actual   <- stan_model(estimated_params, meas_mdl, lvl_names)
+
+  expected <- paste(
+    "model {",
+    "  par_alpha ~ normal(1, 0.5);",
+    "  y1 ~ lognormal(x[:, 2], sigma_1);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
+# Construct prior line----------------------------------------------------------
 test_that("construct_prior_line() returns the expected string", {
 
   prior_obj <- list(par_name = "par_beta",

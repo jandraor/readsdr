@@ -110,6 +110,8 @@ get_density_statement <- function(dist_obj) {
   d_name <- dist_obj$dist_name
   rv     <- dist_obj$random_var
 
+  if(d_name == "lognormal") return(stringr::str_glue("lognormal_lpdf({rv} | {dist_obj$mu}, {dist_obj$sigma})"))
+
   if(d_name == "normal") return(stringr::str_glue("normal_lpdf({rv} | {dist_obj$mu}, {dist_obj$sigma})"))
 
   if(d_name == "neg_binomial_2") return(stringr::str_glue("neg_binomial_2_lpmf({rv} | {dist_obj$mu}, {dist_obj$phi})"))

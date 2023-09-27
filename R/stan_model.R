@@ -120,6 +120,25 @@ translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
     return(return_obj)
   }
 
+  if(dist_obj$dist_name == "lognormal") {
+
+    stock_txt  <- dist_obj$mu
+    nf_pattern <- "net_flow\\(.+?\\)"
+    is_nf      <- stringr::str_detect(stock_txt, nf_pattern)
+
+    if(is_nf) {
+
+      return_obj$rhs           <- stringr::str_glue("lognormal(delta_x_{delta_counter}, {dist_obj$sigma})")
+      return_obj$delta_counter <- delta_counter + 1
+      return(return_obj)
+    }
+
+    new_mu          <- translate_stock(stock_txt, lvl_names)
+    return_obj$rhs  <- stringr::str_glue("lognormal({new_mu}, {dist_obj$sigma})")
+
+    return(return_obj)
+  }
+
   msg <- paste0("translate_lik_rhs() does not support the ",
                dist_obj$dist_name, " distribution.")
 

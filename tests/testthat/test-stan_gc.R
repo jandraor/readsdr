@@ -58,6 +58,20 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
 
 test_that("stan_gc() returns the expected string for a stock measurement", {
 
+  meas_mdl <- "y1 ~ lognormal(Lynx, sigma_1)"
+  actual   <- stan_gc(meas_mdl, FALSE, c("Hares", "Lynx"))
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  array[n_obs] real sim_y1;",
+    "  log_lik = lognormal_lpdf(y1 | x[:, 2], sigma_1);",
+    "  sim_y1 = lognormal_rng(x[:, 2], sigma_1);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+
+
   mm1      <- "y ~ poisson(C)"
   meas_mdl <- list(mm1)
 
