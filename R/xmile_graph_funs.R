@@ -1,17 +1,27 @@
 translate_graph_func <- function(gf_xml) {
-  ypts_xml <- gf_xml %>% xml2::xml_find_first(".//d1:ypts")
 
-  ypts <- xml2::xml_text(ypts_xml) %>%
-    stringr::str_split(",", simplify = TRUE) %>% as.vector %>% as.numeric()
+  ypts_xml <- gf_xml |> xml2::xml_find_first(".//d1:ypts")
+
+  ypts <- xml2::xml_text(ypts_xml) |>
+    stringr::str_split(",", simplify = TRUE) |> as.vector() |> as.numeric()
 
   length_y <- length(ypts)
 
-  xscale_xml <- gf_xml %>% xml2::xml_find_first(".//d1:xscale")
+  xpts_xml <- gf_xml |> xml2::xml_find_first(".//d1:xpts")
 
-  x_min <- xml2::xml_attr(xscale_xml, "min") %>% as.numeric()
-  x_max <- xml2::xml_attr(xscale_xml, "max") %>% as.numeric()
+  if(length(xpts_xml) > 0) {
 
-  x_points <- seq(x_min, x_max, length.out = length_y)
+    x_points <- xml2::xml_text(xpts_xml) |>
+      stringr::str_split(",", simplify = TRUE) |> as.vector() |> as.numeric()
+  } else{
+
+    xscale_xml <- gf_xml |> xml2::xml_find_first(".//d1:xscale")
+
+    x_min <- xml2::xml_attr(xscale_xml, "min") |>  as.numeric()
+    x_max <- xml2::xml_attr(xscale_xml, "max") |>  as.numeric()
+
+    x_points <- seq(x_min, x_max, length.out = length_y)
+  }
 
   graph_fun <- stats::approxfun(
     x = x_points,
