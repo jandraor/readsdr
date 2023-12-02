@@ -175,10 +175,11 @@ get_meas_params <- function(meas_mdl, estimated_params) {
 
       extra_par_name <- extra_par_obj$par_name
 
-      if(!extra_par_name %in% pars_names) {
+      if(extra_par_name %in% pars_names) {
 
-        estimated_params <- c(estimated_params, list(extra_par_obj))
-      }
+        pos_prior      <- which(extra_par_name == pars_names)
+        estimated_params[[pos_prior]]$type <- "meas_par"
+      } else estimated_params <- c(estimated_params, list(extra_par_obj))
     }
   }
 

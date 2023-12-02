@@ -87,3 +87,25 @@ test_that("get_meas_params() deals with a given concentration parameter", {
 
   expect_equal(actual, expected)
 })
+
+test_that("get_meas_params() handles priors for measurement parameters", {
+
+  meas_mdl <- list("y1 ~ lognormal(log(Lynx), sigma_1)")
+
+  estimated_params <- list(sd_prior("par_alpha", "normal", c(1, 0.5),
+                                    min_0 = TRUE),
+                           sd_prior("sigma_1", "lognormal", c(-1, 1)))
+
+  actual   <- get_meas_params(meas_mdl, estimated_params)
+
+  expected <- list(sd_prior("par_alpha", "normal", c(1, 0.5),
+                            min_0 = TRUE),
+                   list(par_name = "sigma_1",
+                        dist     = "lognormal",
+                        mu       = -1,
+                        sigma    = 1,
+                        min      = 0,
+                        type     = "meas_par"))
+
+  expect_equal(actual, expected)
+})

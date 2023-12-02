@@ -138,5 +138,16 @@ extract_extra_params <- function(meas_obj) {
 
   }
 
+  if(dist_obj$dist_name == "lognormal") {
+
+    par_name <- as.character(stringr::str_glue("{dist_obj$sigma}"))
+
+    prior_obj <- list(par_name  = par_name,
+                      min       = 0,
+                      type      = "meas_par")
+
+    return(prior_obj)
+  }
+
   NULL
 }
