@@ -59,83 +59,41 @@ construct_likelihood_line <- function(meas_obj, delta_counter, lvl_names) {
 
 translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
 
-  return_obj <- list(rhs = NULL,
-                     delta_counter = delta_counter)
+  return_obj <- list(rhs           = NULL,
+                     delta_counter = NULL)
+
+  stock_txt  <- dist_obj[[2]]
+
+  translation_obj <- translate_stock_text(stock_txt, delta_counter, lvl_names)
+
+  return_obj$delta_counter <- translation_obj$delta_counter
+  stock_txt                <- translation_obj$stock_txt
 
   if(dist_obj$dist_name == "normal") {
 
-    stock_txt <- dist_obj$mu
-
-    nf_pattern <- get_pattern_regex("net_flow")
-    is_nf      <- stringr::str_detect(stock_txt, nf_pattern)
-
-    if(is_nf) {
-
-      return_obj$rhs           <- stringr::str_glue("normal(delta_x_{delta_counter}, {dist_obj$sigma})")
-      return_obj$delta_counter <- delta_counter + 1
-      return(return_obj)
-    }
-
-    new_mu          <- translate_stock(stock_txt, lvl_names)
+    new_mu          <- stock_txt
     return_obj$rhs  <- stringr::str_glue("normal({new_mu}, {dist_obj$sigma})")
-
     return(return_obj)
   }
 
   if(dist_obj$dist_name == "neg_binomial_2") {
 
-    stock_txt <- dist_obj$mu
-
-    nf_pattern     <- "net_flow\\(.+?\\)"
-
-    is_nf <- stringr::str_detect(stock_txt, nf_pattern)
-
-    if(is_nf) {
-
-      return_obj$rhs           <- stringr::str_glue("neg_binomial_2(delta_x_{delta_counter}, {dist_obj$phi})")
-      return_obj$delta_counter <- delta_counter + 1
-      return(return_obj)
-    }
-
+    new_mu         <- stock_txt
+    return_obj$rhs <- stringr::str_glue("neg_binomial_2({new_mu}, {dist_obj$phi})")
+    return(return_obj)
   }
 
   if(dist_obj$dist_name == "poisson") {
 
-    stock_txt <- dist_obj$lambda
-
-    nf_pattern     <- "net_flow\\(.+?\\)"
-
-    is_nf <- stringr::str_detect(stock_txt, nf_pattern)
-
-    if(is_nf) {
-
-      return_obj$rhs           <- stringr::str_glue("poisson(delta_x_{delta_counter})")
-      return_obj$delta_counter <- delta_counter + 1
-      return(return_obj)
-    }
-
-    new_lambda         <- translate_stock(stock_txt, lvl_names)
-    return_obj$rhs     <- stringr::str_glue("poisson({new_lambda})")
-
+    new_lambda      <- stock_txt
+    return_obj$rhs  <- stringr::str_glue("poisson({new_lambda})")
     return(return_obj)
   }
 
   if(dist_obj$dist_name == "lognormal") {
 
-    stock_txt  <- dist_obj$mu
-    nf_pattern <- "net_flow\\(.+?\\)"
-    is_nf      <- stringr::str_detect(stock_txt, nf_pattern)
-
-    if(is_nf) {
-
-      return_obj$rhs           <- stringr::str_glue("lognormal(delta_x_{delta_counter}, {dist_obj$sigma})")
-      return_obj$delta_counter <- delta_counter + 1
-      return(return_obj)
-    }
-
-    new_mu          <- translate_stock(stock_txt, lvl_names)
-    return_obj$rhs  <- stringr::str_glue("lognormal({new_mu}, {dist_obj$sigma})")
-
+    new_mu         <- stock_txt
+    return_obj$rhs <- stringr::str_glue("lognormal({new_mu}, {dist_obj$sigma})")
     return(return_obj)
   }
 

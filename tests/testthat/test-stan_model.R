@@ -111,3 +111,14 @@ test_that("construct_likelihood_line() returns the expected string", {
 
   expect_equal(actual, expected)
 })
+
+test_that("construct_likelihood_line() handles log transformations", {
+
+  meas_obj <- "y1 ~ lognormal(log(Lynx), sigma_1)"
+  actual   <- construct_likelihood_line(meas_obj, 1, c("Hares", "Lynx"))
+
+  expected <- list(line          = "  y1 ~ lognormal(log(x[:, 2]), sigma_1);",
+                   delta_counter = 1)
+
+  expect_equal(actual, expected)
+})

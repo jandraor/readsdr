@@ -154,4 +154,29 @@ test_that("generate_sim_data_lines() returns the expected list", {
                    assign = "  sim_y = neg_binomial_2_rng(delta_x_1, phi);")
 
   expect_equal(actual, expected)
+
+  meas_mdl  <- list("y1 ~ lognormal(log(Lynx), sigma_1)")
+  lvl_names <- c("Hares", "Lynx" )
+  actual    <- generate_sim_data_lines(meas_mdl, lvl_names)
+
+  expected <- list(decl   = "  array[n_obs] real sim_y1;",
+                   assign = "  sim_y1 = lognormal_rng(log(x[:, 2]), sigma_1);")
+
+  expect_equal(actual, expected)
+})
+
+test_that("get_dist_dens_mass_fun() returns the expected list", {
+
+  lhs       <- "y1"
+  lvl_names <- c("Hares", "Lynx" )
+  dist_obj  <- list(dist_name = "lognormal",
+                    mu        = "log(Lynx)",
+                    sigma     = "sigma_1")
+
+  actual <- get_dist_dens_mass_fun(lhs, dist_obj, FALSE, lvl_names, 1)
+
+  expected <- list(rhs           = "lognormal_lpdf(y1 | log(x[:, 2]), sigma_1)",
+                   delta_counter = 1)
+
+  expect_equal(actual, expected)
 })

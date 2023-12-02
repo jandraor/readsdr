@@ -1,6 +1,8 @@
 # Development version
 
-* Parallelisation of **sd_sensitivity_run()*** supported in Windows.
+* Fix bug in the translation of graphical functions.
+* Add Maryland data.
+* Parallelisation of *sd_sensitivity_run()* supported in Windows.
 * Add **sd_posterior_fun()**.
 * Support the translation of Vensim's *DELAY_N*.
 * Support the translation of Stella's *DELAYN* with four parameters.
@@ -10,12 +12,12 @@
 * Add **sd_measurements()**.
 * Support the translation of *RANDOM NORMAL* from Vensim.
 * Add support to bidimensional vectors in Vensim.
-* read_xmile() returns the element graph only if the parameter *graph* is set to *TRUE*.
-* read_xmile() now translates Vensim's *DELAY FIXED*.
-* Add sd_what_if_from_time()
-* Add sd_impact_inputs()
-* Add sd_loglik_fun()
-* Add sd_net_change()
+* *read_xmile()* returns the element graph only if the parameter *graph* is set to *TRUE*.
+* *read_xmile()* now translates Vensim's *DELAY FIXED*.
+* Add **sd_what_if_from_time()**
+* Add **sd_impact_inputs()**
+* Add **sd_loglik_fun()**
+* Add **sd_net_change()**
 * Fix bug (incorrect division due to missing parentheses) in the translation of *SMOOTH*.
 
 # 0.2.0
