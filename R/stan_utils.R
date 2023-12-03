@@ -34,20 +34,24 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
 
 construct_data_decl <- function(meas_obj, LFO_CV) {
 
-  split_strings <- strsplit(meas_obj, "~")[[1]]
+  decomposed_meas <- decompose_meas(meas_obj)
+  lhs             <- decomposed_meas$lhs
+  rhs             <- decomposed_meas$rhs
+  type            <- get_dist_type(rhs)
 
-  lhs <- split_strings[[1]] %>% stringr::str_trim()
+  meas_size <- determine_meas_size(rhs)
 
-  rhs  <- split_strings[[2]] %>% stringr::str_trim()
-  type <- get_dist_type(rhs)
+  # meas_ipt_ln = measurement input line
 
-  inference_data_line <- stringr::str_glue("  array[n_obs] {type} {lhs};")
+  if(meas_size == 1) meas_ipt_ln <- stringr::str_glue("  {type} {lhs};")
 
-  if(!LFO_CV) return(inference_data_line)
+  if(meas_size == Inf) meas_ipt_ln <- stringr::str_glue("  array[n_obs] {type} {lhs};")
+
+  if(!LFO_CV) return(meas_ipt_ln)
 
   pred_data_line <- stringr::str_glue("  {type} {lhs}_ahead;")
 
-  paste(inference_data_line, pred_data_line, sep = "\n")
+  paste(meas_ipt_ln, pred_data_line, sep = "\n")
 }
 
 get_dist_type <- function(rhs) {
@@ -143,8 +147,8 @@ get_dist_args <- function(dist, language = "Stan") {
 decompose_meas <- function(meas_obj) {
 
   split_strings <- strsplit(meas_obj, "~")[[1]]
-  lhs           <- split_strings[[1]] %>% stringr::str_trim()
-  rhs           <- split_strings[[2]] %>% stringr::str_trim()
+  lhs           <- split_strings[[1]] |> stringr::str_trim()
+  rhs           <- split_strings[[2]] |> stringr::str_trim()
 
   list(lhs = lhs,
        rhs = rhs)
@@ -214,4 +218,24 @@ translate_stock_text <- function(stock_txt, delta_counter, lvl_names) {
 
   list(stock_txt     = stock_txt,
        delta_counter = delta_counter)
+}
+
+determine_meas_size <- function(rhs) {
+
+  dist_obj  <- get_dist_obj(rhs)
+  stock     <- dist_obj[[2]]
+
+  ptrn           <- "([:alpha:]+)\\((.+?)\\)"
+  wrapped_in_fun <- stringr::str_detect(stock, ptrn)
+
+  if(wrapped_in_fun) {
+
+    string_match <- stringr::str_match(stock, ptrn)
+    stock        <- string_match[[3]]
+  }
+
+  single_meas_ptrn <- "[:alpha:]+\\[[:digit:]+\\]"
+  is_single_meas   <- stringr::str_detect(stock, single_meas_ptrn)
+
+  meas_size <- ifelse(is_single_meas, 1, Inf)
 }
