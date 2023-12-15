@@ -1,59 +1,3 @@
-# Stan's data block for ODE models
-stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
-                      n_difeq = NULL) {
-
-  external_params <- c(data_params, data_inits)
-
-  decl <- "  int<lower = 1> n_obs;"
-
-  data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
-    paste(collapse = "\n")
-
-  final_decl <- ifelse(LFO_CV,
-                       "  array[n_obs + 1] real ts;",
-                       "  array[n_obs] real ts;")
-
-  body_block <- paste(decl, data_decl, final_decl, sep = "\n")
-
-  if(!unk_inits) {
-    body_block <- paste(body_block,
-                        stringr::str_glue("  vector[{n_difeq}] x0;"),
-                        sep = "\n")
-  }
-
-  if(!is.null(external_params)) {
-
-    data_params_lines <- stringr::str_glue("  real {external_params};") %>%
-      paste(collapse = "\n")
-
-    body_block <- paste(body_block, data_params_lines, sep = "\n")
-  }
-
-  paste("data {", body_block, "}", sep = "\n")
-}
-
-construct_data_decl <- function(meas_obj, LFO_CV) {
-
-  decomposed_meas <- decompose_meas(meas_obj)
-  lhs             <- decomposed_meas$lhs
-  rhs             <- decomposed_meas$rhs
-  type            <- get_dist_type(rhs)
-
-  meas_size <- determine_meas_size(rhs)
-
-  # meas_ipt_ln = measurement input line
-
-  if(meas_size == 1) meas_ipt_ln <- stringr::str_glue("  {type} {lhs};")
-
-  if(meas_size == Inf) meas_ipt_ln <- stringr::str_glue("  array[n_obs] {type} {lhs};")
-
-  if(!LFO_CV) return(meas_ipt_ln)
-
-  pred_data_line <- stringr::str_glue("  {type} {lhs}_ahead;")
-
-  paste(meas_ipt_ln, pred_data_line, sep = "\n")
-}
-
 get_dist_type <- function(rhs) {
 
   pattern       <- "(.+?)\\(.+\\)"
@@ -82,8 +26,8 @@ get_dist_obj <- function(rhs, language = "Stan") {
   string_match  <- stringr::str_match(rhs, pattern)
   dist_name     <- string_match[[2]]
 
-  args_text <- string_match[[3]] %>%
-    stringr::str_remove("^\\(") %>%
+  args_text <- string_match[[3]] |>
+    stringr::str_remove("^\\(") |>
     stringr::str_remove("\\)$")
 
   args_list <- strsplit(args_text, ",")[[1]] %>% stringr::str_trim() |>
@@ -216,9 +160,33 @@ translate_stock_text <- function(stock_txt, delta_counter, lvl_names) {
 
   if(!is_nf & !var_trans) stock_txt <- translate_stock(stock_txt, lvl_names)
 
-  list(stock_txt     = stock_txt,
+  list(stock_txt     = as.character(stock_txt),
        delta_counter = delta_counter)
 }
+
+translate_stock <- function(stk_txt, lvl_names) {
+
+  stk_txt   <- stringr::str_trim(stk_txt)
+  meas_size <- get_meas_size(stk_txt)
+
+  if(is.infinite(meas_size)) {
+
+    idx      <- which(stk_txt == lvl_names)
+    trs_stk  <- stringr::str_glue("x[:, {idx}]")
+  }
+
+  if(meas_size == 1) {
+
+    subset_ptrn  <- "([:alpha:]+)\\[[:digit:]+\\]"
+    string_match <- stringr::str_match(stk_txt, subset_ptrn)
+    stk_name     <- string_match[2]
+    idx          <- which(stk_name == lvl_names)
+    trs_stk      <- stringr::str_glue("x0[{idx}]")
+  }
+
+  trs_stk # Translated stock
+}
+
 
 determine_meas_size <- function(rhs) {
 
@@ -238,4 +206,16 @@ determine_meas_size <- function(rhs) {
   is_single_meas   <- stringr::str_detect(stock, single_meas_ptrn)
 
   meas_size <- ifelse(is_single_meas, 1, Inf)
+}
+
+get_meas_size <- function(stk_txt) {
+
+  meas_size <- Inf
+
+  single_meas_ptrn <- "[:alpha:]+\\[[:digit:]+\\]"
+  is_subset_meas   <- stringr::str_detect(stk_txt, single_meas_ptrn)
+
+  if(is_subset_meas) meas_size <- 1
+
+  meas_size
 }

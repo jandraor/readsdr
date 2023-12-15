@@ -98,7 +98,7 @@ get_ll_pred_asg <- function(meas_mdl, LFO_CV, lvl_names) {
     ll_lines[[i]] <- prob_fun_obj$rhs
   }
 
-  ll_lines %>% paste(collapse = "+") %>% paste0(";")
+  ll_lines |> paste(collapse = "+") |> paste0(";")
 }
 
 
@@ -135,7 +135,15 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names) {
 
     lhs             <- decomposed_meas$lhs
     type            <- get_dist_type(decomposed_meas$rhs)
-    decl_lines[[i]] <- stringr::str_glue("  array[n_obs] {type} sim_{lhs};")
+
+
+    ms <- determine_meas_size(decomposed_meas$rhs) # Measurement size
+
+    if(ms == 1) decl_line <- stringr::str_glue("  {type} sim_{lhs};")
+
+    if(ms == Inf) decl_line <- stringr::str_glue("  array[n_obs] {type} sim_{lhs};")
+
+    decl_lines[[i]] <- decl_line
 
     dist_obj          <- get_dist_obj(decomposed_meas$rhs)
     dname             <- dist_obj$dist_name

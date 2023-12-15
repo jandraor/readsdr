@@ -1,6 +1,6 @@
 stan_model <- function(estimated_params, meas_mdl, lvl_names) {
 
-  prior_lines <- sapply(estimated_params, construct_prior_line) %>%
+  prior_lines <- sapply(estimated_params, construct_prior_line) |>
     paste(collapse = "\n")
 
   likelihood_lines <- get_likelihood_lines(meas_mdl, lvl_names)
@@ -16,8 +16,8 @@ construct_prior_line <- function(prior_obj) {
 
   dist_args <- get_dist_args(prior_obj$dist)
 
-  dist_pars <- prior_obj[dist_args] %>%
-    as.numeric() %>%
+  dist_pars <- prior_obj[dist_args] |>
+    as.numeric() |>
     paste(collapse = ", ")
 
   stringr::str_glue("  {prior_obj$par_name} ~ {prior_obj$dist}({dist_pars});")
@@ -33,9 +33,14 @@ get_likelihood_lines <- function(meas_mdl, lvl_names) {
 
   for(i in seq_len(n_meas)) {
 
-    ll_obj <- construct_likelihood_line(meas_mdl[[i]],
-                                 delta_counter,
-                                 lvl_names)
+    meas_obj <- meas_mdl[[i]]
+    ll_obj   <- construct_likelihood_line(meas_obj, delta_counter, lvl_names)
+
+    if(length(ll_obj$line) == 0) {
+
+      msg <- stringr::str_glue("Failed to translate '{meas_obj}' in the model block")
+      stop(msg, call. = FALSE)
+    }
 
     meas_lines[[i]] <- ll_obj$line
     delta_counter   <- ll_obj$delta_counter
@@ -101,12 +106,4 @@ translate_lik_rhs <- function(dist_obj, delta_counter, lvl_names) {
                dist_obj$dist_name, " distribution.")
 
   stop(msg, call. = FALSE)
-}
-
-translate_stock <- function(stock_name, lvl_names) {
-
-  stock_name <- stringr::str_trim(stock_name)
-  idx        <- which(stock_name == lvl_names)
-  stringr::str_glue("x[:, {idx}]")
-
 }

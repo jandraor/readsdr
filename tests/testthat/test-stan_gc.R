@@ -165,6 +165,25 @@ test_that("generate_sim_data_lines() returns the expected list", {
   expect_equal(actual, expected)
 })
 
+test_that("generate_sim_data_lines() handles single measurements", {
+
+  meas_mdl <- list("y ~ lognormal(log(Hares), sigma_1)",
+                   "y0 ~ lognormal(log(Hares[0]), sigma_1)")
+
+  lvl_names <- c("Hares", "Lynx" )
+
+  actual <- generate_sim_data_lines(meas_mdl, lvl_names)
+
+  expected <- list(decl = "  array[n_obs] real sim_y;\n  real sim_y0;",
+                   assign = paste(
+                     "  sim_y = lognormal_rng(log(x[:, 1]), sigma_1);",
+                     "  sim_y0 = lognormal_rng(log(x0[1]), sigma_1);",
+                     sep = "\n"))
+
+  expect_equal(actual, expected)
+})
+# ---------------get_dist_dens_mass_fun() --------------------------------------
+
 test_that("get_dist_dens_mass_fun() returns the expected list", {
 
   lhs       <- "y1"

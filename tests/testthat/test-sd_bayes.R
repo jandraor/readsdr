@@ -142,7 +142,7 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
   expect_equal(actual, expected)
 })
 
-test_that("sd_Bayes allows users to override delay metaparameters", {
+test_that("sd_Bayes() allows users to override delay metaparameters", {
 
   filepath <- system.file("models/", "SEjIkR.stmx", package = "readsdr")
 
@@ -163,6 +163,35 @@ test_that("sd_Bayes allows users to override delay metaparameters", {
 
   expect_equal(actual, expected)
 })
+
+test_that("sd_Bayes() handles measurements of init values", {
+
+  filepath <- system.file("models/", "LV.stmx", package = "readsdr")
+
+  est_pars <- list(sd_prior("par_alpha", "normal", c(1, 0.5), min_0 = TRUE),
+                   sd_prior("par_gamma", "normal", c(1, 0.5), min_0 = TRUE),
+                   sd_prior("par_beta", "normal", c(0.5, 0.5), min_0 = TRUE),
+                   sd_prior("par_delta", "normal", c(0.5, 0.5), min_0 = TRUE),
+                   sd_prior("sigma_1", "lognormal", c(-1, 1)),
+                   sd_prior("sigma_2", "lognormal", c(-1, 1)),
+                   sd_prior("H0", "lognormal", c(log(10), 1), type = "init"),
+                   sd_prior("L0", "lognormal", c(log(10), 1), type = "init"))
+
+  meas_mdl <- list("y ~ lognormal(log(Hares), sigma_1)",
+                   "z ~ lognormal(log(Lynx), sigma_2)",
+                   "y0 ~ lognormal(log(Hares[0]), sigma_1)",
+                   "z0 ~ lognormal(log(Lynx[0]), sigma_1)")
+
+  actual <- sd_Bayes(filepath, estimated_params = est_pars, meas_mdl)
+
+  fileName <- "./test_stan_files/LV.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
+})
+
+#---------extract_extra_params()------------------------------------------------
 
 test_that("extract_extra_params() returns the expected list", {
 

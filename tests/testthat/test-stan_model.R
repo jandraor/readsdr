@@ -72,6 +72,49 @@ test_that("stan_model() handles the lognormal distribution", {
   expect_equal(actual, expected)
 })
 
+test_that("stan_model() handles measurements of init values", {
+
+  estimated_params  <- list(
+    list(
+      par_name  = "sigma_1",
+      dist      = "lognormal",
+      mu        = -1,
+      sigma     = 1,
+      min       = 0,
+      type      = "meas_par"),
+    list(
+      par_name = "H0",
+      dist     = "lognormal",
+      mu       = log(10),
+      sigma    = 1,
+      min      = 0,
+      type     = "init"),
+    list(
+      par_name = "par_gamma",
+      dist     = "normal",
+      mu       = 1,
+      sigma    = 0.5,
+      type     = "constant",
+      min      = 0))
+
+  meas_mdl <- list("y ~ lognormal(Hares, sigma_1)",
+                   "y0 ~ lognormal(log(Hares[0]), sigma_1)")
+
+  lvl_names <- c("Hares", "Lynx")
+  actual    <- stan_model(estimated_params, meas_mdl, lvl_names)
+
+  expected <- paste(
+    "model {",
+    "  sigma_1 ~ lognormal(-1, 1);",
+    "  H0 ~ lognormal(2.30258509299405, 1);",
+    "  par_gamma ~ normal(1, 0.5);",
+    "  y ~ lognormal(x[:, 1], sigma_1);",
+    "  y0 ~ lognormal(log(x0[1]), sigma_1);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
 # Construct prior line----------------------------------------------------------
 test_that("construct_prior_line() returns the expected string", {
 
