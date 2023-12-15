@@ -46,7 +46,7 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
     ll_lines[[i]] <- prob_fun_obj$rhs
   }
 
-  ll_lines %>% paste(collapse = "+") %>% paste0(";")
+  ll_lines |> paste(collapse = "+") %>% paste0(";")
 }
 
 get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names,
@@ -65,20 +65,17 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names,
 
   dist_obj$random_var <- lhs
 
-  nf_pattern <- get_pattern_regex("net_flow")
-  is_nf      <- stringr::str_detect(dist_obj[[2]], nf_pattern)
+  stock_txt       <- dist_obj[[2]]
+  translation_obj <- translate_stock_text(stock_txt, delta_counter, lvl_names)
 
-  if(is_nf)  {
+  delta_counter <- translation_obj$delta_counter
+  new_stock_txt <- translation_obj$stock_txt
 
-    dist_obj[[2]] <- stringr::str_glue("delta_x_{delta_counter}")
-    delta_counter <- delta_counter + 1
-  }
-
-  if(!is_nf) dist_obj[[2]] <- translate_stock(dist_obj[[2]], lvl_names)
+  dist_obj[[2]] <- new_stock_txt
 
   rhs <- get_density_statement(dist_obj)
 
-  list(rhs           = rhs,
+  list(rhs           = as.character(rhs),
        delta_counter = delta_counter)
 }
 
@@ -101,7 +98,7 @@ get_ll_pred_asg <- function(meas_mdl, LFO_CV, lvl_names) {
     ll_lines[[i]] <- prob_fun_obj$rhs
   }
 
-  ll_lines %>% paste(collapse = "+") %>% paste0(";")
+  ll_lines |> paste(collapse = "+") |> paste0(";")
 }
 
 
@@ -109,6 +106,8 @@ get_density_statement <- function(dist_obj) {
 
   d_name <- dist_obj$dist_name
   rv     <- dist_obj$random_var
+
+  if(d_name == "lognormal") return(stringr::str_glue("lognormal_lpdf({rv} | {dist_obj$mu}, {dist_obj$sigma})"))
 
   if(d_name == "normal") return(stringr::str_glue("normal_lpdf({rv} | {dist_obj$mu}, {dist_obj$sigma})"))
 
@@ -136,33 +135,34 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names) {
 
     lhs             <- decomposed_meas$lhs
     type            <- get_dist_type(decomposed_meas$rhs)
-    decl_lines[[i]] <- stringr::str_glue("  array[n_obs] {type} sim_{lhs};")
+
+
+    ms <- determine_meas_size(decomposed_meas$rhs) # Measurement size
+
+    if(ms == 1) decl_line <- stringr::str_glue("  {type} sim_{lhs};")
+
+    if(ms == Inf) decl_line <- stringr::str_glue("  array[n_obs] {type} sim_{lhs};")
+
+    decl_lines[[i]] <- decl_line
 
     dist_obj          <- get_dist_obj(decomposed_meas$rhs)
     dname             <- dist_obj$dist_name
 
-    nf_pattern <- get_pattern_regex("net_flow")
-    is_nf      <- stringr::str_detect(dist_obj[[2]], nf_pattern)
+    stock_txt  <- dist_obj[[2]]
 
-    if(is_nf) {
+    translation_obj <- translate_stock_text(stock_txt, delta_counter, lvl_names)
 
-      pars <- stringr::str_glue("delta_x_{delta_counter}")
-      delta_counter <- delta_counter + 1
-    }
-
-    if(!is_nf) pars <- translate_stock(dist_obj[[2]], lvl_names)
+    delta_counter <- translation_obj$delta_counter
+    pars          <- translation_obj$stock_txt
 
     if(length(dist_obj) == 3L) pars <- paste(pars, dist_obj[[3]], sep = ", ")
 
     assign_lines[[i]] <- stringr::str_glue("  sim_{lhs} = {dname}_rng({pars});")
   }
 
-
   decl   <- paste(decl_lines, collapse = "\n")
   assign <- paste(assign_lines, collapse = "\n")
-
 
   list(decl   = decl,
        assign = assign)
 }
-

@@ -58,6 +58,20 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
 
 test_that("stan_gc() returns the expected string for a stock measurement", {
 
+  meas_mdl <- "y1 ~ lognormal(Lynx, sigma_1)"
+  actual   <- stan_gc(meas_mdl, FALSE, c("Hares", "Lynx"))
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  array[n_obs] real sim_y1;",
+    "  log_lik = lognormal_lpdf(y1 | x[:, 2], sigma_1);",
+    "  sim_y1 = lognormal_rng(x[:, 2], sigma_1);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+
+
   mm1      <- "y ~ poisson(C)"
   meas_mdl <- list(mm1)
 
@@ -138,6 +152,50 @@ test_that("generate_sim_data_lines() returns the expected list", {
 
   expected <- list(decl   = "  array[n_obs] int sim_y;",
                    assign = "  sim_y = neg_binomial_2_rng(delta_x_1, phi);")
+
+  expect_equal(actual, expected)
+
+  meas_mdl  <- list("y1 ~ lognormal(log(Lynx), sigma_1)")
+  lvl_names <- c("Hares", "Lynx" )
+  actual    <- generate_sim_data_lines(meas_mdl, lvl_names)
+
+  expected <- list(decl   = "  array[n_obs] real sim_y1;",
+                   assign = "  sim_y1 = lognormal_rng(log(x[:, 2]), sigma_1);")
+
+  expect_equal(actual, expected)
+})
+
+test_that("generate_sim_data_lines() handles single measurements", {
+
+  meas_mdl <- list("y ~ lognormal(log(Hares), sigma_1)",
+                   "y0 ~ lognormal(log(Hares[0]), sigma_1)")
+
+  lvl_names <- c("Hares", "Lynx" )
+
+  actual <- generate_sim_data_lines(meas_mdl, lvl_names)
+
+  expected <- list(decl = "  array[n_obs] real sim_y;\n  real sim_y0;",
+                   assign = paste(
+                     "  sim_y = lognormal_rng(log(x[:, 1]), sigma_1);",
+                     "  sim_y0 = lognormal_rng(log(x0[1]), sigma_1);",
+                     sep = "\n"))
+
+  expect_equal(actual, expected)
+})
+# ---------------get_dist_dens_mass_fun() --------------------------------------
+
+test_that("get_dist_dens_mass_fun() returns the expected list", {
+
+  lhs       <- "y1"
+  lvl_names <- c("Hares", "Lynx" )
+  dist_obj  <- list(dist_name = "lognormal",
+                    mu        = "log(Lynx)",
+                    sigma     = "sigma_1")
+
+  actual <- get_dist_dens_mass_fun(lhs, dist_obj, FALSE, lvl_names, 1)
+
+  expected <- list(rhs           = "lognormal_lpdf(y1 | log(x[:, 2]), sigma_1)",
+                   delta_counter = 1)
 
   expect_equal(actual, expected)
 })

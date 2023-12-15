@@ -1,141 +1,3 @@
-
-#' Extract the values over time of a variable from a Stan fit
-#'
-#' @param var_name A string that indicates the variable's name for which the
-#' function will construct the timeseries.
-#' @param posterior_df A Stan fit object converted into a data frame
-#'
-#' @return A data frame
-#' @export
-#'
-#' @examples
-#' posterior_df <- data.frame(`var[1]` = rep(0, 2), `var[2]` = rep(1, 2),
-#'                             check.names = FALSE)
-#' extract_timeseries_var("var", posterior_df)
-extract_timeseries_var <- function(var_name, posterior_df) {
-  posterior_cols <- colnames(posterior_df)
-  pattern        <- stringr::str_glue("{var_name}\\[.+\\]")
-  pos_search     <- grep(pattern, posterior_cols)
-  search_cols    <- posterior_cols[pos_search]
-  search_df      <- posterior_df[, search_cols]
-
-  var_ts         <- purrr::imap_dfr(search_df, function(col, label) {
-    pattern      <- "\\[(\\d+)\\]"
-    match_output <- stringr::str_match(label, pattern)
-    time_var     <- as.numeric(match_output[[2]])
-
-    data.frame(stringsAsFactors = FALSE,
-               iter  = seq_along(col),
-               time  = time_var,
-               value = col)
-  })
-
-  var_ts$variable <- var_name
-  var_ts          <- var_ts[ , c(1:2,4, 3)]
-
-  var_ts
-}
-
-
-#' Extract the values over time of a stock from a Stan fit
-#'
-#' @param stock_name A string that indicates the stock's name for which the
-#' function will construct the timeseries.
-#' @param all_stocks A vector of strings that contains the names of all the
-#' stocks in the model. This vector must have the same order as the differential
-#' equations in the Stan code.
-#' @param ODE_output A string that indicates the name of the variable where
-#' model's output in stored in Stan.
-#'
-#' @inheritParams extract_timeseries_var
-#'
-#' @return A data frame
-#' @export
-#'
-#' @examples
-#' posterior_df <- data.frame(`yhat[1,2]` = rep(0, 2), `yhat[2,2]` = rep(1, 2),
-#'                             check.names = FALSE)
-#' stocks       <- c("S1", "S2")
-#' extract_timeseries_stock("S2", posterior_df, stocks, "yhat")
-extract_timeseries_stock <- function(stock_name, posterior_df, all_stocks,
-                                     ODE_output) {
-
-  posterior_cols <- colnames(posterior_df)
-  pos_stock      <- which(stock_name == all_stocks)
-  pattern        <- stringr::str_glue("{ODE_output}\\[\\d+,{pos_stock}\\]")
-  pos_search     <- grep(pattern, posterior_cols)
-  search_cols    <- posterior_cols[pos_search]
-  search_df      <- posterior_df[, search_cols]
-
-  stock_ts       <- purrr::imap_dfr(search_df, function(col, label) {
-
-    pattern      <- stringr::str_glue("{ODE_output}\\[(\\d+),\\d+\\]")
-    match_output <- stringr::str_match(label, pattern)
-    time_var     <- as.numeric(match_output[[2]])
-
-    data.frame(stringsAsFactors = FALSE,
-               iter  = seq_along(col),
-               time = time_var,
-               value = col)
-  })
-
-  stock_ts$stock <- stock_name
-  stock_ts       <- stock_ts[, c(1:2, 4, 3)]
-  stock_ts
-}
-
-# Stan's data block for ODE models
-stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
-                      n_difeq = NULL) {
-
-  external_params <- c(data_params, data_inits)
-
-  decl <- "  int<lower = 1> n_obs;"
-
-  data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
-    paste(collapse = "\n")
-
-  final_decl <- ifelse(LFO_CV,
-                       "  array[n_obs + 1] real ts;",
-                       "  array[n_obs] real ts;")
-
-  body_block <- paste(decl, data_decl, final_decl, sep = "\n")
-
-  if(!unk_inits) {
-    body_block <- paste(body_block,
-                        stringr::str_glue("  vector[{n_difeq}] x0;"),
-                        sep = "\n")
-  }
-
-  if(!is.null(external_params)) {
-
-    data_params_lines <- stringr::str_glue("  real {external_params};") %>%
-      paste(collapse = "\n")
-
-    body_block <- paste(body_block, data_params_lines, sep = "\n")
-  }
-
-  paste("data {", body_block, "}", sep = "\n")
-}
-
-construct_data_decl <- function(meas_obj, LFO_CV) {
-
-  split_strings <- strsplit(meas_obj, "~")[[1]]
-
-  lhs <- split_strings[[1]] %>% stringr::str_trim()
-
-  rhs  <- split_strings[[2]] %>% stringr::str_trim()
-  type <- get_dist_type(rhs)
-
-  inference_data_line <- stringr::str_glue("  array[n_obs] {type} {lhs};")
-
-  if(!LFO_CV) return(inference_data_line)
-
-  pred_data_line <- stringr::str_glue("  {type} {lhs}_ahead;")
-
-  paste(inference_data_line, pred_data_line, sep = "\n")
-}
-
 get_dist_type <- function(rhs) {
 
   pattern       <- "(.+?)\\(.+\\)"
@@ -164,8 +26,8 @@ get_dist_obj <- function(rhs, language = "Stan") {
   string_match  <- stringr::str_match(rhs, pattern)
   dist_name     <- string_match[[2]]
 
-  args_text <- string_match[[3]] %>%
-    stringr::str_remove("^\\(") %>%
+  args_text <- string_match[[3]] |>
+    stringr::str_remove("^\\(") |>
     stringr::str_remove("\\)$")
 
   args_list <- strsplit(args_text, ",")[[1]] %>% stringr::str_trim() |>
@@ -229,8 +91,8 @@ get_dist_args <- function(dist, language = "Stan") {
 decompose_meas <- function(meas_obj) {
 
   split_strings <- strsplit(meas_obj, "~")[[1]]
-  lhs           <- split_strings[[1]] %>% stringr::str_trim()
-  rhs           <- split_strings[[2]] %>% stringr::str_trim()
+  lhs           <- split_strings[[1]] |> stringr::str_trim()
+  rhs           <- split_strings[[2]] |> stringr::str_trim()
 
   list(lhs = lhs,
        rhs = rhs)
@@ -261,12 +123,99 @@ get_meas_params <- function(meas_mdl, estimated_params) {
 
       extra_par_name <- extra_par_obj$par_name
 
-      if(!extra_par_name %in% pars_names) {
+      if(extra_par_name %in% pars_names) {
 
-        estimated_params <- c(estimated_params, list(extra_par_obj))
-      }
+        pos_prior      <- which(extra_par_name == pars_names)
+        estimated_params[[pos_prior]]$type <- "meas_par"
+      } else estimated_params <- c(estimated_params, list(extra_par_obj))
     }
   }
 
   estimated_params
+}
+
+translate_stock_text <- function(stock_txt, delta_counter, lvl_names) {
+
+  nf_pattern <- get_pattern_regex("net_flow")
+  is_nf      <- stringr::str_detect(stock_txt, nf_pattern)
+
+  if(is_nf) {
+
+    stock_txt      <- stringr::str_glue("delta_x_{delta_counter}")
+    delta_counter  <- delta_counter + 1
+  }
+
+  trans_pattern <- get_pattern_regex("var_trans")
+  var_trans <- stringr::str_detect(stock_txt, trans_pattern)
+
+  if(var_trans) {
+
+    ptrn         <- "([:alpha:]+)\\((.+?)\\)"
+    string_match <- stringr::str_match(stock_txt, ptrn)
+    trans        <- string_match[[2]]
+    stk_name     <- string_match[[3]]
+    stk_trsn     <- translate_stock(stk_name, lvl_names) # Translated
+    stock_txt    <- stringr::str_glue("{trans}({stk_trsn})")
+  }
+
+  if(!is_nf & !var_trans) stock_txt <- translate_stock(stock_txt, lvl_names)
+
+  list(stock_txt     = as.character(stock_txt),
+       delta_counter = delta_counter)
+}
+
+translate_stock <- function(stk_txt, lvl_names) {
+
+  stk_txt   <- stringr::str_trim(stk_txt)
+  meas_size <- get_meas_size(stk_txt)
+
+  if(is.infinite(meas_size)) {
+
+    idx      <- which(stk_txt == lvl_names)
+    trs_stk  <- stringr::str_glue("x[:, {idx}]")
+  }
+
+  if(meas_size == 1) {
+
+    subset_ptrn  <- "([:alpha:]+)\\[[:digit:]+\\]"
+    string_match <- stringr::str_match(stk_txt, subset_ptrn)
+    stk_name     <- string_match[2]
+    idx          <- which(stk_name == lvl_names)
+    trs_stk      <- stringr::str_glue("x0[{idx}]")
+  }
+
+  trs_stk # Translated stock
+}
+
+
+determine_meas_size <- function(rhs) {
+
+  dist_obj  <- get_dist_obj(rhs)
+  stock     <- dist_obj[[2]]
+
+  ptrn           <- "([:alpha:]+)\\((.+?)\\)"
+  wrapped_in_fun <- stringr::str_detect(stock, ptrn)
+
+  if(wrapped_in_fun) {
+
+    string_match <- stringr::str_match(stock, ptrn)
+    stock        <- string_match[[3]]
+  }
+
+  single_meas_ptrn <- "[:alpha:]+\\[[:digit:]+\\]"
+  is_single_meas   <- stringr::str_detect(stock, single_meas_ptrn)
+
+  meas_size <- ifelse(is_single_meas, 1, Inf)
+}
+
+get_meas_size <- function(stk_txt) {
+
+  meas_size <- Inf
+
+  single_meas_ptrn <- "[:alpha:]+\\[[:digit:]+\\]"
+  is_subset_meas   <- stringr::str_detect(stk_txt, single_meas_ptrn)
+
+  if(is_subset_meas) meas_size <- 1
+
+  meas_size
 }
