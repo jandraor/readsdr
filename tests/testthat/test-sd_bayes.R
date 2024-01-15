@@ -164,7 +164,7 @@ test_that("sd_Bayes() allows users to override delay metaparameters", {
   expect_equal(actual, expected)
 })
 
-test_that("sd_Bayes() handles measurements of init values", {
+test_that("sd_Bayes() handles the LV model", {
 
   filepath <- system.file("models/", "LV.stmx", package = "readsdr")
 
@@ -182,7 +182,8 @@ test_that("sd_Bayes() handles measurements of init values", {
                    "y0 ~ lognormal(log(Hares[0]), sigma_1)",
                    "z0 ~ lognormal(log(Lynx[0]), sigma_1)")
 
-  actual <- sd_Bayes(filepath, estimated_params = est_pars, meas_mdl)
+  actual <- sd_Bayes(filepath, estimated_params = est_pars, meas_mdl,
+                     forecast = 100)
 
   fileName <- "./test_stan_files/LV.stan"
 

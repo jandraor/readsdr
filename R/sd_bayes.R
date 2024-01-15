@@ -30,6 +30,8 @@
 #' @param LFO_CV An optional boolean that indicates whether the returned Stan
 #'   file supports Leave-Future-Out Cross-Validation. This support corresponds to
 #'   estimating the log-likelihood of the ts + 1 measurement.
+#' @param forecast This integer indicates the count of time steps the ODE will
+#' simulate, progressing forward from the time of the last available data point.
 #'
 #' @inheritParams read_xmile
 #'
@@ -47,8 +49,10 @@
 #'   sd_Bayes(filepath, meas_mdl, estimated_params)
 sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                      data_inits = NULL, const_list = NULL,
-                     LFO_CV = FALSE) {
+                     LFO_CV = FALSE, forecast = 0) {
 
+  stopifnot("`forecast` must be an integer & non-negative" =
+              forecast %% 1 == 0 & forecast > -1)
 
   estimated_params <- get_meas_params(meas_mdl, estimated_params)
   est_params_names <- get_names(estimated_params, "par_name")
@@ -95,7 +99,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   stan_model  <- stan_model(estimated_params, meas_mdl, lvl_names)
 
-  stan_gc     <- stan_gc(meas_mdl, LFO_CV, lvl_names)
+  stan_gc     <- stan_gc(meas_mdl, LFO_CV, lvl_names, forecast)
 
   pkg_ver <- utils::packageVersion("readsdr")
 

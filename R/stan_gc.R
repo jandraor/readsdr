@@ -1,30 +1,42 @@
-stan_gc <- function(meas_mdl, LFO_CV, lvl_names) {
+stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = 0) {
 
-  decl <- "  real log_lik;"
+  ll_decl <- "  real log_lik;"
 
-  sim_data_obj <- generate_sim_data_lines(meas_mdl, lvl_names)
-
-  if(LFO_CV) decl <- paste(decl, "  real log_lik_pred;", sep = "\n")
+  sim_data_obj <- generate_sim_data_lines(meas_mdl, lvl_names, forecast)
 
   rhs         <- get_log_lik_statement(meas_mdl, FALSE, lvl_names)
   log_lik_asg <- paste("  log_lik =", rhs)
 
   if(LFO_CV) {
 
+    ll_decl <- paste(ll_decl, "  real log_lik_pred;", sep = "\n")
+
     rhs_pred    <- get_ll_pred_asg(meas_mdl, LFO_CV, lvl_names)
     pred_asg    <- paste("  log_lik_pred =", rhs_pred)
     log_lik_asg <- paste(log_lik_asg, pred_asg, sep = "\n")
   }
 
+  decl <- paste(ll_decl,
+                sim_data_obj$decl,
+                sep = "\n")
+
+  sim_data_asg <- sim_data_obj$assign
+
+  if(forecast > 0) {
+
+    fcst_decl <- create_fcst_declaration(forecast, lvl_names)
+    decl      <- paste(decl, fcst_decl, sep = "\n")
+
+    fcst_sim_lines <- create_fcst_sim_lines(forecast)
+    sim_data_asg   <- paste(fcst_sim_lines, sim_data_asg, sep = "\n")
+  }
+
   block_body <- paste(decl,
-                      sim_data_obj$decl,
                       log_lik_asg,
-                      sim_data_obj$assign,
+                      sim_data_asg,
                       sep = "\n")
 
-  paste("generated quantities {",
-        block_body,
-        "}", sep = "\n")
+  paste("generated quantities {", block_body, "}", sep = "\n")
 }
 
 get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
@@ -46,7 +58,7 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
     ll_lines[[i]] <- prob_fun_obj$rhs
   }
 
-  ll_lines |> paste(collapse = "+") %>% paste0(";")
+  ll_lines |> paste(collapse = " +\n    ") |>  paste0(";")
 }
 
 get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names,
@@ -119,12 +131,14 @@ get_density_statement <- function(dist_obj) {
   stop(msg, call. = FALSE)
 }
 
-generate_sim_data_lines <- function(meas_mdl, lvl_names) {
+generate_sim_data_lines <- function(meas_mdl, lvl_names, fcst) {
 
   n_meas <- length(meas_mdl)
 
-  decl_lines   <- vector(mode = "character", length = n_meas)
-  assign_lines <- vector(mode = "character", length = n_meas)
+  n_lines <- ifelse(fcst > 0, n_meas * 2, n_meas)
+
+  decl_lines   <- vector(mode = "character", length = n_lines)
+  assign_lines <- vector(mode = "character", length = n_lines)
 
   delta_counter <- 1
 
@@ -135,7 +149,6 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names) {
 
     lhs             <- decomposed_meas$lhs
     type            <- get_dist_type(decomposed_meas$rhs)
-
 
     ms <- determine_meas_size(decomposed_meas$rhs) # Measurement size
 
@@ -158,11 +171,62 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names) {
     if(length(dist_obj) == 3L) pars <- paste(pars, dist_obj[[3]], sep = ", ")
 
     assign_lines[[i]] <- stringr::str_glue("  sim_{lhs} = {dname}_rng({pars});")
+
+    if(fcst > 0) {
+
+      pred_decl                <- create_pred_decl(lhs, type, ms, fcst)
+      decl_lines[[i + n_meas]] <- pred_decl
+
+      assign_lines[[i + n_meas]] <- ""
+
+      if(ms != 1) {
+
+        translation_obj <- translate_stock_text(stock_txt, delta_counter,
+                                                lvl_names, "x_fcst")
+
+        delta_counter <- translation_obj$delta_counter
+        pars          <- translation_obj$stock_txt
+
+        if(length(dist_obj) == 3L) pars <- paste(pars, dist_obj[[3]], sep = ", ")
+
+        assign_lines[[i + n_meas]] <- stringr::str_glue("  fcst_{lhs} = {dname}_rng({pars});")
+      }
+    }
   }
 
-  decl   <- paste(decl_lines, collapse = "\n")
-  assign <- paste(assign_lines, collapse = "\n")
+  decl   <- decl_lines[decl_lines != ""] |> paste(collapse = "\n")
+  assign <- assign_lines[assign_lines != ""] |> paste(collapse = "\n")
 
   list(decl   = decl,
        assign = assign)
+}
+
+create_pred_decl <- function(lhs, type, ms, fcst) {
+
+  if(ms == 1) decl_line <- ""
+
+  if(ms == Inf) decl_line <- stringr::str_glue("  array[{fcst}] {type} fcst_{lhs};")
+
+  decl_line
+}
+
+create_fcst_declaration <- function(forecast, lvl_names) {
+
+  n_lvl <- length(lvl_names)
+
+  paste(
+    stringr::str_glue("  array[{forecast}] vector[{n_lvl}] x_fcst; // Forecast"),
+    stringr::str_glue("  array[{forecast}] real t_fcst;"),
+    stringr::str_glue("  vector[{n_lvl}] fcst_0; // Forecast init values"),
+    sep = "\n")
+}
+
+create_fcst_sim_lines <- function(forecast) {
+
+  paste(
+    "  // Simulate forecast",
+    "  fcst_0 = x[n_obs, :];",
+    stringr::str_glue("  t_fcst = linspaced_array({forecast}, 1, {forecast});"),
+    "  x_fcst = ode_rk45(X_model, fcst_0, 0, t_fcst, params);",
+    sep = "\n")
 }

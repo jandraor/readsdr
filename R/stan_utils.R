@@ -134,14 +134,15 @@ get_meas_params <- function(meas_mdl, estimated_params) {
   estimated_params
 }
 
-translate_stock_text <- function(stock_txt, delta_counter, lvl_names) {
+translate_stock_text <- function(stock_txt, delta_counter, lvl_names,
+                                 array_name = "x") {
 
   nf_pattern <- get_pattern_regex("net_flow")
   is_nf      <- stringr::str_detect(stock_txt, nf_pattern)
 
   if(is_nf) {
 
-    stock_txt      <- stringr::str_glue("delta_x_{delta_counter}")
+    stock_txt      <- stringr::str_glue("delta_{array_name}_{delta_counter}")
     delta_counter  <- delta_counter + 1
   }
 
@@ -154,17 +155,18 @@ translate_stock_text <- function(stock_txt, delta_counter, lvl_names) {
     string_match <- stringr::str_match(stock_txt, ptrn)
     trans        <- string_match[[2]]
     stk_name     <- string_match[[3]]
-    stk_trsn     <- translate_stock(stk_name, lvl_names) # Translated
+    stk_trsn     <- translate_stock(stk_name, lvl_names, array_name) # Translated
     stock_txt    <- stringr::str_glue("{trans}({stk_trsn})")
   }
 
-  if(!is_nf & !var_trans) stock_txt <- translate_stock(stock_txt, lvl_names)
+  if(!is_nf & !var_trans) stock_txt <- translate_stock(stock_txt, lvl_names,
+                                                       array_name)
 
   list(stock_txt     = as.character(stock_txt),
        delta_counter = delta_counter)
 }
 
-translate_stock <- function(stk_txt, lvl_names) {
+translate_stock <- function(stk_txt, lvl_names, array_name) {
 
   stk_txt   <- stringr::str_trim(stk_txt)
   meas_size <- get_meas_size(stk_txt)
@@ -172,7 +174,7 @@ translate_stock <- function(stk_txt, lvl_names) {
   if(is.infinite(meas_size)) {
 
     idx      <- which(stk_txt == lvl_names)
-    trs_stk  <- stringr::str_glue("x[:, {idx}]")
+    trs_stk  <- stringr::str_glue("{array_name}[:, {idx}]")
   }
 
   if(meas_size == 1) {
@@ -181,7 +183,7 @@ translate_stock <- function(stk_txt, lvl_names) {
     string_match <- stringr::str_match(stk_txt, subset_ptrn)
     stk_name     <- string_match[2]
     idx          <- which(stk_name == lvl_names)
-    trs_stk      <- stringr::str_glue("x0[{idx}]")
+    trs_stk      <- stringr::str_glue("{array_name}0[{idx}]")
   }
 
   trs_stk # Translated stock

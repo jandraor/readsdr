@@ -11,7 +11,8 @@ sd_Bayes(
   data_params = NULL,
   data_inits = NULL,
   const_list = NULL,
-  LFO_CV = FALSE
+  LFO_CV = FALSE,
+  forecast = 0
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ constant to override and the element's value correspond to the new value.}
 \item{LFO_CV}{An optional boolean that indicates whether the returned Stan
 file supports Leave-Future-Out Cross-Validation. This support corresponds to
 estimating the log-likelihood of the ts + 1 measurement.}
+
+\item{forecast}{This integer indicates the count of time steps the ODE will
+simulate, progressing forward from the time of the last available data point.}
 }
 \value{
 A string

@@ -123,11 +123,56 @@ test_that("stan_gc() returns the expected string for a vectorised net flow measu
     "  array[n_obs] int sim_y_B;",
     "  array[n_obs] int sim_y_C;",
     "  array[n_obs] int sim_y_D;",
-    "  log_lik = poisson_lpmf(y_A | delta_x_1)+poisson_lpmf(y_B | delta_x_2)+poisson_lpmf(y_C | delta_x_3)+poisson_lpmf(y_D | delta_x_4);",
+    "  log_lik = poisson_lpmf(y_A | delta_x_1) +",
+    "    poisson_lpmf(y_B | delta_x_2) +",
+    "    poisson_lpmf(y_C | delta_x_3) +",
+    "    poisson_lpmf(y_D | delta_x_4);",
     "  sim_y_A = poisson_rng(delta_x_1);",
     "  sim_y_B = poisson_rng(delta_x_2);",
     "  sim_y_C = poisson_rng(delta_x_3);",
     "  sim_y_D = poisson_rng(delta_x_4);",
+    "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
+test_that("stan_gc() handles forecasts", {
+
+  meas_mdl <- list("y ~ lognormal(log(Hares), sigma_1)",
+                   "z ~ lognormal(log(Lynx), sigma_2)",
+                   "y0 ~ lognormal(log(Hares[0]), sigma_1)",
+                   "z0 ~ lognormal(log(Lynx[0]), sigma_1)")
+
+  lvl_names <- c("Hares", "Lynx")
+
+  actual       <- stan_gc(meas_mdl, FALSE, lvl_names, forecast = 100)
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  array[n_obs] real sim_y;",
+    "  array[n_obs] real sim_z;",
+    "  real sim_y0;",
+    "  real sim_z0;",
+    "  array[100] real fcst_y;",
+    "  array[100] real fcst_z;",
+    "  array[100] vector[2] x_fcst; // Forecast",
+    "  array[100] real t_fcst;",
+    "  vector[2] fcst_0; // Forecast init values",
+    "  log_lik = lognormal_lpdf(y | log(x[:, 1]), sigma_1) +",
+    "    lognormal_lpdf(z | log(x[:, 2]), sigma_2) +",
+    "    lognormal_lpdf(y0 | log(x0[1]), sigma_1) +",
+    "    lognormal_lpdf(z0 | log(x0[2]), sigma_1);",
+    "  // Simulate forecast",
+    "  fcst_0 = x[n_obs, :];",
+    "  t_fcst = linspaced_array(100, 1, 100);",
+    "  x_fcst = ode_rk45(X_model, fcst_0, 0, t_fcst, params);",
+    "  sim_y = lognormal_rng(log(x[:, 1]), sigma_1);",
+    "  sim_z = lognormal_rng(log(x[:, 2]), sigma_2);",
+    "  sim_y0 = lognormal_rng(log(x0[1]), sigma_1);",
+    "  sim_z0 = lognormal_rng(log(x0[2]), sigma_1);",
+    "  fcst_y = lognormal_rng(log(x_fcst[:, 1]), sigma_1);",
+    "  fcst_z = lognormal_rng(log(x_fcst[:, 2]), sigma_2);",
     "}", sep = "\n")
 
   expect_equal(actual, expected)
@@ -148,7 +193,7 @@ test_that("generate_sim_data_lines() returns the expected list", {
   meas_mdl  <- list("y ~ neg_binomial_2(net_flow(C), phi)")
   lvl_names <- c("S", "E", "I", "R", "C")
 
-  actual <- generate_sim_data_lines(meas_mdl, lvl_names)
+  actual <- generate_sim_data_lines(meas_mdl, lvl_names, fcst = 0)
 
   expected <- list(decl   = "  array[n_obs] int sim_y;",
                    assign = "  sim_y = neg_binomial_2_rng(delta_x_1, phi);")
@@ -157,7 +202,7 @@ test_that("generate_sim_data_lines() returns the expected list", {
 
   meas_mdl  <- list("y1 ~ lognormal(log(Lynx), sigma_1)")
   lvl_names <- c("Hares", "Lynx" )
-  actual    <- generate_sim_data_lines(meas_mdl, lvl_names)
+  actual    <- generate_sim_data_lines(meas_mdl, lvl_names, fcst = 0)
 
   expected <- list(decl   = "  array[n_obs] real sim_y1;",
                    assign = "  sim_y1 = lognormal_rng(log(x[:, 2]), sigma_1);")
@@ -172,7 +217,7 @@ test_that("generate_sim_data_lines() handles single measurements", {
 
   lvl_names <- c("Hares", "Lynx" )
 
-  actual <- generate_sim_data_lines(meas_mdl, lvl_names)
+  actual <- generate_sim_data_lines(meas_mdl, lvl_names, fcst = 0)
 
   expected <- list(decl = "  array[n_obs] real sim_y;\n  real sim_y0;",
                    assign = paste(
