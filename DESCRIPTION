@@ -21,7 +21,8 @@ Suggests:
     knitr,
     rmarkdown,
     ggplot2,
-    tidyr
+    tidyr,
+    truncnorm
 Imports: 
     stringr,
     xml2,
@@ -33,7 +34,6 @@ Imports:
     stats,
     deSolve,
     utils,
-    truncnorm,
     future,
     future.apply,
     progressr

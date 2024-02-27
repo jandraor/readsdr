@@ -23,6 +23,7 @@ data {
   real y0;
   real z0;
   array[n_obs] real ts;
+  int<lower = 1> n_fcst;
 }
 parameters {
   real<lower = 0> par_alpha;
@@ -66,19 +67,19 @@ generated quantities {
   array[n_obs] real sim_z;
   real sim_y0;
   real sim_z0;
-  array[100] real fcst_y;
-  array[100] real fcst_z;
-  array[100] vector[2] x_fcst; // Forecast
-  array[100] real t_fcst;
-  vector[2] fcst_0; // Forecast init values
+  array[n_fcst] real fcst_y;
+  array[n_fcst] real fcst_z;
+  array[n_fcst] vector[2] x_fcst; // Forecast
+  array[n_fcst] real t_fcst;
+  vector[2] x_fcst0; // Forecast init values
   log_lik = lognormal_lpdf(y | log(x[:, 1]), sigma_1) +
     lognormal_lpdf(z | log(x[:, 2]), sigma_2) +
     lognormal_lpdf(y0 | log(x0[1]), sigma_1) +
     lognormal_lpdf(z0 | log(x0[2]), sigma_1);
   // Simulate forecast
-  fcst_0 = x[n_obs, :];
-  t_fcst = linspaced_array(100, 1, 100);
-  x_fcst = ode_rk45(X_model, fcst_0, 0, t_fcst, params);
+  x_fcst0 = x[n_obs, :];
+  t_fcst = linspaced_array(n_fcst, 1, n_fcst);
+  x_fcst = ode_rk45(X_model, x_fcst0, 0, t_fcst, params);
   sim_y = lognormal_rng(log(x[:, 1]), sigma_1);
   sim_z = lognormal_rng(log(x[:, 2]), sigma_2);
   sim_y0 = lognormal_rng(log(x0[1]), sigma_1);

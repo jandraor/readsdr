@@ -30,8 +30,10 @@
 #' @param LFO_CV An optional boolean that indicates whether the returned Stan
 #'   file supports Leave-Future-Out Cross-Validation. This support corresponds to
 #'   estimating the log-likelihood of the ts + 1 measurement.
-#' @param forecast This integer indicates the count of time steps the ODE will
-#' simulate, progressing forward from the time of the last available data point.
+#' @param forecast An optional boolean that indicates whether the Stan file
+#' supports a forecast. If \code{TRUE}, the \strong{data} block requires the
+#' user to supply an integer value for \code{n_fcst}. This variable corresponds
+#' to the number of periods that will be predicted.
 #'
 #' @inheritParams read_xmile
 #'
@@ -49,10 +51,10 @@
 #'   sd_Bayes(filepath, meas_mdl, estimated_params)
 sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                      data_inits = NULL, const_list = NULL,
-                     LFO_CV = FALSE, forecast = 0) {
+                     LFO_CV = FALSE, forecast = FALSE) {
 
-  stopifnot("`forecast` must be an integer & non-negative" =
-              forecast %% 1 == 0 & forecast > -1)
+  stopifnot("`forecast` must be TRUE or FALSE" =
+              is.logical(forecast))
 
   estimated_params <- get_meas_params(meas_mdl, estimated_params)
   est_params_names <- get_names(estimated_params, "par_name")
@@ -90,7 +92,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                                    XMILE_structure = mdl_structure)
 
   stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params,
-                           data_inits, length(lvl_obj))
+                           data_inits, length(lvl_obj), forecast)
 
   stan_params <- stan_params(estimated_params)
 

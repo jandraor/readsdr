@@ -68,9 +68,8 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
 
   if(length(delta_meas) > 0) {
 
-    delta_first_asg <- get_delta_first_asg(delta_meas, lvl_obj)
-
-    for_body  <- get_for_body(delta_meas, lvl_obj)
+    delta_first_asg <- get_delta_first_asg(delta_meas, lvl_names)
+    for_body        <- get_for_body(delta_meas, lvl_names)
 
     for_lines <- paste("  for (i in 1:n_obs-1) {",
                        for_body, "  }",
@@ -157,31 +156,7 @@ trans_par <- function(var_name, par_trans) {
   stop(msg, call. = FALSE)
 }
 
-subset_delta_meas <- function(meas_mdl) {
-
-  lapply(meas_mdl, function(meas_obj) {
-
-    pattern          <- "net_flow\\(.+?\\)"
-    pattern_detected <- stringr::str_detect(meas_obj, pattern)
-
-    if(!pattern_detected) return (NULL)
-
-    meas_obj
-  })
-}
-
-extract_delta_decl <- function(meas_mdl) {
-
-  lapply(seq_along(meas_mdl), function(i) {
-
-    meas_obj <- meas_mdl[[1]]
-    as.character(stringr::str_glue("  array[n_obs] real delta_x_{i};"))
-  })
-}
-
-get_delta_first_asg <- function(meas_mdl, lvl_obj) {
-
-  lvl_names <- get_names(lvl_obj)
+get_delta_first_asg <- function(meas_mdl, lvl_names, var_name = "x") {
 
   lapply(seq_along(meas_mdl), function(i) {
 
@@ -194,15 +169,13 @@ get_delta_first_asg <- function(meas_mdl, lvl_obj) {
 
     idx <- which(lvl_name == lvl_names)
 
-    stringr::str_glue("  delta_x_{i}[1] =  x[1, {idx}] - x0[{idx}] + 1e-5;")
-  }) %>% paste(collapse = "\n")
+    stringr::str_glue("  delta_{var_name}_{i}[1] =  {var_name}[1, {idx}] - {var_name}0[{idx}] + 1e-5;")
+  }) |>
+    paste(collapse = "\n")
 
 }
 
-get_for_body <- function(meas_mdl, lvl_obj) {
-
-
-  lvl_names <- get_names(lvl_obj)
+get_for_body <- function(meas_mdl, lvl_names, var_name = "x") {
 
   lapply(seq_along(meas_mdl), function(i) {
 
@@ -215,7 +188,10 @@ get_for_body <- function(meas_mdl, lvl_obj) {
 
     idx <- which(lvl_name == lvl_names)
 
-    stringr::str_glue("    delta_x_{i}[i + 1] = x[i + 1, {idx}] - x[i, {idx}] + 1e-5;")
+    lhs <- stringr::str_glue("    delta_{var_name}_{i}[i + 1]")
+    rhs <- stringr::str_glue("{var_name}[i + 1, {idx}] - {var_name}[i, {idx}] + 1e-5;")
+
+    paste(lhs, rhs, sep = " = ")
   }) |>  paste(collapse = "\n")
 
 }

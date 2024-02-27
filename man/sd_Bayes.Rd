@@ -12,7 +12,7 @@ sd_Bayes(
   data_inits = NULL,
   const_list = NULL,
   LFO_CV = FALSE,
-  forecast = 0
+  forecast = FALSE
 )
 }
 \arguments{
@@ -43,8 +43,10 @@ constant to override and the element's value correspond to the new value.}
 file supports Leave-Future-Out Cross-Validation. This support corresponds to
 estimating the log-likelihood of the ts + 1 measurement.}
 
-\item{forecast}{This integer indicates the count of time steps the ODE will
-simulate, progressing forward from the time of the last available data point.}
+\item{forecast}{An optional boolean that indicates whether the Stan file
+supports a forecast. If \code{TRUE}, the \strong{data} block requires the
+user to supply an integer value for \code{n_fcst}. This variable corresponds
+to the number of periods that will be predicted.}
 }
 \value{
 A string

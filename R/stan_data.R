@@ -1,6 +1,6 @@
 # Stan's data block for ODE models
 stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
-                      n_difeq = NULL) {
+                      n_difeq = NULL, forecast) {
 
   external_params <- c(data_params, data_inits)
 
@@ -28,6 +28,9 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
 
     body_block <- paste(body_block, data_params_lines, sep = "\n")
   }
+
+  if(forecast) body_block <- paste(body_block, "  int<lower = 1> n_fcst;",
+                                   sep = "\n")
 
   paste("data {", body_block, "}", sep = "\n")
 }

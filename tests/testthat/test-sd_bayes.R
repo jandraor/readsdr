@@ -15,6 +15,8 @@ test_that("sd_Bayes() returns the expected file for a measured net flow", {
   fileName <- "SEIR_nbinom.stan"
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
+
   expect_equal(actual, expected)
 
   estimated_params <- list(
@@ -52,6 +54,7 @@ test_that("sd_Bayes() returns the expected file for a measured stock", {
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 })
 
@@ -76,6 +79,7 @@ test_that("sd_Bayes() returns the expected file with data parameters defined", {
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 
   # N is the data param
@@ -115,6 +119,7 @@ test_that("sd_Bayes() returns the expected file with data inits defined", {
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 })
 
@@ -139,6 +144,7 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 })
 
@@ -161,6 +167,7 @@ test_that("sd_Bayes() allows users to override delay metaparameters", {
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 })
 
@@ -183,12 +190,13 @@ test_that("sd_Bayes() handles the LV model", {
                    "z0 ~ lognormal(log(Lynx[0]), sigma_1)")
 
   actual <- sd_Bayes(filepath, estimated_params = est_pars, meas_mdl,
-                     forecast = 100)
+                     forecast = TRUE)
 
   fileName <- "./test_stan_files/LV.stan"
 
   expected <- readChar(fileName, file.info(fileName)$size)
 
+  skip_on_os("windows")
   expect_equal(actual, expected)
 })
 

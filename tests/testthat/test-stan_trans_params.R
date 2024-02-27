@@ -138,9 +138,10 @@ test_that("get_for_body() returns the expected list", {
   filepath        <- system.file("models/", "SEIR.stmx", package = "readsdr")
   model_structure <- extract_structure_from_XMILE(filepath)
 
-  mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
-  meas_mdl <- list(mm1)
-  actual   <- get_for_body(meas_mdl, model_structure$levels)
+  mm1       <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  meas_mdl  <- list(mm1)
+  lvl_names <- c("S", "E", "I", "R", "C")
+  actual    <- get_for_body(meas_mdl, lvl_names)
 
   expected <- "    delta_x_1[i + 1] = x[i + 1, 5] - x[i, 5] + 1e-5;"
 

@@ -11,7 +11,8 @@ test_that("stan_data() returns the expected string", {
     "  array[n_obs] real ts;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, TRUE, FALSE, NULL, NULL), expected_string)
+  expect_equal(stan_data(meas_mdl, TRUE, FALSE, NULL, NULL,
+                         forecast = FALSE), expected_string)
 
 })
 
@@ -28,7 +29,8 @@ test_that("stan_data() declares the vector for init values", {
     "  vector[5] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, FALSE, FALSE, NULL, NULL, 5),
+  expect_equal(stan_data(meas_mdl, FALSE, FALSE, NULL, NULL, 5,
+                         forecast = FALSE),
                expected_string)
 
   expected_string <- paste(
@@ -40,7 +42,8 @@ test_that("stan_data() declares the vector for init values", {
     "  vector[5] x0;",
     "}", sep = "\n")
 
-  expect_equal(stan_data(meas_mdl, FALSE, TRUE, NULL, NULL, 5),
+  expect_equal(stan_data(meas_mdl, FALSE, TRUE, NULL, NULL, 5,
+                         forecast = FALSE),
                expected_string)
 })
 
@@ -50,7 +53,8 @@ test_that("stan_data() handles single measurements", {
                    "z ~ lognormal(log(Lynx), sigma_2)",
                    "y0 ~ lognormal(log(Hares[0]), sigma_1)")
 
-  actual <- stan_data(meas_mdl, TRUE, FALSE, NULL, NULL)
+  actual <- stan_data(meas_mdl, TRUE, FALSE, NULL, NULL,
+                      forecast = FALSE)
 
   expected <- paste(
     "data {",

@@ -221,3 +221,26 @@ get_meas_size <- function(stk_txt) {
 
   meas_size
 }
+
+# This function identifies measurements of net flows
+subset_delta_meas <- function(meas_mdl) {
+
+  lapply(meas_mdl, function(meas_obj) {
+
+    pattern          <- "net_flow\\(.+?\\)"
+    pattern_detected <- stringr::str_detect(meas_obj, pattern)
+
+    if(!pattern_detected) return (NULL)
+
+    meas_obj
+  })
+}
+
+extract_delta_decl <- function(meas_mdl, n_var = "n_obs", var_name = "x") {
+
+  lapply(seq_along(meas_mdl), function(i) {
+
+    meas_obj <- meas_mdl[[1]]
+    as.character(stringr::str_glue("  array[{n_var}] real delta_{var_name}_{i};"))
+  })
+}

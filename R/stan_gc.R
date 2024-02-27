@@ -1,4 +1,4 @@
-stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = 0) {
+stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = FALSE) {
 
   ll_decl <- "  real log_lik;"
 
@@ -24,10 +24,10 @@ stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = 0) {
 
   if(forecast > 0) {
 
-    fcst_decl <- create_fcst_declaration(forecast, lvl_names)
+    fcst_decl <- create_fcst_declaration(lvl_names, meas_mdl)
     decl      <- paste(decl, fcst_decl, sep = "\n")
 
-    fcst_sim_lines <- create_fcst_sim_lines(forecast)
+    fcst_sim_lines <- create_fcst_sim_lines(lvl_names, meas_mdl)
     sim_data_asg   <- paste(fcst_sim_lines, sim_data_asg, sep = "\n")
   }
 
@@ -141,6 +141,7 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names, fcst) {
   assign_lines <- vector(mode = "character", length = n_lines)
 
   delta_counter <- 1
+  fcst_counter  <- 1
 
   for(i in seq_along(meas_mdl)) {
 
@@ -174,17 +175,17 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names, fcst) {
 
     if(fcst > 0) {
 
-      pred_decl                <- create_pred_decl(lhs, type, ms, fcst)
+      pred_decl                <- create_pred_decl(lhs, type, ms)
       decl_lines[[i + n_meas]] <- pred_decl
 
       assign_lines[[i + n_meas]] <- ""
 
       if(ms != 1) {
 
-        translation_obj <- translate_stock_text(stock_txt, delta_counter,
+        translation_obj <- translate_stock_text(stock_txt, fcst_counter,
                                                 lvl_names, "x_fcst")
 
-        delta_counter <- translation_obj$delta_counter
+        fcst_counter  <- translation_obj$delta_counter
         pars          <- translation_obj$stock_txt
 
         if(length(dist_obj) == 3L) pars <- paste(pars, dist_obj[[3]], sep = ", ")
@@ -201,32 +202,66 @@ generate_sim_data_lines <- function(meas_mdl, lvl_names, fcst) {
        assign = assign)
 }
 
-create_pred_decl <- function(lhs, type, ms, fcst) {
+create_pred_decl <- function(lhs, type, ms) {
 
   if(ms == 1) decl_line <- ""
 
-  if(ms == Inf) decl_line <- stringr::str_glue("  array[{fcst}] {type} fcst_{lhs};")
+  if(ms == Inf) decl_line <- stringr::str_glue("  array[n_fcst] {type} fcst_{lhs};")
 
   decl_line
 }
 
-create_fcst_declaration <- function(forecast, lvl_names) {
+create_fcst_declaration <- function(lvl_names, meas_mdl) {
 
   n_lvl <- length(lvl_names)
 
-  paste(
-    stringr::str_glue("  array[{forecast}] vector[{n_lvl}] x_fcst; // Forecast"),
-    stringr::str_glue("  array[{forecast}] real t_fcst;"),
-    stringr::str_glue("  vector[{n_lvl}] fcst_0; // Forecast init values"),
+  var_decl_lines <- paste(
+    stringr::str_glue("  array[n_fcst] vector[{n_lvl}] x_fcst; // Forecast"),
+    stringr::str_glue("  array[n_fcst] real t_fcst;"),
+    stringr::str_glue("  vector[{n_lvl}] x_fcst0; // Forecast init values"),
     sep = "\n")
+
+  delta_meas <- subset_delta_meas(meas_mdl) |> remove_NULL()
+
+  if(length(delta_meas) > 0) {
+
+    delta_decl_list <- extract_delta_decl(delta_meas,
+                                            n_var = "n_fcst",
+                                          var_name = "x_fcst")
+    delta_decl      <- paste(delta_decl_list, collapse = "\n")
+    var_decl_lines  <- paste(var_decl_lines, delta_decl, sep = "\n")
+  }
+
+  var_decl_lines
 }
 
-create_fcst_sim_lines <- function(forecast) {
+create_fcst_sim_lines <- function(lvl_names, meas_mdl) {
 
-  paste(
+  sim_lines <- paste(
     "  // Simulate forecast",
-    "  fcst_0 = x[n_obs, :];",
-    stringr::str_glue("  t_fcst = linspaced_array({forecast}, 1, {forecast});"),
-    "  x_fcst = ode_rk45(X_model, fcst_0, 0, t_fcst, params);",
+    "  x_fcst0 = x[n_obs, :];",
+    stringr::str_glue("  t_fcst = linspaced_array(n_fcst, 1, n_fcst);"),
+    "  x_fcst = ode_rk45(X_model, x_fcst0, 0, t_fcst, params);",
     sep = "\n")
+
+  delta_meas <- subset_delta_meas(meas_mdl) |> remove_NULL()
+
+  if(length(delta_meas) > 0) {
+
+    delta_first_asg <- get_delta_first_asg(delta_meas,
+                                           lvl_names,
+                                           "x_fcst")
+
+    for_body  <- get_for_body(delta_meas, lvl_names, "x_fcst")
+
+    for_lines <- paste("  for (i in 1:n_fcst-1) {",
+                       for_body, "  }",
+                       sep = "\n")
+
+    delta_asg <- paste(delta_first_asg, for_lines, sep = "\n")
+
+    sim_lines <- paste(sim_lines, delta_asg, sep = "\n")
+  }
+
+  sim_lines
 }

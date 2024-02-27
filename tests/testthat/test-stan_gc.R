@@ -145,7 +145,7 @@ test_that("stan_gc() handles forecasts", {
 
   lvl_names <- c("Hares", "Lynx")
 
-  actual       <- stan_gc(meas_mdl, FALSE, lvl_names, forecast = 100)
+  actual       <- stan_gc(meas_mdl, FALSE, lvl_names, forecast = TRUE)
 
   expected <- paste(
     "generated quantities {",
@@ -154,19 +154,19 @@ test_that("stan_gc() handles forecasts", {
     "  array[n_obs] real sim_z;",
     "  real sim_y0;",
     "  real sim_z0;",
-    "  array[100] real fcst_y;",
-    "  array[100] real fcst_z;",
-    "  array[100] vector[2] x_fcst; // Forecast",
-    "  array[100] real t_fcst;",
-    "  vector[2] fcst_0; // Forecast init values",
+    "  array[n_fcst] real fcst_y;",
+    "  array[n_fcst] real fcst_z;",
+    "  array[n_fcst] vector[2] x_fcst; // Forecast",
+    "  array[n_fcst] real t_fcst;",
+    "  vector[2] x_fcst0; // Forecast init values",
     "  log_lik = lognormal_lpdf(y | log(x[:, 1]), sigma_1) +",
     "    lognormal_lpdf(z | log(x[:, 2]), sigma_2) +",
     "    lognormal_lpdf(y0 | log(x0[1]), sigma_1) +",
     "    lognormal_lpdf(z0 | log(x0[2]), sigma_1);",
     "  // Simulate forecast",
-    "  fcst_0 = x[n_obs, :];",
-    "  t_fcst = linspaced_array(100, 1, 100);",
-    "  x_fcst = ode_rk45(X_model, fcst_0, 0, t_fcst, params);",
+    "  x_fcst0 = x[n_obs, :];",
+    "  t_fcst = linspaced_array(n_fcst, 1, n_fcst);",
+    "  x_fcst = ode_rk45(X_model, x_fcst0, 0, t_fcst, params);",
     "  sim_y = lognormal_rng(log(x[:, 1]), sigma_1);",
     "  sim_z = lognormal_rng(log(x[:, 2]), sigma_2);",
     "  sim_y0 = lognormal_rng(log(x0[1]), sigma_1);",
@@ -174,6 +174,42 @@ test_that("stan_gc() handles forecasts", {
     "  fcst_y = lognormal_rng(log(x_fcst[:, 1]), sigma_1);",
     "  fcst_z = lognormal_rng(log(x_fcst[:, 2]), sigma_2);",
     "}", sep = "\n")
+
+  expect_equal(actual, expected)
+})
+
+test_that("stan_gc() handles forecasts with a net flow in the meas component", {
+
+  meas_mdl <- list("y ~ poisson(net_flow(C))")
+
+  lvl_names <- c("S", "E", "I", "R", "C")
+
+  actual <- stan_gc(meas_mdl, LFO_CV = FALSE,
+                    lvl_names = lvl_names,
+                    forecast = TRUE)
+
+  expected <- paste(
+    "generated quantities {",
+    "  real log_lik;",
+    "  array[n_obs] int sim_y;",
+    "  array[n_fcst] int fcst_y;",
+    "  array[n_fcst] vector[5] x_fcst; // Forecast",
+    "  array[n_fcst] real t_fcst;",
+    "  vector[5] x_fcst0; // Forecast init values",
+    "  array[n_fcst] real delta_x_fcst_1;",
+    "  log_lik = poisson_lpmf(y | delta_x_1);",
+    "  // Simulate forecast",
+    "  x_fcst0 = x[n_obs, :];",
+    "  t_fcst = linspaced_array(n_fcst, 1, n_fcst);",
+    "  x_fcst = ode_rk45(X_model, x_fcst0, 0, t_fcst, params);",
+    "  delta_x_fcst_1[1] =  x_fcst[1, 5] - x_fcst0[5] + 1e-5;",
+    "  for (i in 1:n_fcst-1) {",
+    "    delta_x_fcst_1[i + 1] = x_fcst[i + 1, 5] - x_fcst[i, 5] + 1e-5;",
+    "  }",
+    "  sim_y = poisson_rng(delta_x_1);",
+    "  fcst_y = poisson_rng(delta_x_fcst_1);",
+    "}", sep = "\n")
+
 
   expect_equal(actual, expected)
 })
