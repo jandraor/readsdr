@@ -1,20 +1,11 @@
-stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = FALSE) {
+stan_gc <- function(meas_mdl, lvl_names, forecast = FALSE) {
 
   ll_decl <- "  real log_lik;"
 
   sim_data_obj <- generate_sim_data_lines(meas_mdl, lvl_names, forecast)
 
-  rhs         <- get_log_lik_statement(meas_mdl, FALSE, lvl_names)
+  rhs         <- get_log_lik_statement(meas_mdl, lvl_names)
   log_lik_asg <- paste("  log_lik =", rhs)
-
-  if(LFO_CV) {
-
-    ll_decl <- paste(ll_decl, "  real log_lik_pred;", sep = "\n")
-
-    rhs_pred    <- get_ll_pred_asg(meas_mdl, LFO_CV, lvl_names)
-    pred_asg    <- paste("  log_lik_pred =", rhs_pred)
-    log_lik_asg <- paste(log_lik_asg, pred_asg, sep = "\n")
-  }
 
   decl <- paste(ll_decl,
                 sim_data_obj$decl,
@@ -39,7 +30,7 @@ stan_gc <- function(meas_mdl, LFO_CV, lvl_names, forecast = FALSE) {
   paste("generated quantities {", block_body, "}", sep = "\n")
 }
 
-get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
+get_log_lik_statement <- function(meas_mdl, lvl_names) {
 
   delta_counter <- 1
   n_meas        <- length(meas_mdl)
@@ -52,7 +43,7 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
     decomposed_meas <- decompose_meas(meas_obj)
     dist_obj        <- get_dist_obj(decomposed_meas$rhs)
     prob_fun_obj    <- get_dist_dens_mass_fun(decomposed_meas$lhs, dist_obj,
-                                              LFO_CV, lvl_names, delta_counter)
+                                              lvl_names, delta_counter)
 
     delta_counter <- prob_fun_obj$delta_counter
     ll_lines[[i]] <- prob_fun_obj$rhs
@@ -61,19 +52,7 @@ get_log_lik_statement <- function(meas_mdl, LFO_CV, lvl_names) {
   ll_lines |> paste(collapse = " +\n    ") |>  paste0(";")
 }
 
-get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names,
-                                   delta_counter) {
-
-  if(LFO_CV) {
-
-    dist_obj$random_var <- paste(lhs, "ahead", sep = "_")
-    dist_obj[[2]]       <- paste(lhs, "pred", sep = "_")
-
-    rhs <- get_density_statement(dist_obj)
-
-    return(list(rhs           = rhs,
-                delta_counter = delta_counter))
-  }
+get_dist_dens_mass_fun <- function(lhs, dist_obj, lvl_names, delta_counter) {
 
   dist_obj$random_var <- lhs
 
@@ -91,7 +70,7 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, LFO_CV, lvl_names,
        delta_counter = delta_counter)
 }
 
-get_ll_pred_asg <- function(meas_mdl, LFO_CV, lvl_names) {
+get_ll_pred_asg <- function(meas_mdl, lvl_names) {
 
   delta_counter <- 1
   n_meas        <- length(meas_mdl)
@@ -104,7 +83,7 @@ get_ll_pred_asg <- function(meas_mdl, LFO_CV, lvl_names) {
     decomposed_meas <- decompose_meas(meas_obj)
     dist_obj        <- get_dist_obj(decomposed_meas$rhs)
     prob_fun_obj    <- get_dist_dens_mass_fun(decomposed_meas$lhs, dist_obj,
-                                              LFO_CV, lvl_names, delta_counter)
+                                              lvl_names, delta_counter)
 
     delta_counter <- prob_fun_obj$delta_counter
     ll_lines[[i]] <- prob_fun_obj$rhs

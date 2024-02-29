@@ -27,9 +27,6 @@
 #'  parameters that \strong{only affect initial values} (of stocks) will be
 #'  configured through the Stan data block. That is, the user will provide fixed
 #'  values for such parameters at every Stan run.
-#' @param LFO_CV An optional boolean that indicates whether the returned Stan
-#'   file supports Leave-Future-Out Cross-Validation. This support corresponds to
-#'   estimating the log-likelihood of the ts + 1 measurement.
 #' @param forecast An optional boolean that indicates whether the Stan file
 #' supports a forecast. If \code{TRUE}, the \strong{data} block requires the
 #' user to supply an integer value for \code{n_fcst}. This variable corresponds
@@ -50,8 +47,7 @@
 #'     sd_prior("I0", "lognormal", c(0, 1), "init"))
 #'   sd_Bayes(filepath, meas_mdl, estimated_params)
 sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
-                     data_inits = NULL, const_list = NULL,
-                     LFO_CV = FALSE, forecast = FALSE) {
+                     data_inits = NULL, const_list = NULL, forecast = FALSE) {
 
   stopifnot("`forecast` must be TRUE or FALSE" =
               is.logical(forecast))
@@ -91,17 +87,17 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
                                    const_list      = const_list,
                                    XMILE_structure = mdl_structure)
 
-  stan_data   <- stan_data(meas_mdl, any_unk_inits, LFO_CV, data_params,
+  stan_data   <- stan_data(meas_mdl, any_unk_inits, data_params,
                            data_inits, length(lvl_obj), forecast)
 
   stan_params <- stan_params(estimated_params)
 
   stan_tp     <- stan_trans_params(estimated_params, meas_mdl, lvl_obj,
-                                   any_unk_inits, data_params, LFO_CV)
+                                   any_unk_inits, data_params)
 
   stan_model  <- stan_model(estimated_params, meas_mdl, lvl_names)
 
-  stan_gc     <- stan_gc(meas_mdl, LFO_CV, lvl_names, forecast)
+  stan_gc     <- stan_gc(meas_mdl, lvl_names, forecast)
 
   pkg_ver <- utils::packageVersion("readsdr")
 

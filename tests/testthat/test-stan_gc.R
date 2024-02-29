@@ -3,34 +3,20 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
   mm1      <- "y ~ neg_binomial_2(net_flow(C), phi)"
   meas_mdl <- list(mm1)
 
-  actual <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+  actual <- stan_gc(meas_mdl, c("S", "E", "I", "R", "C"))
 
   expected <- paste(
     "generated quantities {",
     "  real log_lik;",
     "  array[n_obs] int sim_y;",
     "  log_lik = neg_binomial_2_lpmf(y | delta_x_1, phi);",
-    "  sim_y = neg_binomial_2_rng(delta_x_1, phi);",
-    "}", sep = "\n")
-
-  expect_equal(actual, expected)
-
-  actual <- stan_gc(meas_mdl, TRUE)
-
-  expected <- paste(
-    "generated quantities {",
-    "  real log_lik;",
-    "  real log_lik_pred;",
-    "  array[n_obs] int sim_y;",
-    "  log_lik = neg_binomial_2_lpmf(y | delta_x_1, phi);",
-    "  log_lik_pred = neg_binomial_2_lpmf(y_ahead | y_pred, phi);",
     "  sim_y = neg_binomial_2_rng(delta_x_1, phi);",
     "}", sep = "\n")
 
   expect_equal(actual, expected)
 
   meas_mdl <- list("y ~ poisson(net_flow(C))")
-  actual   <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+  actual   <- stan_gc(meas_mdl, lvl_names = c("S", "E", "I", "R", "C"))
 
   expected <- paste(
     "generated quantities {",
@@ -43,7 +29,7 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
   expect_equal(actual, expected)
 
   meas_mdl <- list("y ~ normal(net_flow(C), tau)")
-  actual   <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+  actual   <- stan_gc(meas_mdl, lvl_names = c("S", "E", "I", "R", "C"))
 
   expected <- paste(
     "generated quantities {",
@@ -59,7 +45,7 @@ test_that("stan_gc() returns the expected string for a net flow measurement", {
 test_that("stan_gc() returns the expected string for a stock measurement", {
 
   meas_mdl <- "y1 ~ lognormal(Lynx, sigma_1)"
-  actual   <- stan_gc(meas_mdl, FALSE, c("Hares", "Lynx"))
+  actual   <- stan_gc(meas_mdl, lvl_names = c("Hares", "Lynx"))
 
   expected <- paste(
     "generated quantities {",
@@ -75,28 +61,13 @@ test_that("stan_gc() returns the expected string for a stock measurement", {
   mm1      <- "y ~ poisson(C)"
   meas_mdl <- list(mm1)
 
-  actual <- stan_gc(meas_mdl, FALSE, c("S", "E", "I", "R", "C"))
+  actual <- stan_gc(meas_mdl, lvl_names = c("S", "E", "I", "R", "C"))
 
   expected <- paste(
     "generated quantities {",
     "  real log_lik;",
     "  array[n_obs] int sim_y;",
     "  log_lik = poisson_lpmf(y | x[:, 5]);",
-    "  sim_y = poisson_rng(x[:, 5]);",
-    "}", sep = "\n")
-
-  expect_equal(actual, expected)
-
-  meas_mdl <- list("y ~ poisson(C)")
-  actual   <- stan_gc(meas_mdl, TRUE, c("S", "E", "I", "R", "C"))
-
-  expected <- paste(
-    "generated quantities {",
-    "  real log_lik;",
-    "  real log_lik_pred;",
-    "  array[n_obs] int sim_y;",
-    "  log_lik = poisson_lpmf(y | x[:, 5]);",
-    "  log_lik_pred = poisson_lpmf(y_ahead | y_pred);",
     "  sim_y = poisson_rng(x[:, 5]);",
     "}", sep = "\n")
 
@@ -114,7 +85,7 @@ test_that("stan_gc() returns the expected string for a vectorised net flow measu
   mdl       <- read_xmile(filepath)
   lvl_names <- sd_stocks(mdl)$name
 
-  actual       <- stan_gc(meas_mdl, FALSE, lvl_names)
+  actual       <- stan_gc(meas_mdl, lvl_names = lvl_names)
 
   expected <- paste(
     "generated quantities {",
@@ -145,7 +116,7 @@ test_that("stan_gc() handles forecasts", {
 
   lvl_names <- c("Hares", "Lynx")
 
-  actual       <- stan_gc(meas_mdl, FALSE, lvl_names, forecast = TRUE)
+  actual       <- stan_gc(meas_mdl, lvl_names, forecast = TRUE)
 
   expected <- paste(
     "generated quantities {",
@@ -184,9 +155,7 @@ test_that("stan_gc() handles forecasts with a net flow in the meas component", {
 
   lvl_names <- c("S", "E", "I", "R", "C")
 
-  actual <- stan_gc(meas_mdl, LFO_CV = FALSE,
-                    lvl_names = lvl_names,
-                    forecast = TRUE)
+  actual <- stan_gc(meas_mdl, lvl_names = lvl_names, forecast = TRUE)
 
   expected <- paste(
     "generated quantities {",
@@ -217,7 +186,7 @@ test_that("stan_gc() handles forecasts with a net flow in the meas component", {
 test_that("get_log_lik_statement() returns the expected string", {
 
   meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"
-  actual   <- get_log_lik_statement(meas_obj, FALSE)
+  actual   <- get_log_lik_statement(meas_obj)
 
   expected <- "neg_binomial_2_lpmf(y | delta_x_1, phi);"
 
@@ -273,7 +242,7 @@ test_that("get_dist_dens_mass_fun() returns the expected list", {
                     mu        = "log(Lynx)",
                     sigma     = "sigma_1")
 
-  actual <- get_dist_dens_mass_fun(lhs, dist_obj, FALSE, lvl_names, 1)
+  actual <- get_dist_dens_mass_fun(lhs, dist_obj, lvl_names, 1)
 
   expected <- list(rhs           = "lognormal_lpdf(y1 | log(x[:, 2]), sigma_1)",
                    delta_counter = 1)

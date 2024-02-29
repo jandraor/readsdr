@@ -11,7 +11,6 @@ sd_Bayes(
   data_params = NULL,
   data_inits = NULL,
   const_list = NULL,
-  LFO_CV = FALSE,
   forecast = FALSE
 )
 }
@@ -38,10 +37,6 @@ values for such parameters at every Stan run.}
 
 \item{const_list}{A list in which each element's name is the name of the
 constant to override and the element's value correspond to the new value.}
-
-\item{LFO_CV}{An optional boolean that indicates whether the returned Stan
-file supports Leave-Future-Out Cross-Validation. This support corresponds to
-estimating the log-likelihood of the ts + 1 measurement.}
 
 \item{forecast}{An optional boolean that indicates whether the Stan file
 supports a forecast. If \code{TRUE}, the \strong{data} block requires the

@@ -31,8 +31,7 @@ test_that("stan_trans_params() returns the expected string", {
 
   actual <- stan_trans_params(estimated_params, meas_mdl, lvl_obj,
                               unk_inits   = TRUE,
-                              data_params = NULL,
-                              LFO_CV      = FALSE)
+                              data_params = NULL)
 
   expected <-  paste(
     "transformed parameters{",

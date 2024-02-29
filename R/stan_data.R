@@ -1,17 +1,15 @@
 # Stan's data block for ODE models
-stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
+stan_data <- function(meas_mdl, unk_inits, data_params, data_inits,
                       n_difeq = NULL, forecast) {
 
   external_params <- c(data_params, data_inits)
 
   decl <- "  int<lower = 1> n_obs;"
 
-  data_decl <- lapply(meas_mdl, construct_data_decl, LFO_CV) %>%
+  data_decl <- lapply(meas_mdl, construct_data_decl) |>
     paste(collapse = "\n")
 
-  final_decl <- ifelse(LFO_CV,
-                       "  array[n_obs + 1] real ts;",
-                       "  array[n_obs] real ts;")
+  final_decl <- "  array[n_obs] real ts;"
 
   body_block <- paste(decl, data_decl, final_decl, sep = "\n")
 
@@ -35,7 +33,7 @@ stan_data <- function(meas_mdl, unk_inits, LFO_CV, data_params, data_inits,
   paste("data {", body_block, "}", sep = "\n")
 }
 
-construct_data_decl <- function(meas_obj, LFO_CV) {
+construct_data_decl <- function(meas_obj) {
 
   decomposed_meas <- decompose_meas(meas_obj)
   lhs             <- decomposed_meas$lhs
@@ -50,9 +48,5 @@ construct_data_decl <- function(meas_obj, LFO_CV) {
 
   if(meas_size == Inf) meas_ipt_ln <- stringr::str_glue("  array[n_obs] {type} {lhs};")
 
-  if(!LFO_CV) return(meas_ipt_ln)
-
-  pred_data_line <- stringr::str_glue("  {type} {lhs}_ahead;")
-
-  paste(meas_ipt_ln, pred_data_line, sep = "\n")
+  meas_ipt_ln
 }

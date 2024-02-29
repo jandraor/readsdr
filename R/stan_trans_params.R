@@ -1,13 +1,11 @@
 
 stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
-                              data_params, LFO_CV) {
+                              data_params) {
 
   n_difeq <- length(lvl_obj)
 
-  sim_output_decl <- ifelse(
-    LFO_CV,
-    stringr::str_glue("  array[n_obs + 1] vector[{n_difeq}] x; // Output from the ODE solver"),
-    stringr::str_glue("  array[n_obs] vector[{n_difeq}] x; // Output from the ODE solver"))
+  sim_output_decl <- stringr::str_glue(
+    "  array[n_obs] vector[{n_difeq}] x; // Output from the ODE solver")
 
   par_assigned_names <- pars_assigned(estimated_params, data_params)
   n_params           <- length(par_assigned_names)
@@ -39,10 +37,6 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
       paste(collapse = "\n")
 
     var_decl <- paste(var_decl, par_trans_decl, sep = "\n")
-  }
-
-  if(LFO_CV) {
-    var_decl <- paste(var_decl, "  real y_pred;", sep = "\n")
   }
 
   # Assignments
@@ -79,13 +73,6 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
 
     asg <- paste(asg, delta_asg, sep = "\n")
 
-    if(LFO_CV) asg <- paste(asg, get_pred_asg(meas_mdl, lvl_names, "delta_meas"), sep = "\n")
-  }
-
-  if(length(delta_meas) == 0 & LFO_CV) {
-
-    y_pred_asg <- get_pred_asg(meas_mdl, lvl_names, "stock_meas")
-    asg        <- paste(asg, y_pred_asg, sep = "\n")
   }
 
   block_body <- paste(var_decl, asg, sep = "\n")
