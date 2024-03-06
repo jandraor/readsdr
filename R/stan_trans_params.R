@@ -82,17 +82,6 @@ stan_trans_params <- function(estimated_params, meas_mdl, lvl_obj, unk_inits,
         "}", sep = "\n")
 }
 
-get_trans_line <- function(par_obj) {
-
-  par_trans <- par_obj$par_trans
-  par_name  <- par_obj$name
-
-  if(par_trans == "inv") {
-
-    return(stringr::str_glue("  {par_name} = 1 / inv_{par_name};"))
-  }
-}
-
 construct_stock_init_lines <- function(stock_list, unk_init_list) {
 
   lines_list <- purrr::imap_chr(stock_list, function(stk_obj, i) {

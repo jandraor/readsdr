@@ -70,29 +70,6 @@ get_dist_dens_mass_fun <- function(lhs, dist_obj, lvl_names, delta_counter) {
        delta_counter = delta_counter)
 }
 
-get_ll_pred_asg <- function(meas_mdl, lvl_names) {
-
-  delta_counter <- 1
-  n_meas        <- length(meas_mdl)
-
-  ll_lines <- vector(mode = "character", length = n_meas)
-
-  for(i in seq_len(n_meas)) {
-
-    meas_obj        <- meas_mdl[[i]]
-    decomposed_meas <- decompose_meas(meas_obj)
-    dist_obj        <- get_dist_obj(decomposed_meas$rhs)
-    prob_fun_obj    <- get_dist_dens_mass_fun(decomposed_meas$lhs, dist_obj,
-                                              lvl_names, delta_counter)
-
-    delta_counter <- prob_fun_obj$delta_counter
-    ll_lines[[i]] <- prob_fun_obj$rhs
-  }
-
-  ll_lines |> paste(collapse = "+") |> paste0(";")
-}
-
-
 get_density_statement <- function(dist_obj) {
 
   d_name <- dist_obj$dist_name
