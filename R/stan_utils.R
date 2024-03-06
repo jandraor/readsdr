@@ -144,6 +144,8 @@ tidy_meas_params <- function(meas_obj, estimated_params) {
                       par_trans = "inv")
 
     estimated_params <- c(estimated_params, list(prior_obj))
+
+    message(stringr::str_glue("readsdr added the prior `exp(5)` to the inverse of {dist_obj$phi}"))
   }
 
   if(dn == "normal" | dn == "lognormal") {
