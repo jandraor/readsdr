@@ -57,7 +57,7 @@ sd_loglik_fun <- function(filepath, unknown_pars, meas_data_mdl,
 
   meas_mdl  <- lapply(meas_data_mdl, function(meas_obj) meas_obj$formula)
 
-  detected_mp <- lapply(meas_mdl, extract_extra_params) %>% remove_NULL()
+  detected_mp <- lapply(meas_mdl, extract_extra_params) |> remove_NULL()
   detected_mp <- detected_mp[!duplicated(detected_mp)]
   #measurement parameters (mp)
   mp_names  <- get_raw_names(detected_mp, "par_name")
@@ -347,29 +347,39 @@ meas_mdl_rhs <- function(second_par, unknown_pars, par_names, supplied_pars) {
   rhs
 }
 
-get_constraint_text <- function(extra_constraints, pars_df) {
-  pars_df2  <- dplyr::mutate(pars_df,
-                             pos = dplyr::row_number())
+extract_extra_params <- function(meas_obj) {
 
-  sapply(extra_constraints, function(constraint) {
+  decomposed_meas <- decompose_meas(meas_obj)
+  dist_obj        <- get_dist_obj(decomposed_meas$rhs)
+  dn              <- dist_obj$dist_name
 
-    condition <- identify_pars(constraint, pars_df2)
-    stringr::str_glue("if({condition}) return(-Inf)")
-  }) -> constraints_vector
+  if(dn == "neg_binomial_2") {
 
-  paste(constraints_vector, collapse = "\n")
-}
+    if(is_string_numeric(dist_obj$phi)) return(NULL)
 
-identify_pars <- function(equation, pars_df) {
+    par_name <- as.character(stringr::str_glue("inv_{dist_obj$phi}"))
 
-  n_rows <- nrow(pars_df)
+    prior_obj <- list(par_name  = par_name,
+                      dist      = "exponential",
+                      beta      = 5,
+                      min       = 0,
+                      type      = "meas_par",
+                      par_trans = "inv")
 
-  for(i in seq_len(n_rows)) {
-    pattern     <- paste0("\\b", pars_df[[i, "name"]], "\\b")
-    idx         <- pars_df[[i, "pos"]]
-    replacement <- stringr::str_glue("pars[[{idx}]]")
-    equation    <- stringr::str_replace_all(equation, pattern, replacement)
+    return(prior_obj)
   }
 
-  equation
+  if(dn == "normal" | dn == "lognormal") {
+
+    par_name <- as.character(stringr::str_glue("{dist_obj$sigma}"))
+
+    prior_obj <- list(par_name  = par_name,
+                      min       = 0,
+                      type      = "meas_par")
+
+    return(prior_obj)
+
+  }
+
+  NULL
 }

@@ -112,27 +112,57 @@ Stan_to_R <- function(dist_name, type = "r") {
 
 get_meas_params <- function(meas_mdl, estimated_params) {
 
-  pars_names    <- get_names(estimated_params, "par_name")
+  for(meas_obj in meas_mdl) {
 
-  extra_params <- lapply(meas_mdl, extract_extra_params) |> remove_NULL()
-  extra_params <- extra_params[!duplicated(extra_params)]
+    estimated_params <- tidy_meas_params(meas_obj, estimated_params)
 
-  if(length(extra_params) > 0) {
+  }
 
-    for(extra_par_obj in extra_params) {
+  estimated_params <- estimated_params[!duplicated(estimated_params)]
 
-      extra_par_name <- extra_par_obj$par_name
+  estimated_params
+}
 
-      if(extra_par_name %in% pars_names) {
+tidy_meas_params <- function(meas_obj, estimated_params) {
 
-        pos_prior      <- which(extra_par_name == pars_names)
-        estimated_params[[pos_prior]]$type <- "meas_par"
-      } else estimated_params <- c(estimated_params, list(extra_par_obj))
+  decomposed_meas <- decompose_meas(meas_obj)
+  dist_obj        <- get_dist_obj(decomposed_meas$rhs)
+  pars_names      <- get_names(estimated_params, "par_name")
+  dn              <- dist_obj$dist_name
+
+  if(dn == "neg_binomial_2") {
+
+    if(is_string_numeric(dist_obj$phi)) return(estimated_params)
+
+    par_name <- as.character(stringr::str_glue("inv_{dist_obj$phi}"))
+
+    prior_obj <- list(par_name  = par_name,
+                      dist      = "exponential",
+                      beta      = 5,
+                      min       = 0,
+                      type      = "meas_par",
+                      par_trans = "inv")
+
+    estimated_params <- c(estimated_params, list(prior_obj))
+  }
+
+  if(dn == "normal" | dn == "lognormal") {
+
+    meas_par_name <- as.character(stringr::str_glue("{dist_obj$sigma}"))
+
+    if(!meas_par_name %in% pars_names) {
+
+      msg <- stringr::str_glue("Please add a prior for `{meas_par_name}`.")
+      stop(msg, call. = FALSE)
     }
+
+    pos_prior                          <- which(meas_par_name == pars_names)
+    estimated_params[[pos_prior]]$type <- "meas_par"
   }
 
   estimated_params
 }
+
 
 translate_stock_text <- function(stock_txt, delta_counter, lvl_names,
                                  array_name = "x") {

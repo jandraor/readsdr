@@ -146,6 +146,21 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
 
   skip_on_os("windows")
   expect_equal(actual, expected)
+
+  # nbin version
+
+  measurements <- stringr::str_glue("y_{ag} ~ neg_binomial_2(net_flow(C_{ag}), phi)")
+  meas_mdl     <- as.list(measurements)
+
+  actual <- sd_Bayes(filepath = filepath,
+                     meas_mdl = meas_mdl,
+                     estimated_params = estimated_params)
+
+  fileName <- "./test_stan_files/SEIR_age_nbin.stan"
+
+  expected <- readChar(fileName, file.info(fileName)$size)
+
+  expect_equal(actual, expected)
 })
 
 test_that("sd_Bayes() allows users to override delay metaparameters", {
@@ -200,31 +215,18 @@ test_that("sd_Bayes() handles the LV model", {
   expect_equal(actual, expected)
 })
 
-#---------extract_extra_params()------------------------------------------------
+test_that("sd_Bayes() checks the prior of a normal distribution", {
 
-test_that("extract_extra_params() returns the expected list", {
+  filepath <- system.file("models/", "SEIR.stmx", package = "readsdr")
 
-  meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"
-  actual   <- extract_extra_params(meas_obj)
+  mm1      <- "y ~ normal(net_flow(C), tau)"
+  meas_mdl <- list(mm1)
 
-  expected <- list(par_name  = "inv_phi",
-                   dist      = "exponential",
-                   beta      = 5,
-                   min       = 0,
-                   type      = "meas_par",
-                   par_trans = "inv")
+  estimated_params <- list(
+    sd_prior("par_beta", "lognormal", c(0, 1)),
+    sd_prior("par_rho", "beta", c(2, 2)),
+    sd_prior("I0", "lognormal", c(0, 1), "init"))
 
-  expect_equal(actual, expected)
-
-  meas_obj <- "y ~ normal(net_flow(C), tau)"
-
-  actual   <- extract_extra_params(meas_obj)
-
-  expected <- list(par_name  = "tau",
-                   dist      = "exponential",
-                   beta      = 1,
-                   min       = 0,
-                   type      = "meas_par")
-
-  expect_equal(actual, expected)
+  expect_error(sd_Bayes(filepath, meas_mdl, estimated_params),
+               "Please add a prior for `tau`.")
 })

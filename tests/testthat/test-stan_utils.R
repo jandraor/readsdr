@@ -58,3 +58,21 @@ test_that("translate_stock_text() returns the expected object", {
 
   expect_equal(actual, expected)
 })
+
+#---------tidy_meas_params()------------------------------------------------
+
+test_that("tidy_meas_params() returns the expected list", {
+
+  meas_obj <- "y ~ neg_binomial_2(net_flow(C), phi)"
+  actual   <- tidy_meas_params(meas_obj, list())
+
+  expected <- list(
+    list(par_name  = "inv_phi",
+         dist      = "exponential",
+         beta      = 5,
+         min       = 0,
+         type      = "meas_par",
+         par_trans = "inv"))
+
+  expect_equal(actual, expected)
+})
