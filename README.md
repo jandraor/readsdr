@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Codecov test
-coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://codecov.io/gh/jandraor/readsdr?branch=master)
+coverage](https://codecov.io/gh/jandraor/readsdr/branch/master/graph/badge.svg)](https://app.codecov.io/gh/jandraor/readsdr?branch=master)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/readsdr)](https://CRAN.R-project.org/package=readsdr)
 [![R-CMD-check](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jandraor/readsdr/actions/workflows/R-CMD-check.yaml)
@@ -139,11 +139,10 @@ Thanks to:
   and push forward this endeavour.
 - Sergey Naumov for his ideas to implement several functions in this
   package.
-- [Jim
-  Duggan](http://www.nuigalway.ie/our-research/people/engineering-and-informatics/jamesduggan/)
-  from whom I borrowed ideas to implement this package.
+- [Jim Duggan](https://github.com/JimDuggan) from whom I borrowed ideas
+  to implement this package.
 
 ## References
 
 [Duggan, J. (2016). *System Dynamics Modeling with R*.
-Springer.](https://www.springer.com/us/book/9783319340418)
+Springer.](https://link.springer.com/book/10.1007/978-3-319-34043-2)
