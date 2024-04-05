@@ -53,15 +53,15 @@ devtools::install_github("jandraor/readsdr")
 library(readsdr)
 filepath <- system.file("models/", "SIR.stmx", package = "readsdr")
 mdl      <- read_xmile(filepath) 
-summary(mdl)
 ```
 
 For reading Vensim models, they must be exported as .xmile. 
 
-For information on how to use this package, see the [vignette](https://CRAN.R-project.org/package=readsdr/vignettes/Introduction_to_readsdr.html)
-or type `vignette("Introduction_to_readsdr")` in R.
-
 ## Tutorials
+
+For information on how to use this package, please check:
+
+* [Basics](https://jandraor.github.io/tutorials/Basics.html)
 
 * [Inference](https://jandraor.github.io/tutorials/Inference.html)
 

@@ -20,6 +20,8 @@ sd_what_if_from_time <- function(time, up_to_time = Inf, par_list, ds_inputs,
                                  start_time = NULL, stop_time = NULL,
                                  timestep = NULL, integ_method = "euler") {
 
+  stopifnot("'up_to_time' must be greater than 'time'" = up_to_time > time)
+
   unchanged_consts <- ds_inputs$consts
 
   if(!is.null(start_time)) {
