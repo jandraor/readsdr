@@ -62,17 +62,23 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   if(any_unk_const) {
 
-    const_idx <- which(unk_types == "constant")
-    mdl_pars  <- sapply(estimated_params[const_idx],
-                        function(prior_obj) prior_obj$par_name)
+    const_idx          <- which(unk_types == "constant")
+    mdl_pars_no_inits  <- sapply(estimated_params[const_idx],
+                                 function(prior_obj) prior_obj$par_name)
   }
 
-  if(!is.null(data_params)) mdl_pars <- c(mdl_pars, data_params)
+  if(!is.null(data_params)) mdl_pars_no_inits <- c(mdl_pars_no_inits,
+                                                   data_params)
 
-  params <- c(est_params_names, data_params, data_inits)
+  idx            <- which(unk_types != "meas_par")
+  mdl_pars_inits <- get_names(estimated_params[idx], "par_name")
 
-  mdl_structure <- extract_structure_from_XMILE(filepath, params,
-                                                const_list = const_list)
+  # Parameters only affecting the system model (X)
+  X_params <- c(mdl_pars_inits, data_params, data_inits)
+
+  mdl_structure <- extract_structure_from_XMILE(filepath,
+                                                inits_vector = X_params,
+                                                const_list   = const_list)
   lvl_obj       <- mdl_structure$levels
   lvl_names     <- get_names(mdl_structure$levels)
 
@@ -83,7 +89,7 @@ sd_Bayes <- function(filepath, meas_mdl, estimated_params, data_params = NULL,
 
   ODE_fn      <- "X_model"
   stan_fun    <- stan_ode_function(func_name       = ODE_fn,
-                                   pars            = mdl_pars,
+                                   pars            = mdl_pars_no_inits,
                                    const_list      = const_list,
                                    XMILE_structure = mdl_structure)
 

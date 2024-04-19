@@ -1,4 +1,7 @@
-# inits_vector is only used for sd_bayes()
+# @param inits_vector is specific for inference functions (eg. sd_Bayes, sd_loglik_fun).
+# This character vector indicates that these parameters must not be
+# evaluated in the calculation of initial values. In other words, they are left
+# for estimation.
 extract_structure_from_XMILE <- function(filepath, inits_vector = NULL,
                                          const_list = NULL) {
 
@@ -50,7 +53,21 @@ extract_structure_from_XMILE <- function(filepath, inits_vector = NULL,
     args_fun$builtin_stocks <- vars_and_consts$builtin_stocks
   }
 
-  if(!is.null(inits_vector)) args_fun$fixed_inits <- inits_vector
+  if(!is.null(inits_vector)) {
+
+    const_names <- get_names(constants)
+    nxt_pars    <- inits_vector[!inits_vector %in% const_names] # non-existent pars
+
+    if(length(nxt_pars) > 0) {
+
+      fmt_pars <- paste(nxt_pars, collapse = ", ")
+
+      msg <- stringr::str_glue("Parameter(s) `{fmt_pars}` missing in the model")
+      stop(msg, call. = FALSE)
+    }
+
+    args_fun$fixed_inits <- inits_vector
+  }
 
   levels         <- do.call("create_level_obj_xmile", args_fun)
 
@@ -117,15 +134,16 @@ compute_init_value <- function(var_name, equation, auxs, fixed_inits) {
 }
 
 sanitise_elem_name <- function(elem_name) {
-  elem_name %>%
-    stringr::str_replace_all("\n|\t|~","") %>%
+
+  elem_name |>
+    stringr::str_replace_all("\n|\t|~","") |>
     stringr::str_replace_all(" |\\\\n", "_")
 }
 
 sanitise_init_value <- function(init_value, vendor, is_arrayed) {
 
-  clean_init <- init_value %>%
-    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
+  clean_init <- init_value |>
+    stringr::str_replace_all("\\{.*?\\}", "") |> # removes commentaries
     stringr::str_replace_all("\n|\t|~","")
 
   if(is_arrayed) clean_init <- purrr::map_chr(clean_init, sanitise_arrays,
@@ -135,18 +153,19 @@ sanitise_init_value <- function(init_value, vendor, is_arrayed) {
 }
 
 sanitise_aux_equation <- function(equation, vendor) {
+
   sanitised_equation <- sanitise_arrays(equation, vendor)
 
-  sanitised_equation %>%
-    translate_if_else_functions(vendor) %>%
-    stringr::str_replace_all("\n|\t|~| ","") %>%
-    stringr::str_replace_all("\\{.*?\\}", "") %>%  # removes commentaries
-    translate_extrema() %>%
-    translate_math_funs() %>%
-    translate_stat_funs(vendor) %>%
-    translate_logical_operators(vendor) %>%
-    translate_comparison_operators() %>%
-    translate_time_builtins() %>%
+  sanitised_equation |>
+    translate_if_else_functions(vendor) |>
+    stringr::str_replace_all("\n|\t|~| ","") |>
+    stringr::str_replace_all("\\{.*?\\}", "") |> # removes commentaries
+    translate_extrema() |>
+    translate_math_funs() |>
+    translate_stat_funs(vendor) |>
+    translate_logical_operators(vendor) |>
+    translate_comparison_operators() |>
+    translate_time_builtins() |>
     eval_constant_expr() # Must go at the end
 }
 
@@ -160,6 +179,7 @@ sanitise_aux_equation <- function(equation, vendor) {
 #' @return A string
 #' @noRd
 eval_constant_expr <- function(equation) {
+
   tryCatch(
     error = function(cnd) equation,
     {
@@ -170,6 +190,7 @@ eval_constant_expr <- function(equation) {
 }
 
 check_elem_name <- function(elem_name) {
+
   is_valid <- make.names(elem_name) == elem_name
 
   if(!is_valid) {
@@ -182,7 +203,7 @@ check_elem_name <- function(elem_name) {
 
 which_vendor <- function(raw_xml) {
 
-  vendor_raw <- xml2::xml_find_first(raw_xml, ".//d1:vendor") %>%
+  vendor_raw <- xml2::xml_find_first(raw_xml, ".//d1:vendor") |>
     xml2::xml_text()
 
   is_Vensim <- stringr::str_detect(vendor_raw, "Ventana")
@@ -206,8 +227,8 @@ safe_read <- function(filepath) {
           stop("Invalid XML file", call. = FALSE)
 
         },
-        readChar(filepath, file.info(filepath)$size) %>%
-          sanitise_xml() %>% xml2::read_xml()
+        readChar(filepath, file.info(filepath)$size) |>
+          sanitise_xml() |> xml2::read_xml()
       )
 
     },
@@ -232,6 +253,7 @@ sanitise_arrays <- function(equation, vendor) {
 }
 
 safe_eval <- function(equation, env) {
+
   tryCatch(
     error = function(cnd) equation,
     eval(parse(text = equation), envir = env)
