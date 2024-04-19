@@ -71,7 +71,7 @@ For information on how to use this package, please check:
   - Delay functions: `DELAYN`
   - Limited support to *uni-dimensional* arrays. *Apply all* translation
     is restricted to numeric values.
-  - Math functions: `ABS`, `SQRT`
+  - Math functions: `ABS`, `EXP`, `SQRT`
   - Stats functions: `NORMAL`<sup>3</sup>
 - **Vensim**
   - Comparison operators (`=`, `<>`)
@@ -85,7 +85,7 @@ For information on how to use this package, please check:
   - Smoothing functions<sup>2</sup>: `SMOOTH`, `SMOOTH3`, `SMOOTH3I`,
     `SMOOTHI`
   - Delay functions: `DELAY N`
-  - Math functions: `ABS`, `SQRT`
+  - Math functions: `ABS`, `EXP`, `SQRT`
   - Limited support to *bi-dimensional* arrays.
   - Stats functions: `RANDOM NORMAL`<sup>3</sup>
 

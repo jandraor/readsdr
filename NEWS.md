@@ -1,5 +1,9 @@
 # readsdr (development version)
 
+## New features
+
+* Support the translation of *EXP*
+
 # readsdr 0.3.0
 
 ## Breaking changes
