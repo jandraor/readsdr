@@ -57,3 +57,54 @@ decode_estimates <- function(estimate_list, par_list) {
   data.frame(output_list)
 }
 
+#' Calculate confidence intervals
+#'
+#' @param hsn Hessian matrix
+#' @param conf_level A numeric input indicating the confidence level
+#'
+#' @inheritParams sd_interpret_estimates
+#'
+#' @return A data frame.
+#' @export
+#'
+#' @examples
+#' estimates <- c(-0.2630303, 1.5788579)
+#' par_list  <- list(list(par_name  = "par_inv_R0",
+#'                        par_trans = "expit"),
+#'                   list(par_name  = "I0",
+#'                        par_trans = "exp"))
+#' hsn <- matrix(c(3513.10521, -493.5469626,
+#'                 -493.5469626, 88.4871290), ncol = 2)
+#' sd_conf_intervals(estimates, par_list, hsn)
+sd_conf_intervals <- function(estimates, par_list, hsn, conf_level = 0.95) {
+
+  alpha <- 1 - conf_level
+
+  cov_matrix <- solve(hsn)
+
+  SE <- sqrt(diag(cov_matrix)) # Standard errors
+
+  lower_bounds <- sd_interpret_estimates(estimates +
+                                           stats::qnorm(alpha / 2) * SE,
+                                         par_list)
+
+  upper_bounds <- sd_interpret_estimates(estimates +
+                                           stats::qnorm(1 - alpha / 2) * SE,
+                                         par_list)
+
+  df <- data.frame(lb        = as.numeric(lower_bounds[1, ,]),
+                   ub        = as.numeric(upper_bounds[1, ,]))
+
+  min_max <- apply(df, 1, function(x) c(min(x), max(x)))
+
+  result_df <- data.frame(parameter = colnames(lower_bounds),
+                          lb = min_max[1, ],
+                          ub = min_max[2, ])
+
+  colnames(result_df) <- c("parameter",
+                           paste0(round(100 * alpha / 2,1), "%"),
+                           paste0(round(100 * (1 - alpha / 2),2), "%"))
+
+  result_df
+}
+

@@ -35,3 +35,26 @@ test_that("sd_interpret_estimates() returns the expected data frame", {
 
  expect_equal(actual, expected, tol = 1e-4)
 })
+
+test_that("sd_conf_intervals returns the expected data frame", {
+
+  estimates <- c(-0.2630303135, 1.5788579359)
+
+  par_list  <- list(list(par_name  = "par_inv_R0",
+                         par_trans = "expit"),
+                    list(par_name  = "I0",
+                         par_trans = "exp"))
+
+  hsn    <- matrix(c(3513.105214, -493.5469626, -493.5469626, 88.48712899),
+                   ncol = 2)
+
+  actual <- sd_conf_intervals(estimates, par_list, hsn)
+
+  expected <- data.frame(X1 = c("par_inv_R0", "I0"),
+                         X2 = c(0.4172404, 3.0986791),
+                         X3 = c(0.4521597, 7.5893045))
+
+  names(expected) <- c("parameter", "2.5%", "97.5%")
+
+  expect_equal(actual, expected)
+})
