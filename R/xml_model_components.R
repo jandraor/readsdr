@@ -17,7 +17,7 @@ create_dims_obj <- function(raw_xml) {
 
   dictionary <- lapply(model_elems, function(elem_obj) {
 
-    elem_name <- xml2::xml_attr(elem_obj, "name") %>% sanitise_elem_name()
+    elem_name <- xml2::xml_attr(elem_obj, "name") |> sanitise_elem_name()
 
     dim_xml   <- xml2::xml_find_all(elem_obj, ".//d1:dimensions")
     dim_tags  <- xml2::xml_find_all(dim_xml, ".//d1:dim")
@@ -32,7 +32,7 @@ create_dims_obj <- function(raw_xml) {
     dict_obj        <- list(dim_names)
     names(dict_obj) <- elem_name
     dict_obj
-  }) %>% remove_NULL() %>% unlist(recursive = FALSE)
+  }) |> remove_NULL() |> unlist(recursive = FALSE)
 
 
   list(global_dims = dims_list,
@@ -56,11 +56,11 @@ extract_dim_elems <- function(dim_tag) {
 
 create_param_obj_xmile <- function(sim_specs) {
 
-  start      <- sim_specs %>% xml2::xml_find_first("//d1:start") %>%
+  start      <- sim_specs |> xml2::xml_find_first("//d1:start") |>
     xml2::xml_double()
-  stop       <- sim_specs %>% xml2::xml_find_first("//d1:stop") %>%
+  stop       <- sim_specs |> xml2::xml_find_first("//d1:stop") |>
     xml2::xml_double()
-  dt_html    <- sim_specs %>% xml2::xml_find_first("//d1:dt")
+  dt_html    <- sim_specs |> xml2::xml_find_first("//d1:dt")
   dt         <- xml2::xml_double(dt_html)
 
   if(xml2::xml_has_attr(dt_html ,"reciprocal")) {
@@ -120,6 +120,9 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
 
   is_arrayed <- ifelse(n_dims > 0, TRUE, FALSE)
 
+  stock_names <- stock_xml |> xml2::xml_attr("name") |>
+    sanitise_elem_name() |>  check_elem_name()
+
   if(is_arrayed) {
 
     global_dims <- dims_obj$global_dims
@@ -133,12 +136,14 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
     dims_list        <- lapply(dim_names, function(dim_name) global_dims[[dim_name]])
     names(dims_list) <- dim_names
     elems            <- combine_dims(dims_list)
+
+    stock_names <- paste(stock_names, elems, sep = "_")
   }
 
-  inflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:inflow") %>%
-    xml2::xml_text() %>% sanitise_elem_name()
+  inflow_vctr <- stock_xml |> xml2::xml_find_all(".//d1:inflow") |>
+    xml2::xml_text() |> sanitise_elem_name()
 
-  n_inflow    <- length(inflow_vctr)
+  n_inflow <- length(inflow_vctr)
 
   if(n_inflow > 0L) {
 
@@ -152,8 +157,8 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
                                                                 collapse = "+"))
   }
 
-  outflow_vctr <- stock_xml %>% xml2::xml_find_all(".//d1:outflow") %>%
-    xml2::xml_text() %>% sanitise_elem_name()
+  outflow_vctr <- stock_xml |> xml2::xml_find_all(".//d1:outflow") |>
+    xml2::xml_text() |> sanitise_elem_name()
 
   n_outflow    <- length(outflow_vctr)
 
@@ -166,32 +171,23 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
     }
 
     text_outflow  <- sapply(outflow_list, function(outflows) {
-      paste0("-", outflows) %>% paste(collapse = "")
+      paste0("-", outflows) |> paste(collapse = "")
     })
 
   }
 
-  if(n_inflow > 0L && n_outflow > 0L) {
-    netflows <- paste0(text_inflow, text_outflow)
-  }
+  if(n_inflow > 0L && n_outflow > 0L) netflows <- paste0(text_inflow,
+                                                         text_outflow)
 
-  if(n_inflow > 0L && n_outflow == 0L) {
-    netflows <- text_inflow
-  }
+  if(n_inflow > 0L && n_outflow == 0L) netflows <- text_inflow
 
-  if(n_inflow == 0L && n_outflow > 0L) {
-    netflows <- text_outflow
-  }
+  if(n_inflow == 0L && n_outflow > 0L) netflows <- text_outflow
 
   if(n_inflow == 0L && n_outflow == 0L) {
+
     netflows <- "0"
-  }
-
-  stock_names <- stock_xml %>% xml2::xml_attr("name") %>%
-    sanitise_elem_name() %>% check_elem_name()
-
-  if(is_arrayed) {
-    stock_names <- paste(stock_names, elems, sep = "_")
+    msg <- stringr::str_glue("Stock `{stock_names}` has no flows. Check your XMILE file. See https://github.com/jandraor/readsdr for more info if your model was created in Vensim.")
+    warning(msg, call. = FALSE)
   }
 
   #-----------------------------------------------------------------------------
@@ -200,15 +196,14 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
   child_names  <- xml2::xml_name(cld_xml)
 
 
-
   approach <- ifelse(is_arrayed & "eqn" %in% child_names,
                      "approach_1", "approach_2")
 
   # Apply all from Stella
   if(approach == "approach_1") {
 
-    eqn <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
-      xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
+    eqn <- stock_xml |> xml2::xml_find_all(".//d1:eqn") |>
+      xml2::xml_text() |> sanitise_init_value(vendor, is_arrayed)
 
     aux_obj <- list(name     = stock_names,
                     equation = eqn)
@@ -220,12 +215,9 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
 
   if(approach == "approach_2") {
 
-    initValues <- stock_xml %>% xml2::xml_find_all(".//d1:eqn") %>%
-     xml2::xml_text() %>% sanitise_init_value(vendor, is_arrayed)
+    initValues <- stock_xml |> xml2::xml_find_all(".//d1:eqn") |>
+     xml2::xml_text() |> sanitise_init_value(vendor, is_arrayed)
   }
-
-
-
 
   n_init <- length(initValues)
 
@@ -240,7 +232,6 @@ extract_stock_info <- function(stock_xml, dims_obj, vendor) {
       }
     }
   }
-
 
   #-----------------------------------------------------------------------------
 

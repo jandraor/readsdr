@@ -95,6 +95,7 @@ test_that("create_level_obj_xmile() returns the expected object", {
 })
 
 test_that("create_level_obj_xmile() deals with levels with no flows", {
+
   test_stocks_xml <- xml2::read_xml('
   <root>
     <doc1 xmlns = "http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
@@ -104,8 +105,7 @@ test_that("create_level_obj_xmile() deals with levels with no flows", {
         </stock>
       </variables>
     </doc1>
-  </root>') %>%
-    xml2::xml_find_all(".//d1:stock")
+  </root>') |> xml2::xml_find_all(".//d1:stock")
 
   test_vars   <- list()
   test_consts <- list()
@@ -113,9 +113,9 @@ test_that("create_level_obj_xmile() deals with levels with no flows", {
   time_aux   <- list(name     = "time",
                      equation = 0)
 
-  level_obj    <- create_level_obj_xmile(test_stocks_xml,
+  level_obj    <- suppressWarnings(create_level_obj_xmile(test_stocks_xml,
                                          test_vars, test_consts,
-                                         time_aux = time_aux)
+                                         time_aux = time_aux))
   actual_obj   <- level_obj[[1]]
 
   expected_obj <- list(name = "Population",
@@ -123,6 +123,10 @@ test_that("create_level_obj_xmile() deals with levels with no flows", {
                        initValue = 100)
 
   expect_equal(actual_obj, expected_obj)
+
+  expect_warning(create_level_obj_xmile(test_stocks_xml,
+                                        test_vars, test_consts,
+                                        time_aux = time_aux))
 })
 
 test_that("create_level_obj_xmile() works should levels depend on other levels in init values", {

@@ -47,7 +47,13 @@ filepath <- system.file("models/", "SIR.stmx", package = "readsdr")
 mdl      <- read_xmile(filepath) 
 ```
 
-For reading Vensim models, they must be exported as .xmile.
+Vensim models can only be read if they are exported in the .xmile
+format. Sometimes, Vensim .xmile files can be problematic, where **some
+stocks may not have flows**, and flow equations are put as initial
+values. One way to address this issue is by copying the .mdl file to a
+different folder and exporting the .xmile file again. If you encounter
+this issue, please let the developers know at Vensim’s
+[forum](https://www.ventanasystems.co.uk/forum).
 
 ## Tutorials
 
@@ -109,6 +115,10 @@ smoothing function and **nothing else**.
 ## Applications
 
 This package has been instrumental in the following works:
+
+- [Andrade et al (2024)](https://doi.org/10.1002/sdr.1775). *Preparing
+  for pandemic response in the context of limited resources*. **System
+  Dynamics Review**.
 
 - [Andrade & Duggan (2023)](https://doi.org/10.1098/rsos.230515).
   *Anchoring the mean generation time in the SEIR to mitigate biases in*

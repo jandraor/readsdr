@@ -55,7 +55,12 @@ filepath <- system.file("models/", "SIR.stmx", package = "readsdr")
 mdl      <- read_xmile(filepath) 
 ```
 
-For reading Vensim models, they must be exported as .xmile. 
+Vensim models can only be read if they are exported in the .xmile format. 
+Sometimes, Vensim .xmile files can be problematic, where **some stocks may not 
+have flows**, and flow equations are put as initial values. One way to address 
+this issue is by copying the .mdl file to a different folder and exporting the 
+.xmile file again. If you encounter this issue, please let the developers know 
+at Vensim's [forum](https://www.ventanasystems.co.uk/forum).
 
 ## Tutorials
 
@@ -114,6 +119,8 @@ For information on how to use this package, please check:
 
 This package has been instrumental in the following works:
 
+* [Andrade et al (2024)](https://doi.org/10.1002/sdr.1775). _Preparing for pandemic response in the context of limited resources_.  **System Dynamics Review**.
+
 * [Andrade & Duggan (2023)](https://doi.org/10.1098/rsos.230515). _Anchoring the mean generation time in the SEIR to mitigate biases in_ $\Re_0$ _estimates due to uncertainty in the distribution of the epidemiological delays_. **Royal Society Open Science**.
 
 * [Andrade & Duggan (2022)](https://doi.org/10.1371/journal.pcbi.1010206). _Inferring the effective reproductive number from deterministic and semi-deterministic compartmental models using incidence and mobility data_. **PLOS Computational Biology**.
@@ -121,9 +128,6 @@ This package has been instrumental in the following works:
 * [Andrade & Duggan (2021)](https://doi.org/10.1002/sdr.1693). _A Bayesian approach to calibrate system dynamics models using Hamiltonian Monte Carlo_. **System Dynamics Review**.
 
 * [Andrade & Duggan (2020)](https://doi.org/10.1016/j.epidem.2020.100415). _An evaluation of Hamiltonian Monte Carlo performance to calibrate age-structured compartmental SEIR models to incidence data_. **Epidemics**.
-
-
-
 
 
 ## Acknowledgments
