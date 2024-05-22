@@ -80,10 +80,10 @@ test_that("sd_measurements() returns the expected data frame for the measurement
                             timestep     = 1/16,
                             integ_method = "rk4")
 
-  output          <- sd_simulate(mdl$deSolve_components,
-                                 start_time = 0,
-                                 stop_time = 10, timestep = 1/16,
-                                 integ_method = "rk4")
+  output <- sd_simulate(mdl$deSolve_components,
+                        start_time = 0,
+                        stop_time = 10, timestep = 1/16,
+                        integ_method = "rk4")
 
   net_change_df <- sd_net_change(output, "C")
 
@@ -121,6 +121,39 @@ test_that("sd_measurements() returns the expected data frame for the measurement
                          time        = rep(1:10, 2),
                          var_name    = "y",
                          measurement = c(y1, y2))
+
+  expect_equal(actual, expected)
+})
+
+test_that("sd_measurements() handles transformations", {
+
+  filepath   <- "./test_models/pop_births.stmx"
+  mdl        <- read_xmile(filepath)
+
+  meas_model <- list("y ~ lognormal(log(P), 0.1)")
+
+  set.seed(123)
+
+  actual <- sd_measurements(1,
+                            meas_model   = meas_model,
+                            ds_inputs    = mdl$deSolve_components,
+                            start_time   = 0, stop_time = 2,
+                            integ_method = "rk4", timestep = 1/8)
+
+  set.seed(123)
+
+  sim_output <- sd_simulate(mdl$deSolve_components, start_time = 0,
+                            stop_time = 2, integ_method = "rk4",
+                            timestep = 1/8) |>
+    dplyr::filter(time %in% 0:2)
+
+  meas_vals <- rlnorm(n = 3, meanlog = log(sim_output$P),
+                                           sdlog = 0.1)
+
+  expected <- data.frame(iter        = 1,
+                         time        = 0:2,
+                         var_name    = "y",
+                         measurement = meas_vals)
 
   expect_equal(actual, expected)
 })

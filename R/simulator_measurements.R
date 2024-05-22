@@ -54,15 +54,25 @@ sd_measurements <- function(n_meas, meas_model, ds_inputs,
 measurements_as_is <- function(n_meas, X_output, sampling_obj) {
 
   discrete_df <- X_output[X_output$time - trunc(X_output$time) == 0, ]
-  # This line below assumes that the sampling distribution's first parameter is
-  #   always the measured stock.
+  # Assumes that the sampling distribution's first parameter is the measured stock.
   stk         <- sampling_obj$dist[[2]]
-  stk_df      <- discrete_df[, c("time", stk)]
+
+  trans_pattern <- get_pattern_regex("var_trans")
+  var_trans     <- stringr::str_detect(stk, trans_pattern)
+
+  if(var_trans) {
+
+    ptrn         <- "([:alpha:]+)\\((.+?)\\)"
+    string_match <- stringr::str_match(stk, ptrn)
+    trans        <- string_match[[2]]
+    stk_name     <- string_match[[3]]
+    vals         <- lapply(discrete_df[, stk_name], trans) |> unlist()
+  }
+
+  if(!var_trans) vals <- discrete_df[, stk]
+
   time_vals   <- discrete_df[, "time"]
-  vals        <- discrete_df[, stk]
-
   n_vals      <- length(vals)
-
   r_fun       <- sampling_obj$dist$dist_name
 
   if(length(sampling_obj$dist) == 2L) args <- list(n_vals, vals)
