@@ -56,7 +56,7 @@ test_that("stan_model() returns the expected string for a vectorised model", {
 test_that("stan_model() handles the lognormal distribution", {
 
   estimated_params  <- list(sd_prior("par_alpha", "normal",
-                                     c(1, 0.5), min_0 = TRUE))
+                                     c(1, 0.5), min = 0))
 
   lvl_names <- c("Hares", "Lynx")
 

@@ -73,7 +73,7 @@ test_that("sd_data_generator_fun() returns the expected function for a vectorise
   meas_mdl     <- as.list(measurements)
 
   estimated_params <- list(
-    sd_prior("k_AA", "normal", c(0, 10), min_0 = TRUE),
+    sd_prior("k_AA", "normal", c(0, 10), min = 0),
     sd_prior("par_rho", "beta", c(2, 2)))
 
   actual_fun  <- sd_data_generator_fun(filepath, estimated_params, meas_mdl,

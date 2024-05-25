@@ -2,32 +2,48 @@
 % Please edit documentation in R/priors.R
 \name{sd_prior}
 \alias{sd_prior}
-\title{SD prior}
+\title{Specify priors for the estimated parameters.}
 \usage{
-sd_prior(par_name, dist, dist_pars, type = "constant", min_0 = FALSE)
+sd_prior(par_name, dist, dist_pars, type = "constant", min = NULL, max = NULL)
 }
 \arguments{
-\item{par_name}{A string}
+\item{par_name}{A string indicating the name of the estimated parameter.}
 
-\item{dist}{A string}
+\item{dist}{A string indicating the name of the prior distribution. This name
+should be consistent with Stan language. For instance, "normal" indicates
+the normal distribution in Stan language.}
 
-\item{dist_pars}{A vector}
+\item{dist_pars}{A numeric vector. For instance, if \code{dist} = "normal",
+then \code{dist_pars} will be a vector of size 2 corresponding to
+the \emph{location} (mean) and \emph{scale} (standard deviation).}
 
 \item{type}{A string. It can be either 'constant' or 'init'. It is 'constant'
 by default. 'init' refers to parameters that have only affect the model at
 time 0.}
 
-\item{min_0}{An optional boolean indicating whether the prior has a lower
-bound at zero. In the current implementation, this parameter only has an
-effect on normal priors.}
+\item{min}{An optional numeric or a string value indicating the estimated
+parameter's lower bound. This value overrides the inferred bound from the
+prior distribution. For instance, specifying a beta distribution for the
+estimated parameter inherently sets the lower bound to 0. Providing a
+value to \code{min} will override this default with the supplied value. If
+the supplied value is a string, it should be the name of another estimated
+parameter.}
+
+\item{max}{An optional numeric value or a string indicating the estimated
+parameter's upper bound. This value overrides the inferred bound from the
+prior distribution. For instance, specifying a beta distribution for the
+estimated parameter inherently sets the upper bound to \code{1}. Providing
+a value to \code{max} will override this default with the supplied value.
+If the supplied value is a string, it should be the name of another
+estimated parameter.}
 }
 \value{
 A list
 }
 \description{
-SD prior
+\code{sd_prior} returns a list characterising the features of the prior.
 }
 \examples{
 sd_prior("par_beta", "lognormal", c(0, 1))
-sd_prior("par_rho", "normal", c(0, 1), min_0 = TRUE)
+sd_prior("par_rho", "normal", c(0, 1), min = 0)
 }

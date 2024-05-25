@@ -133,7 +133,7 @@ test_that("sd_Bayes() returns the expected file for vectorised model", {
   meas_mdl     <- as.list(measurements)
 
   estimated_params <- list(
-    sd_prior("k_AA", "normal", c(0, 10), min_0 = TRUE),
+    sd_prior("k_AA", "normal", c(0, 10), min = 0),
     sd_prior("par_rho", "beta", c(2, 2)))
 
   actual <- sd_Bayes(filepath = filepath,
@@ -190,10 +190,10 @@ test_that("sd_Bayes() handles the LV model", {
 
   filepath <- system.file("models/", "LV.stmx", package = "readsdr")
 
-  est_pars <- list(sd_prior("par_alpha", "normal", c(1, 0.5), min_0 = TRUE),
-                   sd_prior("par_gamma", "normal", c(1, 0.5), min_0 = TRUE),
-                   sd_prior("par_beta", "normal", c(0.5, 0.5), min_0 = TRUE),
-                   sd_prior("par_delta", "normal", c(0.5, 0.5), min_0 = TRUE),
+  est_pars <- list(sd_prior("par_alpha", "normal", c(1, 0.5), min = 0),
+                   sd_prior("par_gamma", "normal", c(1, 0.5), min = 0),
+                   sd_prior("par_beta", "normal", c(0.5, 0.5), min = 0),
+                   sd_prior("par_delta", "normal", c(0.5, 0.5), min = 0),
                    sd_prior("sigma_1", "lognormal", c(-1, 1)),
                    sd_prior("sigma_2", "lognormal", c(-1, 1)),
                    sd_prior("H0", "lognormal", c(log(10), 1), type = "init"),

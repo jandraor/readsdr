@@ -28,19 +28,19 @@ test_that("get_meas_params() handles priors for measurement parameters", {
   meas_mdl <- list("y1 ~ lognormal(log(Lynx), sigma_1)")
 
   estimated_params <- list(sd_prior("par_alpha", "normal", c(1, 0.5),
-                                    min_0 = TRUE),
+                                    min = 0),
                            sd_prior("sigma_1", "lognormal", c(-1, 1)))
 
   actual   <- get_meas_params(meas_mdl, estimated_params)
 
   expected <- list(sd_prior("par_alpha", "normal", c(1, 0.5),
-                            min_0 = TRUE),
+                            min = 0),
                    list(par_name = "sigma_1",
                         dist     = "lognormal",
+                        type     = "meas_par",
                         mu       = -1,
                         sigma    = 1,
-                        min      = 0,
-                        type     = "meas_par"))
+                        min      = 0))
 
   expect_equal(actual, expected)
 })
